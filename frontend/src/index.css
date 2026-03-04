@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-bg:       #070B14;
+  --color-surface:  #0D1421;
+  --color-surface2: #131C2E;
+  --color-border:   #1E2D45;
+  --color-border2:  #253550;
+  --color-muted:    #3D5275;
+  --color-text:     #E2EAF4;
+  --color-textmuted:#6B84A3;
+  --color-amber:    #F59E0B;
+  --color-amberdim: #B45309;
+  --color-cyan:     #22D3EE;
+  --color-cyandim:  #0891B2;
+  --color-green:    #10B981;
+  --color-red:      #EF4444;
+  --color-yellow:   #FBBF24;
+  --color-orange:   #F97316;
+
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background-color: #070B14;
+  color: #E2EAF4;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: #0D1421; }
+::-webkit-scrollbar-thumb  { background: #1E2D45; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #253550; }
+
+/* Broadcast scan-line feel */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Glow utilities */
+.glow-amber { box-shadow: 0 0 14px rgba(245,158,11,0.3); }
+.glow-cyan  { box-shadow: 0 0 14px rgba(34,211,238,0.3); }
+.glow-green { box-shadow: 0 0 14px rgba(16,185,129,0.3); }
+.glow-red   { box-shadow: 0 0 14px rgba(239,68,68,0.3);  }
+
+/* Live pulse dot */
+@keyframes pulse-dot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%     { opacity:0.4; transform:scale(1.5); }
+}
+.pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
+
+/* Entry animations */
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.fade-in-up           { animation: fadeInUp 0.35s ease both; }
+.fade-in-up.delay-100 { animation-delay: 0.10s; }
+.fade-in-up.delay-200 { animation-delay: 0.20s; }
+.fade-in-up.delay-300 { animation-delay: 0.30s; }
+.fade-in-up.delay-400 { animation-delay: 0.40s; }
+.fade-in-up.delay-500 { animation-delay: 0.50s; }
+
+/* Typography helpers */
+.font-display  { font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.01em; }
+.font-mono-val { font-family: 'JetBrains Mono', monospace; }
+
+/* Card base */
+.card {
+  background: #0D1421;
+  border: 1px solid #1E2D45;
+  border-radius: 8px;
+}
+
+/* Status badge colors */
+.status-active      { color:#10B981; background:rgba(16,185,129,0.12); }
+.status-inactive    { color:#6B84A3; background:rgba(107,132,163,0.12); }
+.status-maintenance { color:#F59E0B; background:rgba(245,158,11,0.12); }
+.status-faulty      { color:#EF4444; background:rgba(239,68,68,0.12); }
+.status-retired     { color:#3D5275; background:rgba(61,82,117,0.12); }
