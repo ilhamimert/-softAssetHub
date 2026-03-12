@@ -6,15 +6,16 @@ const getCurrent = async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const result = await query(
-      `SELECT TOP 1 m.*, a.AssetName, a.AssetType, a.Status,
-              ag.GroupName, ag.GroupType, c.ChannelName
-       FROM AssetMonitoring m
-       JOIN Assets      a  ON m.AssetID      = a.AssetID
-       JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       JOIN Channels    c  ON a.ChannelID    = c.ChannelID
-       WHERE m.AssetID = @assetId
-       ORDER BY m.MonitoringTime DESC`,
-      { assetId: parseInt(assetId) }
+      `SELECT m.*, a.asset_name, a.asset_type, a.status,
+              ag.group_name, ag.group_type, c.channel_name
+       FROM asset_monitoring m
+       JOIN assets      a  ON m.asset_id      = a.asset_id
+       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       JOIN channels    c  ON a.channel_id    = c.channel_id
+       WHERE m.asset_id = $1
+       ORDER BY m.monitoring_time DESC
+       LIMIT 1`,
+      [parseInt(assetId)]
     );
     const data = result.recordset[0];
     if (!data) return next(createError('Monitoring verisi bulunamadı.', 404, 'NOT_FOUND'));
@@ -30,19 +31,23 @@ const getHistory = async (req, res, next) => {
     const { assetId } = req.params;
     const { from, to, limit = 100 } = req.query;
 
-    let whereClause = 'WHERE m.AssetID = @assetId';
-    const params = { assetId: parseInt(assetId), limit: parseInt(limit) };
+    const params = [parseInt(assetId)];
+    let idx = 2;
+    let whereClause = 'WHERE m.asset_id = $1';
 
-    if (from) { whereClause += ' AND m.MonitoringTime >= @from'; params.from = new Date(from); }
-    if (to)   { whereClause += ' AND m.MonitoringTime <= @to';   params.to   = new Date(to);   }
+    if (from) { whereClause += ` AND m.monitoring_time >= $${idx++}`; params.push(new Date(from)); }
+    if (to)   { whereClause += ` AND m.monitoring_time <= $${idx++}`; params.push(new Date(to)); }
+
+    params.push(parseInt(limit));
 
     const result = await query(
-      `SELECT TOP (@limit) m.MonitoringID, m.MonitoringTime, m.CPUUsage, m.RAMUsage, m.DiskUsage,
-         m.GPUUsage, m.Temperature, m.PowerConsumption, m.NetworkLatency,
-         m.IsOnline, m.PerformanceScore, m.ErrorCount, m.Uptime
-       FROM AssetMonitoring m
+      `SELECT m.monitoring_id, m.monitoring_time, m.cpu_usage, m.ram_usage, m.disk_usage,
+         m.gpu_usage, m.temperature, m.power_consumption, m.network_latency,
+         m.is_online, m.performance_score, m.error_count, m.uptime
+       FROM asset_monitoring m
        ${whereClause}
-       ORDER BY m.MonitoringTime DESC`,
+       ORDER BY m.monitoring_time DESC
+       LIMIT $${idx}`,
       params
     );
     res.json({ success: true, data: result.recordset, total: result.recordset.length });
@@ -51,36 +56,59 @@ const getHistory = async (req, res, next) => {
   }
 };
 
-// POST /monitoring/:assetId/data  — Cihazdan gelen veri push
+function clampOrNull(val, min, max) {
+  if (val === undefined || val === null) return null;
+  const n = Number(val);
+  if (!isFinite(n)) return null;
+  return Math.min(Math.max(n, min), max);
+}
+
+// POST /monitoring/:assetId/data
 const pushData = async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const {
-      cpuUsage, ramUsage, diskUsage, gpuUsage, temperature, cpuTemperature,
-      powerConsumption, fanSpeed, memoryUsedGB, memoryTotalGB,
-      networkInMbps, networkOutMbps, networkLatency, uptime,
-      isOnline, errorCount, performanceScore, signalStrength
-    } = req.body;
+    const parsedId = parseInt(assetId);
+    if (!parsedId || parsedId <= 0) {
+      return next(createError('Geçersiz assetId.', 400));
+    }
+
+    const raw = req.body;
+
+    const cpuUsage         = clampOrNull(raw.cpuUsage,         0,   100);
+    const ramUsage         = clampOrNull(raw.ramUsage,         0,   100);
+    const diskUsage        = clampOrNull(raw.diskUsage,        0,   100);
+    const gpuUsage         = clampOrNull(raw.gpuUsage,         0,   100);
+    const temperature      = clampOrNull(raw.temperature,      -40, 200);
+    const cpuTemperature   = clampOrNull(raw.cpuTemperature,   -40, 200);
+    const powerConsumption = clampOrNull(raw.powerConsumption, 0,   100000);
+    const fanSpeed         = clampOrNull(raw.fanSpeed,         0,   30000);
+    const memoryUsedGB     = clampOrNull(raw.memoryUsedGB,     0,   10240);
+    const memoryTotalGB    = clampOrNull(raw.memoryTotalGB,    0,   10240);
+    const networkInMbps    = clampOrNull(raw.networkInMbps,    0,   100000);
+    const networkOutMbps   = clampOrNull(raw.networkOutMbps,   0,   100000);
+    const networkLatency   = clampOrNull(raw.networkLatency,   0,   60000);
+    const performanceScore = clampOrNull(raw.performanceScore, 0,   100);
+    const signalStrength   = clampOrNull(raw.signalStrength,   -200, 0);
+    const errorCount       = raw.errorCount != null ? Math.max(0, parseInt(raw.errorCount) || 0) : 0;
+    const uptime           = raw.uptime != null ? Math.max(0, parseFloat(raw.uptime) || 0) : null;
+    const isOnline         = raw.isOnline !== false && raw.isOnline !== 0;
 
     const result = await query(
-      `INSERT INTO AssetMonitoring (AssetID, CPUUsage, RAMUsage, DiskUsage, GPUUsage,
-         Temperature, CPUTemperature, PowerConsumption, FanSpeed, MemoryUsedGB, MemoryTotalGB,
-         NetworkInMbps, NetworkOutMbps, NetworkLatency, Uptime,
-         IsOnline, ErrorCount, PerformanceScore, SignalStrength)
-       OUTPUT INSERTED.*
-       VALUES (@assetId, @cpuUsage, @ramUsage, @diskUsage, @gpuUsage,
-         @temperature, @cpuTemperature, @powerConsumption, @fanSpeed, @memoryUsedGB, @memoryTotalGB,
-         @networkInMbps, @networkOutMbps, @networkLatency, @uptime,
-         @isOnline, @errorCount, @performanceScore, @signalStrength)`,
-      {
-        assetId: parseInt(assetId), cpuUsage, ramUsage, diskUsage, gpuUsage,
+      `INSERT INTO asset_monitoring (asset_id, cpu_usage, ram_usage, disk_usage, gpu_usage,
+         temperature, cpu_temperature, power_consumption, fan_speed, memory_used_gb, memory_total_gb,
+         network_in_mbps, network_out_mbps, network_latency, uptime,
+         is_online, error_count, performance_score, signal_strength)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+       RETURNING *`,
+      [
+        parsedId, cpuUsage, ramUsage, diskUsage, gpuUsage,
         temperature, cpuTemperature, powerConsumption, fanSpeed, memoryUsedGB, memoryTotalGB,
-        networkInMbps, networkOutMbps, networkLatency: networkLatency || null,
-        uptime, isOnline, errorCount, performanceScore, signalStrength
-      }
+        networkInMbps, networkOutMbps, networkLatency, uptime,
+        isOnline, errorCount, performanceScore, signalStrength
+      ]
     );
 
-    await checkAndCreateAlerts(parseInt(assetId), req.body);
+    await checkAndCreateAlerts(parsedId, { cpuUsage, ramUsage, diskUsage, temperature, isOnline });
     res.status(201).json({ success: true, data: result.recordset[0] });
   } catch (err) {
     next(err);
@@ -93,24 +121,25 @@ const getChannelStats = async (req, res, next) => {
     const { channelId } = req.params;
     const result = await query(
       `SELECT
-         COUNT(DISTINCT a.AssetID) AS TotalAssets,
-         SUM(CASE WHEN a.Status = 'Active'      THEN 1 ELSE 0 END) AS ActiveAssets,
-         SUM(CASE WHEN a.Status = 'Maintenance' THEN 1 ELSE 0 END) AS MaintenanceAssets,
-         AVG(lm.Temperature)       AS AvgTemperature,
-         SUM(lm.PowerConsumption)  AS TotalPowerConsumption,
-         AVG(lm.PerformanceScore)  AS AvgPerformanceScore,
-         SUM(CASE WHEN lm.IsOnline = 0 THEN 1 ELSE 0 END) AS OfflineAssets,
-         COUNT(DISTINCT ag.AssetGroupID) AS TotalGroups
-       FROM Assets a
-       JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       JOIN Channels    c  ON a.ChannelID    = c.ChannelID
-       LEFT JOIN (
-         SELECT AssetID, Temperature, PowerConsumption, PerformanceScore, IsOnline,
-           ROW_NUMBER() OVER (PARTITION BY AssetID ORDER BY MonitoringTime DESC) AS rn
-         FROM AssetMonitoring
-       ) lm ON lm.AssetID = a.AssetID AND lm.rn = 1
-       WHERE c.ChannelID = @channelId AND a.IsActive = 1`,
-      { channelId: parseInt(channelId) }
+         COUNT(DISTINCT a.asset_id) AS total_assets,
+         SUM(CASE WHEN a.status = 'Active'      THEN 1 ELSE 0 END) AS active_assets,
+         SUM(CASE WHEN a.status = 'Maintenance' THEN 1 ELSE 0 END) AS maintenance_assets,
+         AVG(lm.temperature)        AS avg_temperature,
+         SUM(lm.power_consumption)  AS total_power_consumption,
+         AVG(lm.performance_score)  AS avg_performance_score,
+         SUM(CASE WHEN lm.is_online = FALSE THEN 1 ELSE 0 END) AS offline_assets,
+         COUNT(DISTINCT ag.asset_group_id) AS total_groups
+       FROM assets a
+       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       JOIN channels    c  ON a.channel_id    = c.channel_id
+       LEFT JOIN LATERAL (
+         SELECT temperature, power_consumption, performance_score, is_online
+         FROM asset_monitoring m2
+         WHERE m2.asset_id = a.asset_id
+         ORDER BY m2.monitoring_time DESC LIMIT 1
+       ) lm ON true
+       WHERE c.channel_id = $1 AND a.is_active = TRUE`,
+      [parseInt(channelId)]
     );
     res.json({ success: true, data: result.recordset[0] });
   } catch (err) {
@@ -122,31 +151,34 @@ const getChannelStats = async (req, res, next) => {
 const getHeatmap = async (req, res, next) => {
   try {
     const { channelId } = req.query;
-    let whereClause = 'WHERE a.IsActive = 1';
-    const params = {};
+    const params = [];
+    let whereClause = 'WHERE a.is_active = TRUE';
 
     if (channelId) {
-      whereClause += ' AND a.ChannelID = @channelId';
-      params.channelId = parseInt(channelId);
+      params.push(parseInt(channelId));
+      whereClause += ` AND a.channel_id = $1`;
     }
 
     const result = await query(
-      `SELECT TOP 50
-         a.AssetID, a.AssetName, a.AssetCode, a.AssetType, a.Status,
-         c.ChannelName, ag.GroupName, ag.GroupType,
-         lm.Temperature, lm.PowerConsumption, lm.CPUUsage, lm.GPUUsage,
-         lm.RAMUsage, lm.IsOnline, lm.PerformanceScore, lm.NetworkLatency
-       FROM Assets a
-       JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       JOIN Channels    c  ON a.ChannelID    = c.ChannelID
-       LEFT JOIN (
-         SELECT AssetID, Temperature, PowerConsumption, CPUUsage, GPUUsage,
-           RAMUsage, IsOnline, PerformanceScore, NetworkLatency,
-           ROW_NUMBER() OVER (PARTITION BY AssetID ORDER BY MonitoringTime DESC) AS rn
-         FROM AssetMonitoring
-       ) lm ON lm.AssetID = a.AssetID AND lm.rn = 1
+      `SELECT
+         a.asset_id, a.asset_name, a.asset_code, a.asset_type, a.status,
+         c.channel_name, ag.group_name, ag.group_type,
+         lm.temperature, lm.power_consumption, lm.cpu_usage, lm.gpu_usage,
+         lm.ram_usage, lm.is_online, lm.performance_score, lm.network_latency,
+         lm.monitoring_time AS last_monitoring_time
+       FROM assets a
+       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       JOIN channels    c  ON a.channel_id    = c.channel_id
+       LEFT JOIN LATERAL (
+         SELECT temperature, power_consumption, cpu_usage, gpu_usage,
+                ram_usage, is_online, performance_score, network_latency, monitoring_time
+         FROM asset_monitoring m2
+         WHERE m2.asset_id = a.asset_id
+         ORDER BY m2.monitoring_time DESC LIMIT 1
+       ) lm ON true
        ${whereClause}
-       ORDER BY c.ChannelName, ag.GroupType, a.AssetName`,
+       ORDER BY c.channel_name, ag.group_type, a.asset_name
+       LIMIT 50`,
       params
     );
     res.json({ success: true, data: result.recordset });
@@ -185,10 +217,10 @@ async function checkAndCreateAlerts(assetId, data) {
 
   for (const alert of alerts) {
     await query(
-      `INSERT INTO Alerts (AssetID, AlertType, AlertCategory, AlertMessage, AlertSeverity, ThresholdValue, CurrentValue)
-       VALUES (@assetId, @type, @category, @msg, @severity, @threshold, @current)`,
-      { assetId, type: alert.type, category: alert.category, msg: alert.msg, severity: alert.severity, threshold: alert.threshold, current: alert.current }
-    ).catch(() => {});
+      `INSERT INTO alerts (asset_id, alert_type, alert_category, alert_message, alert_severity, threshold_value, current_value)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [assetId, alert.type, alert.category, alert.msg, alert.severity, alert.threshold, alert.current]
+    ).catch((err) => console.warn('[Alert] Oluşturulamadı:', err.message));
   }
 }
 

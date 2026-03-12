@@ -74,28 +74,28 @@ const inputCls = "w-full bg-[#131C2E] border border-[#1E2D45] rounded text-xs te
 function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: () => void; onEdit: () => void }) {
   if (!asset) return null;
   return (
-    <Modal open={!!asset} onClose={onClose} title={asset.AssetName} size="lg">
+    <Modal open={!!asset} onClose={onClose} title={asset.assetName} size="lg">
       {/* Header */}
       <div className="flex items-start gap-4 mb-5 pb-4 border-b border-[#1E2D45]">
         <div className="w-14 h-14 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0">
-          <AssetTypeIcon type={asset.AssetType} size={24} />
+          <AssetTypeIcon type={asset.assetType} size={24} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-display font-bold text-xl text-white">{asset.AssetName}</h3>
-            <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val', statusBg(asset.Status))}>
-              {statusLabel(asset.Status)}
+            <h3 className="font-display font-bold text-xl text-white">{asset.assetName}</h3>
+            <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val', statusBg(asset.status))}>
+              {statusLabel(asset.status)}
             </span>
             <span className={cn(
               'w-2 h-2 rounded-full',
-              asset.IsOnline === false ? 'bg-red-400' : 'bg-green-400 pulse-dot'
+              asset.isOnline === false ? 'bg-red-400' : 'bg-green-400 pulse-dot'
             )} />
           </div>
           <p className="text-xs text-[#6B84A3] mt-1 font-mono-val">
-            {asset.ChannelName}{asset.GroupName ? ` › ${asset.GroupName}` : ''}
+            {asset.channelName}{asset.groupName ? ` › ${asset.groupName}` : ''}
           </p>
-          {asset.AssetCode && (
-            <p className="text-[10px] text-amber-400 font-mono-val mt-0.5">{asset.AssetCode}</p>
+          {asset.assetCode && (
+            <p className="text-[10px] text-amber-400 font-mono-val mt-0.5">{asset.assetCode}</p>
           )}
         </div>
         <button
@@ -110,39 +110,39 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">Cihaz Bilgileri</p>
-          <InfoRow label="Tür" value={assetTypeLabel(asset.AssetType)} />
-          <InfoRow label="Model" value={asset.Model} />
-          <InfoRow label="Seri No" value={asset.SerialNumber} mono />
-          <InfoRow label="Üretici" value={asset.Manufacturer} />
-          <InfoRow label="Tedarikçi" value={asset.Supplier} />
-          <InfoRow label="IP Adresi" value={asset.IPAddress} mono />
-          <InfoRow label="MAC Adresi" value={asset.MACAddress} mono />
-          <InfoRow label="Firmware" value={asset.FirmwareVersion} mono />
-          <InfoRow label="Rack Pozisyon" value={asset.RackPosition} mono />
+          <InfoRow label="Tür" value={assetTypeLabel(asset.assetType)} />
+          <InfoRow label="Model" value={asset.model} />
+          <InfoRow label="Seri No" value={asset.serialNumber} mono />
+          <InfoRow label="Üretici" value={asset.manufacturer} />
+          <InfoRow label="Tedarikçi" value={asset.supplier} />
+          <InfoRow label="IP Adresi" value={asset.ipAddress} mono />
+          <InfoRow label="MAC Adresi" value={asset.macAddress} mono />
+          <InfoRow label="Firmware" value={asset.firmwareVersion} mono />
+          <InfoRow label="Rack Pozisyon" value={asset.rackPosition} mono />
         </div>
         <div>
           <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">Mali Bilgiler</p>
-          <InfoRow label="Satın Alma" value={formatDate(asset.PurchaseDate ?? undefined)} />
-          <InfoRow label="Garanti Bitiş" value={formatDate(asset.WarrantyEndDate ?? undefined)} />
-          <InfoRow label="Maliyet" value={formatCurrency(asset.PurchaseCost ?? undefined)} />
-          <InfoRow label="Güncel Değer" value={formatCurrency(asset.CurrentValue ?? undefined)} />
-          <InfoRow label="Amortisman" value={asset.DepreciationRate != null ? `%${asset.DepreciationRate} / Yıl` : null} />
+          <InfoRow label="Satın Alma" value={formatDate(asset.purchaseDate ?? undefined)} />
+          <InfoRow label="Garanti Bitiş" value={formatDate(asset.warrantyEndDate ?? undefined)} />
+          <InfoRow label="Maliyet" value={formatCurrency(asset.purchaseCost ?? undefined)} />
+          <InfoRow label="Güncel Değer" value={formatCurrency(asset.currentValue ?? undefined)} />
+          <InfoRow label="Amortisman" value={asset.depreciationRate != null ? `%${asset.depreciationRate} / Yıl` : null} />
 
           {/* Live stats if available */}
-          {asset.LastTemperature != null && (
+          {asset.lastTemperature != null && (
             <>
               <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2 mt-4">Anlık Durum</p>
-              <InfoRow label="Sıcaklık" value={`${asset.LastTemperature}°C`} mono />
-              {asset.LastPowerConsumption != null && (
-                <InfoRow label="Güç Tük." value={`${asset.LastPowerConsumption}W`} mono />
+              <InfoRow label="Sıcaklık" value={`${asset.lastTemperature}°C`} mono />
+              {asset.lastPowerConsumption != null && (
+                <InfoRow label="Güç Tük." value={`${asset.lastPowerConsumption}W`} mono />
               )}
             </>
           )}
 
-          {asset.Notes && (
+          {asset.notes && (
             <div className="mt-3">
               <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-1">Notlar</p>
-              <p className="text-xs text-[#E2EAF4] bg-[#131C2E] rounded p-2 leading-relaxed">{asset.Notes}</p>
+              <p className="text-xs text-[#E2EAF4] bg-[#131C2E] rounded p-2 leading-relaxed">{asset.notes}</p>
             </div>
           )}
         </div>
@@ -156,30 +156,30 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
   const qc = useQueryClient();
   const [form, setForm] = useState<any>(
     asset ? {
-      assetName: asset.AssetName,
-      assetType: asset.AssetType,
-      assetCode: asset.AssetCode,
-      model: asset.Model,
-      serialNumber: asset.SerialNumber,
-      manufacturer: asset.Manufacturer,
-      supplier: asset.Supplier,
-      ipAddress: asset.IPAddress,
-      macAddress: asset.MACAddress,
-      firmwareVersion: asset.FirmwareVersion,
-      rackPosition: asset.RackPosition,
-      status: asset.Status,
-      purchaseCost: asset.PurchaseCost,
-      currentValue: asset.CurrentValue,
-      depreciationRate: asset.DepreciationRate,
-      purchaseDate: asset.PurchaseDate?.slice(0, 10),
-      warrantyEndDate: asset.WarrantyEndDate?.slice(0, 10),
-      notes: asset.Notes,
+      assetName: asset.assetName,
+      assetType: asset.assetType,
+      assetCode: asset.assetCode,
+      model: asset.model,
+      serialNumber: asset.serialNumber,
+      manufacturer: asset.manufacturer,
+      supplier: asset.supplier,
+      ipAddress: asset.ipAddress,
+      macAddress: asset.macAddress,
+      firmwareVersion: asset.firmwareVersion,
+      rackPosition: asset.rackPosition,
+      status: asset.status,
+      purchaseCost: asset.purchaseCost,
+      currentValue: asset.currentValue,
+      depreciationRate: asset.depreciationRate,
+      purchaseDate: asset.purchaseDate?.slice(0, 10),
+      warrantyEndDate: asset.warrantyEndDate?.slice(0, 10),
+      notes: asset.notes,
     } as any : { assetName: '', assetType: 'Server', status: 'Active' }
   );
   const [error, setError] = useState('');
 
   const updateMut = useMutation({
-    mutationFn: (body: object) => assetApi.update(asset!.AssetID, body),
+    mutationFn: (body: object) => assetApi.update(asset!.assetId, body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['assets'] }); onClose(); },
     onError: (e: any) => setError(e?.response?.data?.message ?? 'Bir hata oluştu.'),
   });
@@ -213,7 +213,7 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
 
   if (!asset) return null;
   return (
-    <Modal open={!!asset} onClose={onClose} title={`Düzenle: ${asset.AssetName}`} size="lg">
+    <Modal open={!!asset} onClose={onClose} title={`Düzenle: ${asset.assetName}`} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Varlık Adı" required>
@@ -316,7 +316,7 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
 function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => void }) {
   const qc = useQueryClient();
   const deleteMut = useMutation({
-    mutationFn: () => assetApi.delete(asset!.AssetID),
+    mutationFn: () => assetApi.delete(asset!.assetId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['assets'] }); onClose(); },
   });
   if (!asset) return null;
@@ -327,7 +327,7 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
           <Trash2 size={22} className="text-red-400" />
         </div>
         <div>
-          <p className="text-sm text-[#E2EAF4] font-medium">{asset.AssetName}</p>
+          <p className="text-sm text-[#E2EAF4] font-medium">{asset.assetName}</p>
           <p className="text-[11px] text-[#6B84A3] mt-1 font-mono-val">
             Bu varlığı silmek istediğinize emin misiniz?<br />
             Varlık "Kullanım Dışı" olarak işaretlenecek.
@@ -415,11 +415,11 @@ export function AssetList() {
   const handleExport = () => {
     const headers = ['Varlık Adı', 'Kod', 'Tür', 'Model', 'Kanal', 'Grup', 'Durum', 'Sıcaklık', 'Güç', 'Satın Alma', 'Maliyet'];
     const rows = assets.map(a => [
-      a.AssetName, a.AssetCode ?? '', assetTypeLabel(a.AssetType), a.Model ?? '',
-      a.ChannelName ?? '', a.GroupName ?? '',
-      statusLabel(a.Status), a.LastTemperature != null ? `${a.LastTemperature}°C` : '',
-      a.LastPowerConsumption != null ? `${a.LastPowerConsumption}W` : '',
-      formatDate(a.PurchaseDate ?? undefined), formatCurrency(a.PurchaseCost ?? undefined),
+      a.assetName, a.assetCode ?? '', assetTypeLabel(a.assetType), a.model ?? '',
+      a.channelName ?? '', a.groupName ?? '',
+      statusLabel(a.status), a.lastTemperature != null ? `${a.lastTemperature}°C` : '',
+      a.lastPowerConsumption != null ? `${a.lastPowerConsumption}W` : '',
+      formatDate(a.purchaseDate ?? undefined), formatCurrency(a.purchaseCost ?? undefined),
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -452,7 +452,7 @@ export function AssetList() {
         {[
           {
             value: channelId, onChange: (v: string) => { setChannelId(v); setPage(1); },
-            options: [{ value: '', label: 'Tüm Kanallar' }, ...channels.map((c: any) => ({ value: String(c.ChannelID), label: c.ChannelName }))],
+            options: [{ value: '', label: 'Tüm Kanallar' }, ...channels.map((c: any) => ({ value: String(c.channelId), label: c.channelName }))],
           },
           {
             value: status, onChange: (v: string) => { setStatus(v); setPage(1); },
@@ -537,7 +537,7 @@ export function AssetList() {
                 ))
                 : assets.map((asset, i) => (
                   <tr
-                    key={asset.AssetID}
+                    key={asset.assetId}
                     className="border-b border-[#1E2D45] hover:bg-[#131C2E]/60 transition-colors group cursor-pointer"
                     onClick={() => setViewAsset(asset)}
                   >
@@ -546,37 +546,37 @@ export function AssetList() {
                     </td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
-                        <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', asset.IsOnline === false ? 'bg-red-400' : 'bg-green-400 pulse-dot')} />
-                        <span className="text-xs text-[#E2EAF4] font-medium">{asset.AssetName}</span>
+                        <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', asset.isOnline === false ? 'bg-red-400' : 'bg-green-400 pulse-dot')} />
+                        <span className="text-xs text-[#E2EAF4] font-medium">{asset.assetName}</span>
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-[10px] text-[#6B84A3] font-mono-val whitespace-nowrap">{asset.AssetCode ?? '-'}</td>
+                    <td className="py-2.5 px-3 text-[10px] text-[#6B84A3] font-mono-val whitespace-nowrap">{asset.assetCode ?? '-'}</td>
                     <td className="py-2.5 px-3">
                       <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono-val whitespace-nowrap">
-                        {assetTypeLabel(asset.AssetType)}
+                        {assetTypeLabel(asset.assetType)}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3] whitespace-nowrap">{asset.Model ?? '-'}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#6B84A3] whitespace-nowrap">{asset.model ?? '-'}</td>
                     <td className="py-2.5 px-3">
-                      <p className="text-[10px] text-[#E2EAF4] truncate max-w-[140px]">{asset.ChannelName}</p>
-                      <p className="text-[10px] text-[#3D5275] font-mono-val truncate max-w-[140px]">{asset.GroupName ?? '-'}</p>
+                      <p className="text-[10px] text-[#E2EAF4] truncate max-w-[140px]">{asset.channelName}</p>
+                      <p className="text-[10px] text-[#3D5275] font-mono-val truncate max-w-[140px]">{asset.groupName ?? '-'}</p>
                     </td>
                     <td className="py-2.5 px-3">
-                      <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val whitespace-nowrap', statusBg(asset.Status))}>
-                        {statusLabel(asset.Status)}
+                      <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val whitespace-nowrap', statusBg(asset.status))}>
+                        {statusLabel(asset.status)}
                       </span>
                     </td>
-                    <td className={cn('py-2.5 px-3 text-xs font-mono-val whitespace-nowrap', asset.LastTemperature ? tempColor(asset.LastTemperature) : 'text-[#3D5275]')}>
-                      {asset.LastTemperature != null ? `${asset.LastTemperature}°C` : '-'}
+                    <td className={cn('py-2.5 px-3 text-xs font-mono-val whitespace-nowrap', asset.lastTemperature ? tempColor(asset.lastTemperature) : 'text-[#3D5275]')}>
+                      {asset.lastTemperature != null ? `${asset.lastTemperature}°C` : '-'}
                     </td>
                     <td className="py-2.5 px-3 text-xs font-mono-val text-[#6B84A3] whitespace-nowrap">
-                      {asset.LastPowerConsumption != null ? `${asset.LastPowerConsumption}W` : '-'}
+                      {asset.lastPowerConsumption != null ? `${asset.lastPowerConsumption}W` : '-'}
                     </td>
                     <td className="py-2.5 px-3 text-[10px] text-[#6B84A3] font-mono-val whitespace-nowrap">
-                      {formatDate(asset.PurchaseDate ?? undefined)}
+                      {formatDate(asset.purchaseDate ?? undefined)}
                     </td>
                     <td className="py-2.5 px-3 text-xs font-mono-val text-[#E2EAF4] whitespace-nowrap">
-                      {formatCurrency(asset.PurchaseCost ?? undefined)}
+                      {formatCurrency(asset.purchaseCost ?? undefined)}
                     </td>
                     <td className="py-2.5 px-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

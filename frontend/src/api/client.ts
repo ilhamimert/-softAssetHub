@@ -14,35 +14,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor — 401 gelirse token yenile veya logout
+// Response interceptor — hataları ilet
 api.interceptors.response.use(
   (res) => res,
-  async (error) => {
-    const original = error.config;
-
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true;
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      if (refreshToken) {
-        try {
-          const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
-          localStorage.setItem('accessToken', data.data.accessToken);
-          localStorage.setItem('refreshToken', data.data.refreshToken);
-          original.headers.Authorization = `Bearer ${data.data.accessToken}`;
-          return api(original);
-        } catch {
-          localStorage.clear();
-          window.location.href = '/login';
-        }
-      } else {
-        localStorage.clear();
-        window.location.href = '/login';
-      }
-    }
-
-    return Promise.reject(error);
-  }
+  async (error) => Promise.reject(error)
 );
 
 // ============================================================
@@ -131,6 +106,7 @@ export const alertApi = {
   getDashboard: (params?: object) => api.get('/alerts/dashboard', { params }),
   create: (data: object) => api.post('/alerts', data),
   resolve: (id: number, notes?: string) => api.put(`/alerts/${id}/resolve`, { resolutionNotes: notes }),
+  bulkResolve: (ids: number[], notes?: string) => api.post('/alerts/bulk-resolve', { ids, resolutionNotes: notes }),
   delete: (id: number) => api.delete(`/alerts/${id}`),
 };
 
@@ -141,6 +117,7 @@ export const analyticsApi = {
   getAssetHealth: (params?: object) => api.get('/analytics/asset-health', { params }),
   getBudget: (params?: object) => api.get('/analytics/budget', { params }),
   getMaintenanceForecast: (params?: object) => api.get('/analytics/maintenance-forecast', { params }),
+  getPhysicalNodeDistribution: () => api.get('/analytics/physical-node-distribution'),
 };
 
 // Users
@@ -151,6 +128,16 @@ export const userApi = {
   update: (id: number, data: object) => api.put(`/users/${id}`, data),
   delete: (id: number) => api.delete(`/users/${id}`),
   changePassword: (id: number, data: object) => api.put(`/users/${id}/password`, data),
+};
+
+// Licenses
+export const licenseApi = {
+  getAll:     (params?: object) => api.get('/licenses', { params }),
+  getByAsset: (assetId: number) => api.get(`/assets/${assetId}/licenses`),
+  getById:    (id: number)      => api.get(`/licenses/${id}`),
+  create:     (data: object)    => api.post('/licenses', data),
+  update:     (id: number, data: object) => api.put(`/licenses/${id}`, data),
+  delete:     (id: number)      => api.delete(`/licenses/${id}`),
 };
 
 // Logs

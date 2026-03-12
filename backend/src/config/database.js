@@ -1,69 +1,140 @@
-const sql = require('mssql');
+const { Pool } = require('pg');
 
-const config = {
-  server: process.env.DB_SERVER || 'localhost',
-  port: parseInt(process.env.DB_PORT) || 1433,
-  database: process.env.DB_NAME || 'AssetManagementDB',
-  user: process.env.DB_USER || 'sa',
-  password: process.env.DB_PASSWORD || '5412',
-  options: {
-    encrypt: process.env.DB_ENCRYPT === 'true',
-    trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE !== 'false',
-    enableArithAbort: true,
-  },
-  pool: {
-    max: 20,
-    min: 2,
-    idleTimeoutMillis: 30000,
-    acquireTimeoutMillis: 60000,
-  },
-  connectionTimeout: 30000,
-  requestTimeout: 30000,
-};
+if (!process.env.DB_PASSWORD) {
+  console.error('❌ DB_PASSWORD ortam değişkeni tanımlı değil! .env dosyasını kontrol edin.');
+  process.exit(1);
+}
 
 let pool = null;
 
-async function getPool() {
+function getPool() {
   if (!pool) {
-    pool = await sql.connect(config);
-    console.log('✅ SQL Server bağlantı havuzu oluşturuldu.');
+    pool = new Pool({
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT) || 5432,
+      database: process.env.DB_NAME || 'asset_hub',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD,
+      max: 40,
+      min: 5,
+      idleTimeoutMillis: 60000,
+      connectionTimeoutMillis: 45000,
+    });
 
     pool.on('error', (err) => {
-      console.error('❌ SQL Server havuz hatası:', err);
+      console.error('❌ PostgreSQL havuz hatası:', err);
       pool = null;
     });
+
+    console.log('✅ PostgreSQL bağlantı havuzu oluşturuldu.');
   }
   return pool;
 }
 
-async function query(queryString, params = {}) {
-  const poolConn = await getPool();
-  const request = poolConn.request();
+/** snake_case → camelCase dönüştürücü */
+function toCamelCase(str) {
+  return str.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
+}
 
-  for (const [key, value] of Object.entries(params)) {
-    if (value === null || value === undefined) {
-      request.input(key, sql.NVarChar, null);
-    } else if (typeof value === 'number' && Number.isInteger(value)) {
-      request.input(key, sql.Int, value);
-    } else if (typeof value === 'number') {
-      request.input(key, sql.Float, value);
-    } else if (typeof value === 'boolean') {
-      request.input(key, sql.Bit, value);
-    } else if (value instanceof Date) {
-      request.input(key, sql.DateTime, value);
-    } else {
-      request.input(key, sql.NVarChar, String(value));
-    }
+function convertRow(row) {
+  if (!row) return row;
+  return Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [toCamelCase(k), v])
+  );
+}
+
+/**
+ * Parametreli sorgu çalıştırır.
+ * params: pozisyonel dizi — örn. [userId, 'Admin']
+ * Döndürür: { recordset: [...camelCase rows], rowsAffected: [n] }
+ */
+async function query(queryString, params = []) {
+  const result = await getPool().query(queryString, params);
+  return {
+    recordset: result.rows.map(convertRow),
+    rowsAffected: [result.rowCount],
+  };
+}
+
+/**
+ * Atomik işlemler için transaction wrapper.
+ * fn(txQuery) içindeki tüm sorgular tek transaction'da çalışır;
+ * herhangi bir hata olursa otomatik rollback yapılır.
+ *
+ * @example
+ * await withTransaction(async (txQuery) => {
+ *   await txQuery('UPDATE users SET ...', [1]);
+ *   await txQuery('INSERT INTO activity_log ...', [...]);
+ * });
+ */
+/**
+ * RLS-aware sorgu çalıştırıcı.
+ * Transaction içinde SET LOCAL ile kullanıcı bağlamını atar;
+ * RLS politikaları bu değerlere göre filtreler.
+ *
+ * @param {object} user  — { userId, role, channelId }
+ * @param {function} fn  — async (rlsQuery) => { ... }
+ *
+ * @example
+ * await withRLS(req.user, async (rlsQuery) => {
+ *   const r = await rlsQuery('SELECT * FROM assets WHERE ...', []);
+ * });
+ */
+async function withRLS(user, fn) {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`SET LOCAL app.user_role   = '${user.role}'`);
+    await client.query(`SET LOCAL app.user_id     = '${user.userId}'`);
+    await client.query(`SET LOCAL app.channel_id  = '${user.channelId || 0}'`);
+
+    const rlsQuery = async (queryString, params = []) => {
+      const r = await client.query(queryString, params);
+      return {
+        recordset: r.rows.map(convertRow),
+        rowsAffected: [r.rowCount],
+      };
+    };
+
+    const result = await fn(rlsQuery);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
   }
+}
 
-  return request.query(queryString);
+async function withTransaction(fn) {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+
+    const txQuery = async (queryString, params = []) => {
+      const r = await client.query(queryString, params);
+      return {
+        recordset: r.rows.map(convertRow),
+        rowsAffected: [r.rowCount],
+      };
+    };
+
+    const result = await fn(txQuery);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 async function testConnection() {
   try {
-    const poolConn = await getPool();
-    await poolConn.request().query('SELECT 1 AS test');
-    console.log('✅ Veritabanı bağlantısı başarılı.');
+    const result = await query('SELECT NOW() AS now');
+    console.log('✅ PostgreSQL bağlantısı başarılı:', result.recordset[0].now);
     return true;
   } catch (err) {
     console.error('❌ Veritabanı bağlantı hatası:', err.message);
@@ -73,10 +144,10 @@ async function testConnection() {
 
 async function closePool() {
   if (pool) {
-    await pool.close();
+    await pool.end();
     pool = null;
     console.log('✅ Veritabanı bağlantısı kapatıldı.');
   }
 }
 
-module.exports = { getPool, query, testConnection, closePool, sql };
+module.exports = { getPool, query, withRLS, withTransaction, testConnection, closePool };

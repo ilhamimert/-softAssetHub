@@ -1,502 +1,1075 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ChevronRight, ChevronDown, Layers, Server, Cpu,
-  Wifi, HardDrive, Monitor, Thermometer, Zap, Activity,
-  Calendar, DollarSign, Shield, Clock, Package
+  ChevronRight, ChevronDown, Server, Package,
+  Building2, Radio, Boxes, Trash2, Plus, DoorOpen,
+  Activity, RefreshCw, Check, X, AlertCircle,
+  GripVertical, Search, Link2, Unlink, QrCode, History,
 } from 'lucide-react';
-import { channelApi, assetGroupApi, assetApi, componentApi, monitoringApi, maintenanceApi } from '@/api/client';
-import { cn, statusBg, tempColor, usageColor, formatCurrency, formatDate, formatDateTime, assetTypeLabel, formatUptime, statusLabel, maintenanceStatusLabel } from '@/lib/utils';
-import type { Channel, AssetGroup, Asset, AssetComponent, AssetMonitoring, MaintenanceRecord } from '@/types';
+import { QRCodeSVG } from 'qrcode.react';
+import { assetApi } from '@/api/client';
+import { cn } from '@/lib/utils';
 
-// ─── Group type colors ────────────────────────────────────────
-const groupTypeConfig: Record<string, { color: string; dot: string }> = {
-  Playout:      { color: 'text-blue-400',   dot: 'bg-blue-400'   },
-  Encoding:     { color: 'text-green-400',  dot: 'bg-green-400'  },
-  Transmission: { color: 'text-amber-400',  dot: 'bg-amber-400'  },
-  Archive:      { color: 'text-purple-400', dot: 'bg-purple-400' },
-  Storage:      { color: 'text-cyan-400',   dot: 'bg-cyan-400'   },
-  General:      { color: 'text-gray-400',   dot: 'bg-gray-400'   },
+// ─── API ──────────────────────────────────────────────────────
+const PHYS_API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/hierarchy` : 'http://localhost:5000/api/v1/hierarchy';
+
+// ─── Types ────────────────────────────────────────────────────
+interface PhysNode {
+  id: string;
+  name: string;
+  path: string;
+  parentId?: string;
+  linkedAssetId?: number | null;
+  children: PhysNode[];
+}
+
+interface SqlAsset {
+  assetId: number;
+  assetCode: string;
+  assetName: string;
+  isOnline?: boolean;
+  status?: string;
+}
+
+interface DragState {
+  nodeId: string;
+  level: PhysLevel;
+}
+
+const PHYS_LEVELS = ['holding', 'kanal', 'bina', 'oda', 'bilgisayar', 'eklenti'] as const;
+type PhysLevel = typeof PHYS_LEVELS[number];
+
+const CHILD_OF: Partial<Record<PhysLevel, PhysLevel>> = {
+  holding: 'kanal', kanal: 'bina', bina: 'oda', oda: 'bilgisayar', bilgisayar: 'eklenti',
 };
 
-// ─── Asset type icon ─────────────────────────────────────────
-function AssetTypeIcon({ type, size = 14 }: { type: string; size?: number }) {
-  const icons: Record<string, any> = {
-    GPU: Cpu, DisplayCard: Monitor, Server, Disk: HardDrive, Network: Wifi,
-  };
-  const Icon = icons[type] ?? Server;
-  return <Icon size={size} />;
-}
-
-// ─── Tree Node component ──────────────────────────────────────
-interface TreeItemProps {
+// ─── Level config ─────────────────────────────────────────────
+type LevelCfg = {
+  Icon: React.ComponentType<{ size?: number; className?: string }>;
+  color: string;
   label: string;
-  icon: React.ReactNode;
-  isExpanded: boolean;
-  isSelected: boolean;
-  hasChildren: boolean;
-  onToggle: () => void;
-  onSelect: () => void;
-  level: number;
-  badge?: number;
-  status?: string;
-  labelColor?: string;
+  bg: string;
+  border: string;
+};
+
+const LEVEL_CFG: Record<PhysLevel, LevelCfg> = {
+  holding: { Icon: Building2, color: 'text-amber-400', label: 'Holding', bg: 'bg-amber-500/10', border: 'border-amber-500/25' },
+  kanal: { Icon: Radio, color: 'text-blue-400', label: 'Kanal', bg: 'bg-blue-500/10', border: 'border-blue-500/25' },
+  bina: { Icon: Building2, color: 'text-purple-400', label: 'Bina', bg: 'bg-purple-500/10', border: 'border-purple-500/25' },
+  oda: { Icon: DoorOpen, color: 'text-green-400', label: 'Oda', bg: 'bg-green-500/10', border: 'border-green-500/25' },
+  bilgisayar: { Icon: Server, color: 'text-cyan-400', label: 'Bilgisayar', bg: 'bg-cyan-500/10', border: 'border-cyan-500/25' },
+  eklenti: { Icon: Package, color: 'text-gray-400', label: 'Eklenti', bg: 'bg-gray-500/10', border: 'border-gray-500/25' },
+};
+
+// ─── Highlight ────────────────────────────────────────────────
+function Highlight({ text, term }: { text: string; term: string }) {
+  if (!term) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(term.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-amber-500/30 text-amber-300 rounded px-0.5">{text.slice(idx, idx + term.length)}</mark>
+      {text.slice(idx + term.length)}
+    </>
+  );
 }
 
-function TreeItem({ label, icon, isExpanded, isSelected, hasChildren, onToggle, onSelect, level, badge, status, labelColor }: TreeItemProps) {
+// ─── Tree Node ────────────────────────────────────────────────
+function TreeNode({
+  node, depth, expanded, selectedId, searchTerm,
+  onToggle, onSelect, onDelete, onAddChild,
+  multiSel, onMultiToggle,
+  onlineMap, dragLevel, dropTargetId,
+  onDragStart, onDragEnter, onDragLeave, onDrop,
+}: {
+  node: PhysNode;
+  depth: number;
+  expanded: Set<string>;
+  selectedId: string | null;
+  searchTerm: string;
+  onToggle: (id: string) => void;
+  onSelect: (node: PhysNode, level: PhysLevel) => void;
+  onDelete: (id: string, level: PhysLevel, name: string) => void;
+  onAddChild: (parentId: string, level: PhysLevel) => void;
+  multiSel: Set<string>;
+  onMultiToggle: (id: string, level: PhysLevel) => void;
+  onlineMap: Map<number, boolean>;
+  dragLevel: PhysLevel | null;
+  dropTargetId: string | null;
+  onDragStart: (e: React.DragEvent, node: PhysNode, level: PhysLevel) => void;
+  onDragEnter: (e: React.DragEvent, node: PhysNode, level: PhysLevel) => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, node: PhysNode, level: PhysLevel) => void;
+}) {
+  const level = PHYS_LEVELS[depth] ?? 'eklenti';
+  const { Icon, color, label } = LEVEL_CFG[level];
+  const isOpen = expanded.has(node.id);
+  const isSel = selectedId === node.id;
+  const isMulti = multiSel.has(node.id);
+  const hasKids = (node.children?.length ?? 0) > 0;
+  const canAdd = !!CHILD_OF[level];
+
+  // Can this node be dragged?
+  const canDrag = level === 'bilgisayar' || level === 'eklenti';
+
+  // Is this node a valid drop target?
+  const isDropTarget = dropTargetId === node.id;
+
+  // Online status dot for bilgisayar linked to SQL asset
+  const isOnline = level === 'bilgisayar' && node.linkedAssetId != null
+    ? onlineMap.get(node.linkedAssetId)
+    : undefined;
+
   return (
-    <div
-      className={cn(
-        'flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer transition-all text-xs group',
-        'hover:bg-[#131C2E]',
-        isSelected ? 'bg-amber-500/10 text-amber-400 border border-amber-500/15' : 'text-[#E2EAF4]'
-      )}
-      style={{ paddingLeft: `${level * 12 + 8}px` }}
-      onClick={() => {
-        onSelect();
-        if (hasChildren) onToggle();
-      }}
-    >
-      {hasChildren ? (
+    <div>
+      <div
+        className={cn(
+          'flex items-center gap-1.5 py-[5px] pr-1.5 rounded-md cursor-pointer select-none',
+          'text-[11px] transition-colors group',
+          isSel
+            ? 'bg-[#162032] text-[#E2EAF4] border border-[#2A3F5F]'
+            : isMulti
+              ? 'bg-blue-500/10 text-[#E2EAF4] border border-blue-500/20'
+              : isDropTarget
+                ? 'bg-amber-500/10 border border-amber-500/30'
+                : 'hover:bg-[#0F1A2E] text-[#A0B4CC]',
+        )}
+        style={{ paddingLeft: `${depth * 16 + 6}px` }}
+        draggable={canDrag}
+        onDragStart={e => canDrag && onDragStart(e, node, level)}
+        onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+        onDragEnter={e => onDragEnter(e, node, level)}
+        onDragLeave={onDragLeave}
+        onDrop={e => onDrop(e, node, level)}
+        onClick={e => {
+          if (e.ctrlKey || e.metaKey) {
+            onMultiToggle(node.id, level);
+          } else {
+            onSelect(node, level);
+            if (hasKids) onToggle(node.id);
+          }
+        }}
+      >
+        {/* Drag handle */}
+        {canDrag && (
+          <span className="opacity-0 group-hover:opacity-50 text-[#3D5275] cursor-grab active:cursor-grabbing flex-shrink-0">
+            <GripVertical size={9} />
+          </span>
+        )}
+
+        {/* Expand arrow */}
+        <span className="w-4 flex items-center justify-center flex-shrink-0">
+          {hasKids
+            ? <button
+              onClick={e => { e.stopPropagation(); onToggle(node.id); }}
+              className="text-[#4A6080] hover:text-[#A0B4CC] transition-colors"
+            >
+              {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+            </button>
+            : null
+          }
+        </span>
+
+        {/* Icon */}
+        <span className={cn('flex-shrink-0 transition-colors', isSel ? color : 'text-[#3D5275]')}>
+          <Icon size={11} />
+        </span>
+
+        {/* Name */}
+        <span className="flex-1 truncate">
+          <Highlight text={node.name} term={searchTerm} />
+        </span>
+
+        {/* Online status dot */}
+        {isOnline !== undefined && (
+          <span
+            title={isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
+            className={cn(
+              'w-1.5 h-1.5 rounded-full flex-shrink-0',
+              isOnline ? 'bg-green-400' : 'bg-red-400',
+            )}
+          />
+        )}
+
+        {/* Child count */}
+        {hasKids && (
+          <span className="text-[9px] font-mono-val px-1 rounded bg-[#1E2D45] text-[#4A6080] opacity-0 group-hover:opacity-100 transition-opacity mr-0.5">
+            {node.children.length}
+          </span>
+        )}
+
+        {/* Add child btn */}
+        {canAdd && (
+          <button
+            onClick={e => { e.stopPropagation(); onAddChild(node.id, level); }}
+            title={`${LEVEL_CFG[CHILD_OF[level]!].label} ekle`}
+            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-blue-500/20 text-[#3D5275] hover:text-blue-400 transition-all"
+          >
+            <Plus size={9} />
+          </button>
+        )}
+
+        {/* Delete btn */}
         <button
-          onClick={e => { e.stopPropagation(); onToggle(); }}
-          className="text-[#6B84A3] hover:text-[#E2EAF4] transition-colors flex-shrink-0 w-3"
+          onClick={e => { e.stopPropagation(); onDelete(node.id, level, node.name); }}
+          title={`${label} sil`}
+          className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/20 text-[#3D5275] hover:text-red-400 transition-all"
         >
-          {isExpanded ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+          <Trash2 size={9} />
         </button>
-      ) : (
-        <span className="w-3 flex-shrink-0" />
-      )}
-      <span className={cn('flex-shrink-0', isSelected ? 'text-amber-400' : (labelColor ?? 'text-[#6B84A3]'))}>
-        {icon}
-      </span>
-      <span className={cn('flex-1 truncate text-[11px]', labelColor && !isSelected && labelColor)}>{label}</span>
-      {status && (
-        <span className={cn(
-          'w-1.5 h-1.5 rounded-full flex-shrink-0',
-          status === 'Active' ? 'bg-green-400' :
-            status === 'Maintenance' ? 'bg-amber-400' :
-              status === 'Faulty' ? 'bg-red-400' : 'bg-[#3D5275]'
-        )} />
-      )}
-      {badge != null && badge > 0 && (
-        <span className="text-[9px] font-mono-val px-1.5 py-0.5 rounded bg-[#1E2D45] text-[#6B84A3]">{badge}</span>
-      )}
+      </div>
+
+      {/* Children */}
+      {isOpen && node.children?.map(child => (
+        <TreeNode
+          key={child.id}
+          node={child}
+          depth={depth + 1}
+          expanded={expanded}
+          selectedId={selectedId}
+          searchTerm={searchTerm}
+          onToggle={onToggle}
+          onSelect={onSelect}
+          onDelete={onDelete}
+          onAddChild={onAddChild}
+          multiSel={multiSel}
+          onMultiToggle={onMultiToggle}
+          onlineMap={onlineMap}
+          dragLevel={dragLevel}
+          dropTargetId={dropTargetId}
+          onDragStart={onDragStart}
+          onDragEnter={onDragEnter}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        />
+      ))}
     </div>
   );
 }
 
-// ─── Detail Tab Panel ─────────────────────────────────────────
-function TabPanel({ children, active }: { children: React.ReactNode; active: boolean }) {
-  if (!active) return null;
-  return <div className="fade-in-up">{children}</div>;
+// ─── Helpers ──────────────────────────────────────────────────
+function matchesSearch(node: PhysNode, term: string): boolean {
+  if (node.name.toLowerCase().includes(term.toLowerCase())) return true;
+  return node.children?.some(c => matchesSearch(c, term)) ?? false;
 }
 
-function InfoRow({ label, value, mono = false }: { label: string; value?: string | number | null; mono?: boolean }) {
-  return (
-    <div className="flex items-start gap-2 py-2 border-b border-[#131C2E]">
-      <span className="text-[10px] text-[#6B84A3] uppercase tracking-wider font-mono-val w-32 flex-shrink-0 pt-0.5">{label}</span>
-      <span className={cn('text-xs text-[#E2EAF4] flex-1', mono && 'font-mono-val')}>{value ?? '-'}</span>
-    </div>
-  );
+function filterTree(nodes: PhysNode[], term: string): PhysNode[] {
+  if (!term) return nodes;
+  return nodes
+    .filter(n => matchesSearch(n, term))
+    .map(n => ({ ...n, children: filterTree(n.children ?? [], term) }));
+}
+
+function collectAllIds(nodes: PhysNode[]): string[] {
+  const ids: string[] = [];
+  for (const n of nodes) {
+    ids.push(n.id);
+    if (n.children?.length) ids.push(...collectAllIds(n.children));
+  }
+  return ids;
 }
 
 // ─── Assets Page ──────────────────────────────────────────────
-type Selection =
-  | { type: 'channel'; id: number }
-  | { type: 'assetgroup'; id: number }
-  | { type: 'asset'; id: number }
-  | null;
-
 export function Assets() {
-  const [expandedChannels, setExpandedChannels]  = useState<Set<number>>(new Set());
-  const [expandedGroups, setExpandedGroups]       = useState<Set<number>>(new Set());
-  const [selection, setSelection]                 = useState<Selection>(null);
-  const [tab, setTab]                             = useState(0);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [sel, setSel] = useState<{ node: PhysNode; level: PhysLevel } | null>(null);
+  const [addChildName, setAddChildName] = useState('');
+  const [treeAddTo, setTreeAddTo] = useState<{ parentId: string; level: PhysLevel } | null>(null);
+  const [treeAddName, setTreeAddName] = useState('');
+  const [addRootName, setAddRootName] = useState('');
+  const [showRootForm, setShowRootForm] = useState(false);
 
-  // Channels
-  const { data: channelsData } = useQuery({
-    queryKey: ['channels'],
-    queryFn: () => channelApi.getAll(),
-  });
+  // New feature states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [multiSel, setMultiSel] = useState<Set<string>>(new Set());
+  const [multiLvl, setMultiLvl] = useState<PhysLevel | null>(null);
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [linkSearch, setLinkSearch] = useState('');
+  const [showAudit, setShowAudit] = useState(false);
+  const [showQr, setShowQr] = useState(false);
 
-  // AssetGroups — load all, filter client-side
-  const { data: groupsData } = useQuery({
-    queryKey: ['assetgroups-all'],
-    queryFn: () => assetGroupApi.getAll(),
-    enabled: (channelsData?.data?.data?.length ?? 0) > 0,
-  });
+  const treeInputRef = useRef<HTMLInputElement>(null);
+  const qc = useQueryClient();
 
-  // All assets
-  const { data: assetsData } = useQuery({
-    queryKey: ['assets-tree'],
-    queryFn: () => assetApi.getAll({ limit: 500 }),
-  });
-
-  // Selected asset detail
-  const selectedAssetId = selection?.type === 'asset' ? selection.id : undefined;
-
-  const { data: assetDetailData } = useQuery({
-    queryKey: ['asset-detail', selectedAssetId],
-    queryFn: () => assetApi.getById(selectedAssetId!),
-    enabled: !!selectedAssetId,
-  });
-
-  const { data: monitoringData } = useQuery({
-    queryKey: ['monitoring-current', selectedAssetId],
-    queryFn: () => monitoringApi.getCurrent(selectedAssetId!),
-    enabled: !!selectedAssetId,
+  // ── Queries ─────────────────────────────────────────────────
+  const { data: physTree, isLoading, isError, refetch } = useQuery<PhysNode[]>({
+    queryKey: ['phys-tree'],
+    queryFn: () =>
+      fetch(`${PHYS_API}/tree`).then(r => {
+        if (!r.ok) throw new Error('API hatası');
+        return r.json();
+      }),
     refetchInterval: 10000,
+    retry: 1,
   });
 
-  const { data: maintenanceData } = useQuery({
-    queryKey: ['maintenance-asset', selectedAssetId],
-    queryFn: () => maintenanceApi.getByAsset(selectedAssetId!),
-    enabled: !!selectedAssetId,
+  const { data: packetData } = useQuery({
+    queryKey: ['phys-packet', sel?.node.id],
+    queryFn: () => fetch(`${PHYS_API}/packet/${sel!.node.id}`).then(r => r.json()),
+    enabled: sel?.level === 'bilgisayar',
   });
 
-  const { data: componentsData } = useQuery({
-    queryKey: ['components-asset', selectedAssetId],
-    queryFn: () => componentApi.getByAsset(selectedAssetId!),
-    enabled: !!selectedAssetId,
+  const { data: sqlAssetsData } = useQuery({
+    queryKey: ['sql-assets-all'],
+    queryFn: () => assetApi.getAll({ limit: 500 }).then(r => r.data?.data ?? []),
+    refetchInterval: 30000,
   });
 
-  const channels: Channel[]         = channelsData?.data?.data ?? [];
-  const allGroups: AssetGroup[]     = groupsData?.data?.data ?? [];
-  const allAssets: Asset[]          = assetsData?.data?.data ?? [];
-  const selectedAsset: Asset        = assetDetailData?.data?.data;
-  const monitoring: AssetMonitoring = monitoringData?.data?.data;
-  const maintenanceList: MaintenanceRecord[] = maintenanceData?.data?.data ?? [];
-  const componentList: AssetComponent[]      = componentsData?.data?.data ?? [];
+  const { data: auditData } = useQuery({
+    queryKey: ['phys-audit'],
+    queryFn: () => fetch(`${PHYS_API}/audit-log`).then(r => r.json()),
+    enabled: showAudit,
+    refetchInterval: showAudit ? 5000 : false,
+  });
 
-  const groupsForChannel   = (cid: number) => allGroups.filter(g => g.ChannelID === cid);
-  const assetsForGroup     = (gid: number) => allAssets.filter(a => a.AssetGroupID === gid);
+  const holdings: PhysNode[] = physTree ?? [];
+  const sqlAssets: SqlAsset[] = sqlAssetsData ?? [];
 
-  const TABS = ['Genel Bilgiler', 'Canlı Durum', 'Bakım', 'İstatistik', 'Eklentiler'];
+  // Online map: assetId -> bool
+  const onlineMap = useMemo(() => {
+    const m = new Map<number, boolean>();
+    for (const a of sqlAssets) m.set(a.assetId, a.isOnline ?? false);
+    return m;
+  }, [sqlAssets]);
 
+  // Filtered tree for search
+  const filteredHoldings = useMemo(
+    () => filterTree(holdings, searchTerm),
+    [holdings, searchTerm],
+  );
+
+  // Auto-expand all on search
+  useEffect(() => {
+    if (searchTerm) {
+      setExpanded(new Set(collectAllIds(holdings)));
+    }
+  }, [searchTerm]);
+
+  // Live node from current tree
+  const findNode = (nodes: PhysNode[], id: string): PhysNode | null => {
+    for (const n of nodes) {
+      if (n.id === id) return n;
+      const found = findNode(n.children ?? [], id);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const liveNode = sel ? (findNode(holdings, sel.node.id) ?? sel.node) : null;
+
+  // Linked SQL asset
+  const linkedAsset = useMemo(
+    () => liveNode?.linkedAssetId != null
+      ? sqlAssets.find(a => a.assetId === liveNode.linkedAssetId) ?? null
+      : null,
+    [liveNode, sqlAssets],
+  );
+
+  // Link search results
+  const linkSearchResults = useMemo(() => {
+    if (!linkSearch.trim()) return [];
+    const q = linkSearch.toLowerCase();
+    return sqlAssets.filter(a =>
+      a.assetName?.toLowerCase().includes(q) || a.assetCode?.toLowerCase().includes(q)
+    ).slice(0, 8);
+  }, [linkSearch, sqlAssets]);
+
+  // ── Helpers ─────────────────────────────────────────────────
+  const expand = (id: string) =>
+    setExpanded(s => { const n = new Set(s); n.add(id); return n; });
+
+  const toggle = (id: string) =>
+    setExpanded(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+
+  const select = (node: PhysNode, level: PhysLevel) => {
+    setSel({ node, level });
+    setMultiSel(new Set());
+    setAddChildName('');
+    setTreeAddTo(null);
+    setLinkSearch('');
+    setShowQr(false);
+  };
+
+  const multiToggle = (id: string, level: PhysLevel) => {
+    setMultiSel(s => {
+      const n = new Set(s);
+      if (n.has(id)) { n.delete(id); if (n.size === 0) setMultiLvl(null); }
+      else { n.add(id); setMultiLvl(level); }
+      return n;
+    });
+    setSel(null);
+  };
+
+  // ── API actions ─────────────────────────────────────────────
+  const doDelete = async (id: string, level: PhysLevel, name: string) => {
+    if (!confirm(`"${name}" ve tüm alt öğeler silinecek. Onaylıyor musunuz?`)) return;
+    await fetch(`${PHYS_API}/${level}/${id}`, { method: 'DELETE' });
+    if (sel?.node.id === id) setSel(null);
+    qc.invalidateQueries({ queryKey: ['phys-tree'] });
+    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+  };
+
+  const doBulkDelete = async () => {
+    if (!multiLvl || multiSel.size === 0) return;
+    if (!confirm(`${multiSel.size} öğe silinecek. Onaylıyor musunuz?`)) return;
+    for (const id of multiSel) {
+      const node = findNode(holdings, id);
+      if (node) await fetch(`${PHYS_API}/${multiLvl}/${id}`, { method: 'DELETE' });
+    }
+    setMultiSel(new Set());
+    setMultiLvl(null);
+    qc.invalidateQueries({ queryKey: ['phys-tree'] });
+    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+  };
+
+  const doAdd = async (parentId: string, parentLevel: PhysLevel, name: string) => {
+    const endpoint = CHILD_OF[parentLevel];
+    if (!endpoint || !name.trim()) return;
+    await fetch(`${PHYS_API}/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parentId, name: name.trim() }),
+    });
+    expand(parentId);
+    qc.invalidateQueries({ queryKey: ['phys-tree'] });
+    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+  };
+
+  const doAddRoot = async (name: string) => {
+    if (!name.trim()) return;
+    await fetch(`${PHYS_API}/holding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    setAddRootName('');
+    setShowRootForm(false);
+    qc.invalidateQueries({ queryKey: ['phys-tree'] });
+    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+  };
+
+  const loadDemo = async () => {
+    await fetch(`${PHYS_API}/demo`, { method: 'POST' });
+    qc.invalidateQueries({ queryKey: ['phys-tree'] });
+    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+  };
+
+  const doMove = async (nodeId: string, level: PhysLevel, newParentId: string) => {
+    await fetch(`${PHYS_API}/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nodeType: level, nodeId, newParentId }),
+    });
+    qc.invalidateQueries({ queryKey: ['phys-tree'] });
+    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+  };
+
+  const doLink = async (pcId: string, assetId: number | null) => {
+    await fetch(`${PHYS_API}/bilgisayar/${pcId}/link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assetId }),
+    });
+    setLinkSearch('');
+    qc.invalidateQueries({ queryKey: ['phys-tree'] });
+    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+  };
+
+  // ── Drag & Drop handlers ─────────────────────────────────────
+  const handleDragStart = (e: React.DragEvent, node: PhysNode, level: PhysLevel) => {
+    e.dataTransfer.effectAllowed = 'move';
+    setDragState({ nodeId: node.id, level });
+  };
+
+  const handleDragEnter = (e: React.DragEvent, node: PhysNode, level: PhysLevel) => {
+    e.preventDefault();
+    if (!dragState) return;
+    // bilgisayar can drop into oda; eklenti can drop into bilgisayar
+    const validDrop =
+      (dragState.level === 'bilgisayar' && level === 'oda') ||
+      (dragState.level === 'eklenti' && level === 'bilgisayar');
+    if (validDrop && node.id !== dragState.nodeId) setDropTargetId(node.id);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropTargetId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, node: PhysNode, level: PhysLevel) => {
+    e.preventDefault();
+    if (!dragState || dropTargetId !== node.id) { setDragState(null); setDropTargetId(null); return; }
+    doMove(dragState.nodeId, dragState.level, node.id);
+    setDragState(null);
+    setDropTargetId(null);
+  };
+
+  // ── Tree inline add ──────────────────────────────────────────
+  const startTreeAdd = (parentId: string, level: PhysLevel) => {
+    setTreeAddTo({ parentId, level });
+    setTreeAddName('');
+    expand(parentId);
+    setTimeout(() => treeInputRef.current?.focus(), 50);
+  };
+
+  const submitTreeAdd = async () => {
+    if (!treeAddTo) return;
+    await doAdd(treeAddTo.parentId, treeAddTo.level, treeAddName);
+    setTreeAddTo(null);
+    setTreeAddName('');
+  };
+
+  // ── Right panel add ──────────────────────────────────────────
+  const submitRightAdd = async () => {
+    if (!sel || !liveNode || !addChildName.trim()) return;
+    await doAdd(liveNode.id, sel.level, addChildName);
+    setAddChildName('');
+  };
+
+  const childLevel = sel ? CHILD_OF[sel.level] : undefined;
+
+  // ── Render ───────────────────────────────────────────────────
   return (
-    <div className="flex gap-3 h-[calc(100vh-8rem)]">
-      {/* Tree view */}
-      <div className="w-64 flex-shrink-0 card overflow-y-auto">
-        <div className="p-3 border-b border-[#1E2D45]">
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Varlık Hiyerarşisi</p>
-          <p className="text-[9px] text-[#3D5275] font-mono-val mt-0.5">Kanal → Grup → Varlık</p>
+    <div className="flex flex-col gap-3 h-[calc(100vh-8rem)]">
+
+      {/* Bulk actions bar */}
+      {multiSel.size > 0 && (
+        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs font-mono-val flex-shrink-0">
+          <span className="text-blue-400">{multiSel.size} öğe seçildi</span>
+          <button
+            onClick={doBulkDelete}
+            className="flex items-center gap-1.5 px-3 py-1 rounded bg-red-500/15 text-red-400 border border-red-500/20 hover:bg-red-500/25 transition-all"
+          >
+            <Trash2 size={11} /> Seçilileri Sil
+          </button>
+          <button
+            onClick={() => { setMultiSel(new Set()); setMultiLvl(null); }}
+            className="ml-auto text-[#3D5275] hover:text-[#6B84A3]"
+          >
+            <X size={12} />
+          </button>
         </div>
-        <div className="p-1.5 space-y-0.5">
-          {channels.map(channel => {
-            const groups = groupsForChannel(channel.ChannelID);
-            return (
-              <div key={channel.ChannelID}>
-                <TreeItem
-                  label={channel.ChannelName}
-                  icon={<Layers size={11} />}
-                  isExpanded={expandedChannels.has(channel.ChannelID)}
-                  isSelected={selection?.type === 'channel' && selection.id === channel.ChannelID}
-                  hasChildren={groups.length > 0}
-                  onToggle={() => setExpandedChannels(s => {
-                    const n = new Set(s);
-                    n.has(channel.ChannelID) ? n.delete(channel.ChannelID) : n.add(channel.ChannelID);
-                    return n;
-                  })}
-                  onSelect={() => { setSelection({ type: 'channel', id: channel.ChannelID }); setTab(0); }}
-                  level={0}
-                  badge={channel.AssetCount ?? 0}
+      )}
+
+      <div className="flex gap-3 flex-1 min-h-0">
+
+        {/* ═══════════════════════════════════════════════════════
+            LEFT — Fiziksel Ağaç
+        ═══════════════════════════════════════════════════════ */}
+        <div className="w-72 flex-shrink-0 card overflow-hidden flex flex-col">
+
+          {/* Header */}
+          <div className="px-3 pt-3 pb-2 border-b border-[#1E2D45] flex-shrink-0 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">
+                Fiziksel Hiyerarşi
+              </span>
+              <button
+                onClick={() => refetch()}
+                title="Yenile"
+                className="p-1 rounded text-[#3D5275] hover:text-[#6B84A3] hover:bg-[#1E2D45] transition-all"
+              >
+                <RefreshCw size={10} />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+              <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#3D5275]" />
+              <input
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="Ara..."
+                className="w-full pl-6 pr-2 py-1.5 text-[10px] bg-[#070B14] border border-[#1E2D45] rounded-md text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none focus:border-[#2A3F5F]"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#3D5275] hover:text-[#6B84A3]"
+                >
+                  <X size={9} />
+                </button>
+              )}
+            </div>
+
+            <p className="text-[9px] text-[#2A3F5F] font-mono-val">
+              Holding → Kanal → Bina → Oda → Bilgisayar → Eklenti
+            </p>
+
+            {/* Actions */}
+            <div className="flex gap-1">
+              <button
+                onClick={loadDemo}
+                className="flex-1 text-[9px] font-mono-val py-1.5 rounded bg-[#111827] text-[#6B84A3] hover:text-amber-400 hover:bg-amber-500/10 border border-[#1E2D45] hover:border-amber-500/20 transition-all"
+              >
+                Gerçek Veri Yükle
+              </button>
+              <button
+                onClick={() => {
+                  setShowRootForm(v => !v);
+                  setTimeout(() => document.getElementById('rootInput')?.focus(), 50);
+                }}
+                className="px-2.5 py-1.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all text-[9px] font-mono-val flex items-center gap-1"
+              >
+                <Plus size={9} /> Holding
+              </button>
+            </div>
+
+            {/* Root holding form */}
+            {showRootForm && (
+              <div className="flex gap-1">
+                <input
+                  id="rootInput"
+                  value={addRootName}
+                  onChange={e => setAddRootName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') doAddRoot(addRootName);
+                    if (e.key === 'Escape') { setShowRootForm(false); setAddRootName(''); }
+                  }}
+                  placeholder="Holding adı..."
+                  className="flex-1 text-[10px] bg-[#070B14] border border-amber-500/30 rounded px-2 py-1 text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none"
                 />
-
-                {expandedChannels.has(channel.ChannelID) && groups.map(group => {
-                  const cfg = groupTypeConfig[group.GroupType] ?? groupTypeConfig.General;
-                  const assets = assetsForGroup(group.AssetGroupID);
-                  return (
-                    <div key={group.AssetGroupID}>
-                      <TreeItem
-                        label={`${group.GroupName}`}
-                        icon={<span className={cn('w-2 h-2 rounded-sm inline-block', cfg.dot.replace('bg-', 'bg-').replace('-400', '-400'))} />}
-                        isExpanded={expandedGroups.has(group.AssetGroupID)}
-                        isSelected={selection?.type === 'assetgroup' && selection.id === group.AssetGroupID}
-                        hasChildren={assets.length > 0}
-                        onToggle={() => setExpandedGroups(s => {
-                          const n = new Set(s);
-                          n.has(group.AssetGroupID) ? n.delete(group.AssetGroupID) : n.add(group.AssetGroupID);
-                          return n;
-                        })}
-                        onSelect={() => { setSelection({ type: 'assetgroup', id: group.AssetGroupID }); setTab(0); }}
-                        level={1}
-                        badge={assets.length}
-                        labelColor={cfg.color}
-                      />
-
-                      {expandedGroups.has(group.AssetGroupID) && assets.map(asset => (
-                        <TreeItem
-                          key={asset.AssetID}
-                          label={asset.AssetName}
-                          icon={<AssetTypeIcon type={asset.AssetType} size={10} />}
-                          isExpanded={false}
-                          isSelected={selection?.type === 'asset' && selection.id === asset.AssetID}
-                          hasChildren={false}
-                          onToggle={() => {}}
-                          onSelect={() => { setSelection({ type: 'asset', id: asset.AssetID }); setTab(0); }}
-                          level={2}
-                          status={asset.Status}
-                        />
-                      ))}
-                    </div>
-                  );
-                })}
+                <button onClick={() => doAddRoot(addRootName)} className="p-1.5 rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25">
+                  <Check size={10} />
+                </button>
+                <button onClick={() => { setShowRootForm(false); setAddRootName(''); }} className="p-1.5 rounded text-[#3D5275] hover:text-[#6B84A3]">
+                  <X size={10} />
+                </button>
               </div>
-            );
-          })}
+            )}
+          </div>
+
+          {/* Tree body */}
+          <div className="flex-1 overflow-y-auto py-1.5 px-1 space-y-0.5">
+            {isError ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center px-3 gap-2">
+                <AlertCircle size={22} className="text-red-400/40" />
+                <p className="text-[10px] text-[#3D5275] font-mono-val leading-relaxed">
+                  Fiziksel ağaç verisi yüklenemedi<br />
+                  <span className="text-[#2A3F5F]">Backend bağlantısını kontrol edin</span>
+                </p>
+              </div>
+            ) : isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Activity size={14} className="animate-pulse text-[#3D5275]" />
+              </div>
+            ) : filteredHoldings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+                <Boxes size={26} className="text-[#1E2D45]" />
+                <p className="text-[10px] text-[#3D5275] font-mono-val leading-relaxed">
+                  {searchTerm ? 'Eşleşen öğe yok.' : 'Veri yok.\nDemo yükle veya holding ekle.'}
+                </p>
+              </div>
+            ) : (
+              filteredHoldings.map(h => (
+                <TreeNode
+                  key={h.id}
+                  node={h}
+                  depth={0}
+                  expanded={expanded}
+                  selectedId={sel?.node.id ?? null}
+                  searchTerm={searchTerm}
+                  onToggle={toggle}
+                  onSelect={select}
+                  onDelete={doDelete}
+                  onAddChild={startTreeAdd}
+                  multiSel={multiSel}
+                  onMultiToggle={multiToggle}
+                  onlineMap={onlineMap}
+                  dragLevel={dragState?.level ?? null}
+                  dropTargetId={dropTargetId}
+                  onDragStart={handleDragStart}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                />
+              ))
+            )}
+
+            {/* Inline add form (triggered from tree + button) */}
+            {treeAddTo && (
+              <div className="mx-1 mt-2 p-2 rounded-lg border border-blue-500/20 bg-[#0D1A2D]">
+                <p className="text-[9px] text-blue-400/70 font-mono-val mb-1.5">
+                  + {LEVEL_CFG[CHILD_OF[treeAddTo.level]!]?.label} Ekle
+                </p>
+                <div className="flex gap-1">
+                  <input
+                    ref={treeInputRef}
+                    value={treeAddName}
+                    onChange={e => setTreeAddName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') submitTreeAdd();
+                      if (e.key === 'Escape') { setTreeAddTo(null); setTreeAddName(''); }
+                    }}
+                    placeholder="Ad..."
+                    className="flex-1 text-[10px] bg-[#070B14] border border-blue-500/30 rounded px-2 py-1 text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none"
+                  />
+                  <button onClick={submitTreeAdd} className="p-1.5 rounded bg-blue-500/15 text-blue-400 hover:bg-blue-500/25">
+                    <Check size={10} />
+                  </button>
+                  <button onClick={() => { setTreeAddTo(null); setTreeAddName(''); }} className="p-1.5 rounded text-[#3D5275] hover:text-[#6B84A3]">
+                    <X size={10} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════
+            RIGHT — Detay Paneli
+        ═══════════════════════════════════════════════════════ */}
+        <div className="flex-1 min-w-0 card overflow-y-auto">
+
+          {/* Empty state */}
+          {!sel || !liveNode ? (
+            <div className="flex flex-col items-center justify-center h-full text-center px-8 gap-3">
+              <Boxes size={48} className="text-[#1E2D45]" />
+              <p className="text-[#3D5275] font-mono-val text-sm">Sol menüden bir öğe seçin</p>
+              <p className="text-[#2A3F5F] font-mono-val text-[10px]">
+                Ctrl+Tık ile çoklu seçim • Sürükle-Bırak ile taşıma
+              </p>
+            </div>
+          ) : (
+            <div className="p-5 space-y-6">
+
+              {/* ── Node header ─────────────────────────────── */}
+              <div className="flex items-start gap-4 pb-5 border-b border-[#1E2D45]">
+                {/* Big icon */}
+                <div className={cn(
+                  'w-14 h-14 rounded-xl border-2 flex items-center justify-center flex-shrink-0',
+                  LEVEL_CFG[sel.level].bg,
+                  LEVEL_CFG[sel.level].border,
+                )}>
+                  {(() => { const { Icon, color } = LEVEL_CFG[sel.level]; return <Icon size={26} className={color} />; })()}
+                </div>
+
+                {/* Name + path */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h2 className="font-display font-bold text-xl text-white">{liveNode.name}</h2>
+                    <span className={cn(
+                      'text-[10px] px-2 py-0.5 rounded-full border font-mono-val',
+                      LEVEL_CFG[sel.level].color,
+                      LEVEL_CFG[sel.level].bg,
+                      LEVEL_CFG[sel.level].border,
+                    )}>
+                      {LEVEL_CFG[sel.level].label}
+                    </span>
+                    {/* Live status badge for bilgisayar */}
+                    {sel.level === 'bilgisayar' && liveNode.linkedAssetId != null && (() => {
+                      const online = onlineMap.get(liveNode.linkedAssetId);
+                      return (
+                        <span className={cn(
+                          'flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border font-mono-val',
+                          online
+                            ? 'text-green-400 bg-green-500/10 border-green-500/25'
+                            : 'text-red-400 bg-red-500/10 border-red-500/25',
+                        )}>
+                          <span className={cn('w-1.5 h-1.5 rounded-full', online ? 'bg-green-400' : 'bg-red-400')} />
+                          {online ? 'Çevrimiçi' : 'Çevrimdışı'}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <p className="text-[10px] text-[#3D5275] font-mono-val break-all leading-relaxed">{liveNode.path}</p>
+                  <p className="text-[10px] text-[#4A6080] font-mono-val mt-1">
+                    {liveNode.children?.length ?? 0} alt öğe
+                  </p>
+                </div>
+
+                {/* Delete */}
+                <button
+                  onClick={() => doDelete(liveNode.id, sel.level, liveNode.name)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono-val bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all flex-shrink-0"
+                >
+                  <Trash2 size={11} /> Sil
+                </button>
+              </div>
+
+              {/* ── SQL Asset Bağlantısı (Bilgisayar only) ── */}
+              {sel.level === 'bilgisayar' && (
+                <div>
+                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
+                    SQL Varlık Bağlantısı
+                  </p>
+                  {linkedAsset ? (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
+                      <Link2 size={14} className="text-green-400 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-[#E2EAF4] font-medium truncate">{linkedAsset.assetName}</p>
+                        <p className="text-[10px] text-[#3D5275] font-mono-val">{linkedAsset.assetCode} · ID: {linkedAsset.assetId}</p>
+                      </div>
+                      <button
+                        onClick={() => doLink(liveNode.id, null)}
+                        title="Bağlantıyı kaldır"
+                        className="p-1.5 rounded hover:bg-red-500/10 text-[#3D5275] hover:text-red-400 transition-all"
+                      >
+                        <Unlink size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#3D5275]" />
+                        <input
+                          value={linkSearch}
+                          onChange={e => setLinkSearch(e.target.value)}
+                          placeholder="Varlık adı veya kodu..."
+                          className="w-full pl-8 pr-3 py-2 text-sm bg-[#0D1525] border border-[#1E2D45] focus:border-[#3D5275] rounded-lg text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none transition-colors"
+                        />
+                      </div>
+                      {linkSearchResults.length > 0 && (
+                        <div className="rounded-lg border border-[#1E2D45] overflow-hidden">
+                          {linkSearchResults.map(a => (
+                            <button
+                              key={a.assetId}
+                              onClick={() => doLink(liveNode.id, a.assetId)}
+                              className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#0F1A2E] border-b border-[#1E2D45] last:border-0 transition-colors"
+                            >
+                              <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', onlineMap.get(a.assetId) ? 'bg-green-400' : 'bg-red-400')} />
+                              <span className="flex-1 min-w-0">
+                                <span className="text-xs text-[#E2EAF4] block truncate">{a.assetName}</span>
+                                <span className="text-[10px] text-[#3D5275] font-mono-val">{a.assetCode}</span>
+                              </span>
+                              <Link2 size={10} className="text-[#3D5275] flex-shrink-0" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {!linkSearch && (
+                        <p className="text-[10px] text-[#2A3F5F] font-mono-val">
+                          SQL Assets tablosundaki varlıkları arayın ve bağlayın
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── QR Kod (Bilgisayar only) ─────────────────── */}
+              {sel.level === 'bilgisayar' && (
+                <div>
+                  <button
+                    onClick={() => setShowQr(v => !v)}
+                    className="flex items-center gap-2 text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3 hover:text-[#A0B4CC] transition-colors"
+                  >
+                    <QrCode size={11} />
+                    QR Kod
+                    <ChevronRight size={10} className={cn('transition-transform', showQr && 'rotate-90')} />
+                  </button>
+                  {showQr && (
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-white rounded-xl flex-shrink-0">
+                        <QRCodeSVG
+                          value={`${PHYS_API}/api/packet/${liveNode.id}`}
+                          size={128}
+                          bgColor="#ffffff"
+                          fgColor="#0D1421"
+                          level="M"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-[#E2EAF4] font-medium mb-1">{liveNode.name}</p>
+                        <p className="text-[10px] text-[#3D5275] font-mono-val break-all leading-relaxed">
+                          {PHYS_API}/api/packet/{liveNode.id}
+                        </p>
+                        <p className="text-[10px] text-[#2A3F5F] font-mono-val mt-2">
+                          QR kodu okutarak cihaz paketine erişin
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Alt öğe ekle ────────────────────────────── */}
+              {childLevel && (
+                <div>
+                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">
+                    Yeni {LEVEL_CFG[childLevel].label}
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      value={addChildName}
+                      onChange={e => setAddChildName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') submitRightAdd();
+                        if (e.key === 'Escape') setAddChildName('');
+                      }}
+                      placeholder={`${LEVEL_CFG[childLevel].label} adı girin...`}
+                      className="flex-1 text-sm bg-[#0D1525] border border-[#1E2D45] focus:border-[#3D5275] rounded-lg px-3 py-2 text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none transition-colors"
+                    />
+                    <button
+                      onClick={submitRightAdd}
+                      disabled={!addChildName.trim()}
+                      className={cn(
+                        'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-mono-val border transition-all disabled:opacity-40',
+                        LEVEL_CFG[childLevel].color,
+                        LEVEL_CFG[childLevel].bg,
+                        LEVEL_CFG[childLevel].border,
+                        'hover:brightness-125',
+                      )}
+                    >
+                      <Plus size={13} /> Ekle
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Children grid ───────────────────────────── */}
+              {(liveNode.children?.length ?? 0) > 0 && (
+                <div>
+                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
+                    {childLevel ? LEVEL_CFG[childLevel].label : 'Alt Öğe'}ler{' '}
+                    <span className="text-[#3D5275] normal-case">({liveNode.children.length})</span>
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {liveNode.children.map(child => {
+                      const cLvl = childLevel ?? 'eklenti';
+                      const { Icon, color, bg, border, label } = LEVEL_CFG[cLvl];
+                      const childOnline = cLvl === 'bilgisayar' && (child as PhysNode & { linkedAssetId?: number }).linkedAssetId != null
+                        ? onlineMap.get((child as PhysNode & { linkedAssetId?: number }).linkedAssetId!)
+                        : undefined;
+                      return (
+                        <div
+                          key={child.id}
+                          className="flex items-center gap-3 p-3 rounded-lg bg-[#0D1525] border border-[#1A2540] cursor-pointer hover:border-[#2A3F5F] hover:bg-[#111827] transition-all group"
+                          onClick={() => {
+                            select(child, cLvl);
+                            expand(liveNode.id);
+                          }}
+                        >
+                          {/* Icon */}
+                          <div className={cn('w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 relative', bg, border)}>
+                            <Icon size={14} className={color} />
+                            {childOnline !== undefined && (
+                              <span className={cn(
+                                'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#0D1525]',
+                                childOnline ? 'bg-green-400' : 'bg-red-400',
+                              )} />
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-[#E2EAF4] font-medium truncate">{child.name}</p>
+                            <p className="text-[10px] text-[#3D5275] font-mono-val">{label}</p>
+                            {(child.children?.length ?? 0) > 0 && (
+                              <p className="text-[10px] text-[#4A6080] font-mono-val">{child.children.length} alt öğe</p>
+                            )}
+                          </div>
+
+                          {/* Delete */}
+                          <button
+                            onClick={e => { e.stopPropagation(); doDelete(child.id, cLvl, child.name); }}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-red-500/20 text-[#3D5275] hover:text-red-400 transition-all"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Bilgisayar: CRC Packet ──────────────────── */}
+              {sel.level === 'bilgisayar' && (
+                <div>
+                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
+                    Veri Paketi — CRC16-CCITT
+                  </p>
+                  {packetData ? (
+                    <div className="space-y-3">
+                      {/* Metrics */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { label: 'Header', value: packetData.header ?? '-' },
+                          { label: 'CRC16-CCITT', value: packetData.crc16 ?? '-' },
+                          { label: 'Boyut', value: packetData.totalBytes ? `${packetData.totalBytes} B` : '-' },
+                          { label: 'Eklenti', value: liveNode.children?.length ?? 0 },
+                        ].map(({ label, value }) => (
+                          <div key={label} className="p-3 rounded-lg bg-[#0D1525] border border-[#1A2540]">
+                            <p className="text-[9px] text-[#3D5275] uppercase tracking-wider font-mono-val mb-1">{label}</p>
+                            <p className="font-mono-val text-sm text-amber-400 font-bold">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Path */}
+                      <div>
+                        <p className="text-[9px] text-[#3D5275] uppercase tracking-wider font-mono-val mb-1.5">Hiyerarşik Path</p>
+                        <div className="bg-[#070B14] border border-[#1A2540] rounded-lg p-3 font-mono-val text-[10px] text-green-400 break-all leading-relaxed">
+                          {packetData.path}
+                        </div>
+                      </div>
+
+                      {/* Hex dump */}
+                      <div>
+                        <p className="text-[9px] text-[#3D5275] uppercase tracking-wider font-mono-val mb-1.5">Hex Dump</p>
+                        <div className="bg-[#070B14] border border-[#1A2540] rounded-lg p-3 font-mono-val text-[10px] text-[#64748b] break-all leading-relaxed max-h-36 overflow-y-auto">
+                          {packetData.hexDump?.match(/.{1,2}/g)?.join(' ') ?? '-'}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-[#3D5275] text-xs font-mono-val">
+                      <Activity size={12} className="animate-pulse" /> Paket hesaplanıyor...
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Detail panel */}
-      <div className="flex-1 min-w-0 card overflow-y-auto">
-        {!selection ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <Server size={40} className="text-[#1E2D45] mb-4" />
-            <p className="text-sm text-[#3D5275] font-mono-val">Sol menüden bir varlık seçin</p>
-          </div>
-        ) : selection.type === 'asset' && selectedAsset ? (
-          <div className="p-4">
-            {/* Asset header */}
-            <div className="flex items-start gap-4 mb-4 pb-4 border-b border-[#1E2D45]">
-              <div className="w-12 h-12 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0">
-                <AssetTypeIcon type={selectedAsset.AssetType} size={20} />
+      {/* ═══════════════════════════════════════════════════════
+          BOTTOM — Değişiklik Geçmişi (Audit Log)
+      ═══════════════════════════════════════════════════════ */}
+      <div className="card flex-shrink-0">
+        <button
+          onClick={() => setShowAudit(v => !v)}
+          className="flex items-center gap-2 w-full text-left"
+        >
+          <History size={11} className="text-[#6B84A3]" />
+          <span className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val flex-1">
+            Değişiklik Geçmişi
+          </span>
+          <ChevronRight size={10} className={cn('text-[#3D5275] transition-transform', showAudit && 'rotate-90')} />
+        </button>
+
+        {showAudit && (
+          <div className="mt-3 max-h-48 overflow-y-auto space-y-1">
+            {!auditData || auditData.length === 0 ? (
+              <p className="text-[10px] text-[#3D5275] font-mono-val py-4 text-center">Henüz değişiklik yok</p>
+            ) : auditData.map((e: { timestamp: string; action: string; nodeType: string; nodeName: string }, i: number) => (
+              <div key={i} className="flex items-center gap-3 py-1.5 border-b border-[#1E2D45] last:border-0">
+                <span className="text-[9px] text-[#3D5275] font-mono-val flex-shrink-0 w-36">
+                  {new Date(e.timestamp).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'medium' })}
+                </span>
+                <span className={cn(
+                  'text-[9px] px-1.5 py-0.5 rounded font-mono-val flex-shrink-0',
+                  e.action === 'create' && 'bg-green-500/10 text-green-400',
+                  e.action === 'delete' && 'bg-red-500/10 text-red-400',
+                  e.action === 'move' && 'bg-blue-500/10 text-blue-400',
+                  e.action === 'link' && 'bg-purple-500/10 text-purple-400',
+                  e.action === 'unlink' && 'bg-orange-500/10 text-orange-400',
+                  e.action === 'demo' && 'bg-amber-500/10 text-amber-400',
+                )}>
+                  {e.action}
+                </span>
+                <span className="text-[9px] text-[#4A6080] font-mono-val flex-shrink-0">{e.nodeType}</span>
+                <span className="text-[10px] text-[#A0B4CC] font-mono-val truncate">{e.nodeName}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-display font-bold text-lg text-white">{selectedAsset.AssetName}</h2>
-                  <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val', statusBg(selectedAsset.Status))}>
-                    {statusLabel(selectedAsset.Status)}
-                  </span>
-                  {monitoring && (
-                    <span className={cn(
-                      'w-2 h-2 rounded-full',
-                      monitoring.IsOnline ? 'bg-green-400 pulse-dot' : 'bg-red-400'
-                    )} />
-                  )}
-                </div>
-                <p className="text-xs text-[#6B84A3] mt-1 font-mono-val">
-                  {selectedAsset.ChannelName}
-                  {selectedAsset.GroupName && (
-                    <> › <span className={cn(groupTypeConfig[selectedAsset.GroupType ?? '']?.color ?? 'text-[#6B84A3]')}>
-                      {selectedAsset.GroupName}
-                    </span></>
-                  )}
-                </p>
-                {selectedAsset.AssetCode && (
-                  <p className="text-[10px] text-amber-400 font-mono-val mt-0.5">{selectedAsset.AssetCode}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex gap-1 mb-4 bg-[#131C2E] rounded p-0.5 flex-wrap">
-              {TABS.map((t, i) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(i)}
-                  className={cn(
-                    'px-3 py-1.5 rounded text-[11px] font-mono-val transition-all',
-                    tab === i
-                      ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
-                      : 'text-[#6B84A3] hover:text-[#E2EAF4]'
-                  )}
-                >
-                  {t}
-                  {t === 'Eklentiler' && componentList.length > 0 && (
-                    <span className="ml-1 text-[9px] bg-[#1E2D45] px-1 rounded">{componentList.length}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab 0: General */}
-            <TabPanel active={tab === 0}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">Varlık Bilgileri</p>
-                  <InfoRow label="Model" value={selectedAsset.Model} />
-                  <InfoRow label="Seri No" value={selectedAsset.SerialNumber} mono />
-                  <InfoRow label="Tür" value={assetTypeLabel(selectedAsset.AssetType)} />
-                  <InfoRow label="Üretici" value={selectedAsset.Manufacturer} />
-                  <InfoRow label="Tedarikçi" value={selectedAsset.Supplier} />
-                  <InfoRow label="IP Adresi" value={selectedAsset.IPAddress} mono />
-                  <InfoRow label="MAC Adresi" value={selectedAsset.MACAddress} mono />
-                  <InfoRow label="Firmware" value={selectedAsset.FirmwareVersion} mono />
-                  <InfoRow label="Rack Pozisyon" value={selectedAsset.RackPosition} mono />
-                </div>
-                <div>
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">Mali Bilgiler</p>
-                  <InfoRow label="Satın Alma" value={formatDate(selectedAsset.PurchaseDate ?? undefined)} />
-                  <InfoRow label="Garanti Bitiş" value={formatDate(selectedAsset.WarrantyEndDate ?? undefined)} />
-                  <InfoRow label="Maliyet" value={formatCurrency(selectedAsset.PurchaseCost ?? undefined)} />
-                  <InfoRow label="Güncel Değer" value={formatCurrency(selectedAsset.CurrentValue ?? undefined)} />
-                  <InfoRow label="Amortisman" value={selectedAsset.DepreciationRate != null ? `%${selectedAsset.DepreciationRate} / Yıl` : null} />
-                  {selectedAsset.Notes && (
-                    <div className="mt-3">
-                      <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-1">Notlar</p>
-                      <p className="text-xs text-[#E2EAF4] bg-[#131C2E] rounded p-2 leading-relaxed">{selectedAsset.Notes}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </TabPanel>
-
-            {/* Tab 1: Real-time */}
-            <TabPanel active={tab === 1}>
-              {monitoring ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Sıcaklık', value: monitoring.Temperature != null ? `${monitoring.Temperature}°C` : '-', icon: Thermometer, color: monitoring.Temperature != null ? tempColor(monitoring.Temperature) : 'text-[#3D5275]' },
-                      { label: 'Güç Tüketimi', value: monitoring.PowerConsumption != null ? `${monitoring.PowerConsumption}W` : '-', icon: Zap, color: 'text-amber-400' },
-                      { label: 'GPU / CPU', value: monitoring.GPUUsage != null ? `%${Math.round(monitoring.GPUUsage)}` : monitoring.CPUUsage != null ? `%${Math.round(monitoring.CPUUsage)}` : '-', icon: Activity, color: monitoring.GPUUsage != null ? usageColor(monitoring.GPUUsage) : 'text-cyan-400' },
-                      { label: 'Bellek', value: monitoring.MemoryUsedGB != null ? `${monitoring.MemoryUsedGB.toFixed(1)}/${monitoring.MemoryTotalGB?.toFixed(0)}GB` : '-', icon: HardDrive, color: 'text-cyan-400' },
-                    ].map(({ label, value, icon: Icon, color }) => (
-                      <div key={label} className="card p-3">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <Icon size={12} className="text-[#6B84A3]" />
-                          <p className="text-[10px] text-[#6B84A3] uppercase tracking-wider font-mono-val">{label}</p>
-                        </div>
-                        <p className={cn('font-display font-bold text-2xl', color)}>{value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <InfoRow label="RAM Kullanım" value={monitoring.RAMUsage != null ? `%${Math.round(monitoring.RAMUsage)}` : null} />
-                    <InfoRow label="Disk Kullanım" value={monitoring.DiskUsage != null ? `%${Math.round(monitoring.DiskUsage)}` : null} />
-                    <InfoRow label="Fan Hızı" value={monitoring.FanSpeed != null ? `${monitoring.FanSpeed} RPM` : null} mono />
-                    <InfoRow label="Uptime" value={formatUptime(monitoring.Uptime ?? undefined)} mono />
-                    <InfoRow label="Ağ Gecikmesi" value={monitoring.NetworkLatency != null ? `${monitoring.NetworkLatency}ms` : null} mono />
-                    <InfoRow label="Hata Sayısı" value={monitoring.ErrorCount} mono />
-                    <InfoRow label="Perf. Skoru" value={monitoring.PerformanceScore != null ? `${monitoring.PerformanceScore.toFixed(1)}/100` : null} />
-                    <InfoRow label="Sinyal" value={monitoring.SignalStrength != null ? `${monitoring.SignalStrength}/5` : null} />
-                    <InfoRow label="Son Güncelleme" value={formatDateTime(monitoring.MonitoringTime)} />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-center text-[#3D5275] text-sm font-mono-val py-12">
-                  Monitoring verisi bulunamadı
-                </p>
-              )}
-            </TabPanel>
-
-            {/* Tab 2: Maintenance */}
-            <TabPanel active={tab === 2}>
-              <div className="space-y-2">
-                {maintenanceList.length > 0 ? maintenanceList.map(m => (
-                  <div key={m.MaintenanceID} className="card p-3 bg-[#131C2E] border-[#1E2D45]">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className={cn(
-                            'text-[10px] px-2 py-0.5 rounded font-mono-val border',
-                            m.Status === 'Completed' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                              m.Status === 'Scheduled' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                'bg-[#1E2D45] text-[#6B84A3] border-[#1E2D45]'
-                          )}>
-                            {maintenanceStatusLabel(m.Status)}
-                          </span>
-                          <span className="text-xs text-[#E2EAF4]">{m.MaintenanceType ?? 'Bakım'}</span>
-                        </div>
-                        {m.Description && <p className="text-xs text-[#6B84A3] mt-1">{m.Description}</p>}
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-[10px] font-mono-val text-amber-400">{formatDate(m.MaintenanceDate)}</p>
-                        {m.TechnicianName && <p className="text-[10px] text-[#6B84A3]">{m.TechnicianName}</p>}
-                      </div>
-                    </div>
-                    {m.NextMaintenanceDate && (
-                      <p className="text-[10px] text-[#3D5275] font-mono-val mt-2 flex items-center gap-1">
-                        <Calendar size={9} /> Sonraki: {formatDate(m.NextMaintenanceDate)}
-                      </p>
-                    )}
-                  </div>
-                )) : (
-                  <p className="text-center text-[#3D5275] text-sm font-mono-val py-12">
-                    Bakım kaydı bulunamadı
-                  </p>
-                )}
-              </div>
-            </TabPanel>
-
-            {/* Tab 3: Stats */}
-            <TabPanel active={tab === 3}>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {[
-                  { label: 'Ort. Kullanım', value: monitoring?.GPUUsage != null ? `%${monitoring.GPUUsage.toFixed(1)}` : '-', icon: Activity },
-                  { label: 'Maks Sıcaklık', value: monitoring?.Temperature != null ? `${monitoring.Temperature}°C` : '-', icon: Thermometer },
-                  { label: 'Toplam Uptime', value: formatUptime(monitoring?.Uptime ?? undefined), icon: Clock },
-                  { label: 'Bakım Sayısı', value: maintenanceList.length, icon: Calendar },
-                  { label: 'Toplam Maliyet', value: formatCurrency(selectedAsset.PurchaseCost ?? undefined), icon: DollarSign },
-                  { label: 'Garanti Durumu', value: selectedAsset.WarrantyEndDate ? (new Date(selectedAsset.WarrantyEndDate) > new Date() ? 'Aktif' : 'Süresi Doldu') : '-', icon: Shield },
-                ].map(({ label, value, icon: Icon }) => (
-                  <div key={label} className="card p-3 bg-[#131C2E]">
-                    <Icon size={12} className="text-[#6B84A3] mb-2" />
-                    <p className="font-display font-bold text-xl text-white">{value}</p>
-                    <p className="text-[10px] text-[#3D5275] font-mono-val mt-0.5 uppercase tracking-wider">{label}</p>
-                  </div>
-                ))}
-              </div>
-            </TabPanel>
-
-            {/* Tab 4: Components (Eklentiler) */}
-            <TabPanel active={tab === 4}>
-              {componentList.length > 0 ? (
-                <div className="space-y-2">
-                  {componentList.map(comp => (
-                    <div key={comp.ComponentID} className="card p-3 bg-[#131C2E] border-[#1E2D45]">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded bg-[#1E2D45] border border-[#2A3F5F] flex items-center justify-center flex-shrink-0">
-                            <Package size={14} className="text-[#6B84A3]" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-[#E2EAF4]">{comp.ComponentName}</p>
-                            <p className="text-[10px] text-[#6B84A3] font-mono-val">{comp.ComponentType}</p>
-                            {comp.Model && <p className="text-[10px] text-[#3D5275]">{comp.Model}</p>}
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <span className={cn(
-                            'text-[10px] px-2 py-0.5 rounded font-mono-val border',
-                            comp.Status === 'Active' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                              comp.Status === 'Faulty' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                'bg-[#1E2D45] text-[#6B84A3] border-[#1E2D45]'
-                          )}>
-                            {comp.Status}
-                          </span>
-                        </div>
-                      </div>
-                      {(comp.SerialNumber || comp.Manufacturer) && (
-                        <div className="mt-2 pt-2 border-t border-[#1E2D45] grid grid-cols-2 gap-1">
-                          {comp.Manufacturer && <p className="text-[10px] text-[#6B84A3]">Üretici: <span className="text-[#E2EAF4]">{comp.Manufacturer}</span></p>}
-                          {comp.SerialNumber && <p className="text-[10px] text-[#6B84A3] font-mono-val">S/N: <span className="text-[#E2EAF4]">{comp.SerialNumber}</span></p>}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Package size={32} className="text-[#1E2D45] mb-3" />
-                  <p className="text-sm text-[#3D5275] font-mono-val">Bu varlığa ait eklenti bulunamadı</p>
-                </div>
-              )}
-            </TabPanel>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <Layers size={32} className="text-[#1E2D45] mb-3" />
-            <p className="text-sm text-[#3D5275] font-mono-val">
-              {selection.type === 'channel' ? 'Kanal seçildi — bir varlık grubu veya varlık seçin' :
-                selection.type === 'assetgroup' ? 'Grup seçildi — bir varlık seçin' :
-                  'Sol menüden bir varlık seçin'}
-            </p>
+            ))}
           </div>
         )}
       </div>
+
     </div>
   );
 }

@@ -1,19 +1,22 @@
 const { query } = require('../config/database');
 const createError = require('http-errors');
 
+// channel_name artık assets → channels üzerinden join edilir
+// (asset_components.channel_id Migration 004'te kaldırıldı)
+
 // GET /assets/:assetId/components
 const getByAsset = async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const result = await query(
-      `SELECT c.*, a.AssetName, ag.GroupName, ch.ChannelName
-       FROM AssetComponents c
-       JOIN Assets      a  ON a.AssetID      = c.AssetID
-       JOIN AssetGroups ag ON ag.AssetGroupID = c.AssetGroupID
-       JOIN Channels    ch ON ch.ChannelID    = c.ChannelID
-       WHERE c.AssetID = @assetId AND c.IsActive = 1
-       ORDER BY c.ComponentType, c.ComponentName`,
-      [{ name: 'assetId', value: parseInt(assetId) }]
+      `SELECT c.*, a.asset_name, ag.group_name, ch.channel_name
+       FROM asset_components c
+       JOIN assets       a  ON a.asset_id       = c.asset_id
+       LEFT JOIN asset_groups ag ON ag.asset_group_id = c.asset_group_id
+       JOIN channels     ch ON ch.channel_id    = a.channel_id
+       WHERE c.asset_id = $1 AND c.is_active = TRUE
+       ORDER BY c.component_type, c.component_name`,
+      [parseInt(assetId)]
     );
     res.json({ success: true, data: result.recordset });
   } catch (err) {
@@ -26,13 +29,13 @@ const getById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await query(
-      `SELECT c.*, a.AssetName, a.AssetCode, ag.GroupName, ag.GroupType, ch.ChannelName
-       FROM AssetComponents c
-       JOIN Assets      a  ON a.AssetID      = c.AssetID
-       JOIN AssetGroups ag ON ag.AssetGroupID = c.AssetGroupID
-       JOIN Channels    ch ON ch.ChannelID    = c.ChannelID
-       WHERE c.ComponentID = @id AND c.IsActive = 1`,
-      [{ name: 'id', value: parseInt(id) }]
+      `SELECT c.*, a.asset_name, a.asset_code, ag.group_name, ag.group_type, ch.channel_name
+       FROM asset_components c
+       JOIN assets       a  ON a.asset_id       = c.asset_id
+       LEFT JOIN asset_groups ag ON ag.asset_group_id = c.asset_group_id
+       JOIN channels     ch ON ch.channel_id    = a.channel_id
+       WHERE c.component_id = $1 AND c.is_active = TRUE`,
+      [parseInt(id)]
     );
     if (!result.recordset.length) return next(createError(404, 'Eklenti bulunamadı'));
     res.json({ success: true, data: result.recordset[0] });
@@ -54,47 +57,36 @@ const create = async (req, res, next) => {
       return next(createError(400, 'assetId, componentName ve componentType zorunludur'));
     }
 
-    // Asset'in varlığını ve hiyerarşi bilgisini al
     const assetResult = await query(
-      `SELECT AssetID, AssetGroupID, ChannelID FROM Assets WHERE AssetID = @assetId AND IsActive = 1`,
-      [{ name: 'assetId', value: parseInt(assetId) }]
+      `SELECT asset_id, asset_group_id FROM assets WHERE asset_id = $1 AND is_active = TRUE`,
+      [parseInt(assetId)]
     );
     if (!assetResult.recordset.length) return next(createError(404, 'Varlık bulunamadı'));
 
-    const { AssetGroupID, ChannelID } = assetResult.recordset[0];
+    const { assetGroupId } = assetResult.recordset[0];
 
     const result = await query(
-      `INSERT INTO AssetComponents
-         (AssetID, AssetGroupID, ChannelID, ComponentName, ComponentType,
-          Model, SerialNumber, Manufacturer, Specifications, PurchaseDate, WarrantyEndDate, Notes)
-       OUTPUT INSERTED.ComponentID
-       VALUES (@assetId, @assetGroupId, @channelId, @componentName, @componentType,
-               @model, @serialNumber, @manufacturer, @specifications, @purchaseDate, @warrantyEndDate, @notes)`,
+      `INSERT INTO asset_components
+         (asset_id, asset_group_id, component_name, component_type,
+          model, serial_number, manufacturer, specifications, purchase_date, warranty_end_date, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING component_id`,
       [
-        { name: 'assetId',        value: parseInt(assetId) },
-        { name: 'assetGroupId',   value: AssetGroupID },
-        { name: 'channelId',      value: ChannelID },
-        { name: 'componentName',  value: componentName },
-        { name: 'componentType',  value: componentType },
-        { name: 'model',          value: model           || null },
-        { name: 'serialNumber',   value: serialNumber    || null },
-        { name: 'manufacturer',   value: manufacturer    || null },
-        { name: 'specifications', value: specifications  || null },
-        { name: 'purchaseDate',   value: purchaseDate    || null },
-        { name: 'warrantyEndDate',value: warrantyEndDate || null },
-        { name: 'notes',          value: notes           || null },
+        parseInt(assetId), assetGroupId, componentName, componentType,
+        model || null, serialNumber || null, manufacturer || null,
+        specifications || null, purchaseDate || null, warrantyEndDate || null, notes || null,
       ]
     );
 
-    const newId = result.recordset[0].ComponentID;
+    const newId = result.recordset[0].componentId;
     const newComp = await query(
-      `SELECT c.*, a.AssetName, ag.GroupName, ch.ChannelName
-       FROM AssetComponents c
-       JOIN Assets      a  ON a.AssetID      = c.AssetID
-       JOIN AssetGroups ag ON ag.AssetGroupID = c.AssetGroupID
-       JOIN Channels    ch ON ch.ChannelID    = c.ChannelID
-       WHERE c.ComponentID = @id`,
-      [{ name: 'id', value: newId }]
+      `SELECT c.*, a.asset_name, ag.group_name, ch.channel_name
+       FROM asset_components c
+       JOIN assets       a  ON a.asset_id       = c.asset_id
+       LEFT JOIN asset_groups ag ON ag.asset_group_id = c.asset_group_id
+       JOIN channels     ch ON ch.channel_id    = a.channel_id
+       WHERE c.component_id = $1`,
+      [newId]
     );
     res.status(201).json({ success: true, data: newComp.recordset[0] });
   } catch (err) {
@@ -112,47 +104,38 @@ const update = async (req, res, next) => {
     } = req.body;
 
     const exists = await query(
-      `SELECT ComponentID FROM AssetComponents WHERE ComponentID = @id AND IsActive = 1`,
-      [{ name: 'id', value: parseInt(id) }]
+      `SELECT component_id FROM asset_components WHERE component_id = $1 AND is_active = TRUE`,
+      [parseInt(id)]
     );
     if (!exists.recordset.length) return next(createError(404, 'Eklenti bulunamadı'));
 
     await query(
-      `UPDATE AssetComponents SET
-         ComponentName  = COALESCE(@componentName,  ComponentName),
-         ComponentType  = COALESCE(@componentType,  ComponentType),
-         Model          = COALESCE(@model,          Model),
-         SerialNumber   = COALESCE(@serialNumber,   SerialNumber),
-         Manufacturer   = COALESCE(@manufacturer,   Manufacturer),
-         Specifications = COALESCE(@specifications, Specifications),
-         PurchaseDate   = COALESCE(@purchaseDate,   PurchaseDate),
-         WarrantyEndDate= COALESCE(@warrantyEndDate,WarrantyEndDate),
-         Status         = COALESCE(@status,         Status),
-         Notes          = COALESCE(@notes,          Notes),
-         UpdatedDate    = GETDATE()
-       WHERE ComponentID = @id`,
+      `UPDATE asset_components SET
+         component_name    = COALESCE($1, component_name),
+         component_type    = COALESCE($2, component_type),
+         model             = COALESCE($3, model),
+         serial_number     = COALESCE($4, serial_number),
+         manufacturer      = COALESCE($5, manufacturer),
+         specifications    = COALESCE($6, specifications),
+         purchase_date     = COALESCE($7, purchase_date),
+         warranty_end_date = COALESCE($8, warranty_end_date),
+         status            = COALESCE($9, status),
+         notes             = COALESCE($10, notes)
+       WHERE component_id = $11`,
       [
-        { name: 'id',             value: parseInt(id) },
-        { name: 'componentName',  value: componentName  || null },
-        { name: 'componentType',  value: componentType  || null },
-        { name: 'model',          value: model          || null },
-        { name: 'serialNumber',   value: serialNumber   || null },
-        { name: 'manufacturer',   value: manufacturer   || null },
-        { name: 'specifications', value: specifications || null },
-        { name: 'purchaseDate',   value: purchaseDate   || null },
-        { name: 'warrantyEndDate',value: warrantyEndDate|| null },
-        { name: 'status',         value: status         || null },
-        { name: 'notes',          value: notes          || null },
+        componentName || null, componentType || null, model || null, serialNumber || null,
+        manufacturer || null, specifications || null, purchaseDate || null,
+        warrantyEndDate || null, status || null, notes || null, parseInt(id),
       ]
     );
     const updated = await query(
-      `SELECT c.*, a.AssetName, ag.GroupName, ch.ChannelName
-       FROM AssetComponents c
-       JOIN Assets      a  ON a.AssetID      = c.AssetID
-       JOIN AssetGroups ag ON ag.AssetGroupID = c.AssetGroupID
-       JOIN Channels    ch ON ch.ChannelID    = c.ChannelID
-       WHERE c.ComponentID = @id`,
-      [{ name: 'id', value: parseInt(id) }]
+      `SELECT c.*, a.asset_name, ag.group_name, ch.channel_name
+       FROM asset_components c
+       JOIN assets       a  ON a.asset_id       = c.asset_id
+       LEFT JOIN asset_groups ag ON ag.asset_group_id = c.asset_group_id
+       JOIN channels     ch ON ch.channel_id    = a.channel_id
+       WHERE c.component_id = $1`,
+      [parseInt(id)]
     );
     res.json({ success: true, data: updated.recordset[0] });
   } catch (err) {
@@ -165,14 +148,14 @@ const remove = async (req, res, next) => {
   try {
     const { id } = req.params;
     const exists = await query(
-      `SELECT ComponentID FROM AssetComponents WHERE ComponentID = @id AND IsActive = 1`,
-      [{ name: 'id', value: parseInt(id) }]
+      `SELECT component_id FROM asset_components WHERE component_id = $1 AND is_active = TRUE`,
+      [parseInt(id)]
     );
     if (!exists.recordset.length) return next(createError(404, 'Eklenti bulunamadı'));
 
     await query(
-      `UPDATE AssetComponents SET IsActive = 0, UpdatedDate = GETDATE() WHERE ComponentID = @id`,
-      [{ name: 'id', value: parseInt(id) }]
+      `UPDATE asset_components SET is_active = FALSE WHERE component_id = $1`,
+      [parseInt(id)]
     );
     res.json({ success: true, message: 'Eklenti silindi' });
   } catch (err) {

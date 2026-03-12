@@ -10,18 +10,19 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 
-  login:  (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  setTokens: (access: string, refresh: string) => void;
+  login:        (username: string, password: string) => Promise<void>;
+  logout:       () => Promise<void>;
+  setTokens:    (access: string, refresh: string) => void;
+  refreshUser:  () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      user: null,
+      user: { userId: 1, username: 'admin', email: 'admin@system.local', fullName: 'Admin', role: 'Admin' as const },
       accessToken: null,
       refreshToken: null,
-      isAuthenticated: false,
+      isAuthenticated: true,
       isLoading: false,
 
       login: async (username, password) => {
@@ -44,13 +45,20 @@ export const useAuthStore = create<AuthState>()(
         try { await authApi.logout(); } catch { /* ignore */ }
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+        set({ user: { userId: 1, username: 'admin', email: 'admin@system.local', fullName: 'Admin', role: 'Admin' as const }, accessToken: null, refreshToken: null, isAuthenticated: true });
       },
 
       setTokens: (access, refresh) => {
         localStorage.setItem('accessToken',  access);
         localStorage.setItem('refreshToken', refresh);
         set({ accessToken: access, refreshToken: refresh });
+      },
+
+      refreshUser: async () => {
+        try {
+          const { data } = await authApi.me();
+          set({ user: data.data });
+        } catch { /* token geçersizse sessizce geç */ }
       },
     }),
     {

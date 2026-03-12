@@ -36,6 +36,11 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Recharts — tüm SVG wrapper'ları şeffaf (beyaz arka plan önleme) */
+.recharts-wrapper,
+.recharts-surface { background: transparent !important; }
+.recharts-tooltip-wrapper .recharts-default-tooltip { background: #0D1421 !important; }
+
 /* Scrollbar */
 ::-webkit-scrollbar        { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track  { background: #0D1421; }

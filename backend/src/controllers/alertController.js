@@ -4,26 +4,44 @@ const { createError } = require('../middleware/errorHandler');
 // GET /alerts
 const getAll = async (req, res, next) => {
   try {
-    const { severity, alertType, isResolved = 0, channelId, page = 1, limit = 50 } = req.query;
+    const { severity, alertType, isResolved, channelId, assetId, page = 1, limit = 50 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
-
+    const params = [];
+    let idx = 1;
     let whereClause = 'WHERE 1=1';
-    const params = { limit: parseInt(limit), offset };
 
-    if (severity)   { whereClause += ' AND al.AlertSeverity = @severity'; params.severity = parseInt(severity); }
-    if (alertType)  { whereClause += ' AND al.AlertType = @alertType'; params.alertType = alertType; }
-    if (isResolved !== undefined) { whereClause += ' AND al.IsResolved = @isResolved'; params.isResolved = parseInt(isResolved); }
-    if (channelId)  { whereClause += ' AND c.ChannelID = @channelId'; params.channelId = parseInt(channelId); }
+    if (severity !== undefined) {
+      whereClause += ` AND al.alert_severity = $${idx++}`;
+      params.push(parseInt(severity));
+    }
+    if (alertType) {
+      whereClause += ` AND al.alert_type = $${idx++}`;
+      params.push(alertType);
+    }
+    if (isResolved !== undefined) {
+      whereClause += ` AND al.is_resolved = $${idx++}`;
+      params.push(isResolved === '1' || isResolved === 'true');
+    }
+    if (channelId) {
+      whereClause += ` AND c.channel_id = $${idx++}`;
+      params.push(parseInt(channelId));
+    }
+    if (assetId) {
+      whereClause += ` AND al.asset_id = $${idx++}`;
+      params.push(parseInt(assetId));
+    }
+
+    params.push(parseInt(limit), offset);
 
     const result = await query(
-      `SELECT al.*, a.AssetName, a.AssetCode, c.ChannelName, ag.GroupName
-       FROM Alerts al
-       LEFT JOIN Assets a ON al.AssetID = a.AssetID
-       LEFT JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       LEFT JOIN Channels c ON a.ChannelID = c.ChannelID
+      `SELECT al.*, a.asset_name, a.asset_code, c.channel_name, ag.group_name
+       FROM alerts al
+       LEFT JOIN assets a ON al.asset_id = a.asset_id
+       LEFT JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       LEFT JOIN channels c ON a.channel_id = c.channel_id
        ${whereClause}
-       ORDER BY al.TriggeredTime DESC
-       OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`,
+       ORDER BY al.triggered_time DESC
+       LIMIT $${idx} OFFSET $${idx + 1}`,
       params
     );
 
@@ -37,32 +55,37 @@ const getAll = async (req, res, next) => {
 const getDashboard = async (req, res, next) => {
   try {
     const { channelId } = req.query;
-    let whereClause = 'WHERE al.IsResolved = 0';
-    const params = {};
-    if (channelId) { whereClause += ' AND c.ChannelID = @channelId'; params.channelId = parseInt(channelId); }
+    const params = [];
+    let whereClause = 'WHERE al.is_resolved = FALSE';
+
+    if (channelId) {
+      params.push(parseInt(channelId));
+      whereClause += ` AND c.channel_id = $1`;
+    }
 
     const result = await query(
-      `SELECT TOP 20 al.*, a.AssetName, a.AssetCode, c.ChannelName, ag.GroupName
-       FROM Alerts al
-       LEFT JOIN Assets a ON al.AssetID = a.AssetID
-       LEFT JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       LEFT JOIN Channels c ON a.ChannelID = c.ChannelID
+      `SELECT al.*, a.asset_name, a.asset_code, c.channel_name, ag.group_name
+       FROM alerts al
+       LEFT JOIN assets a ON al.asset_id = a.asset_id
+       LEFT JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       LEFT JOIN channels c ON a.channel_id = c.channel_id
        ${whereClause}
-       ORDER BY al.AlertSeverity DESC, al.TriggeredTime DESC`,
+       ORDER BY al.alert_severity DESC, al.triggered_time DESC
+       LIMIT 20`,
       params
     );
 
     const countResult = await query(
       `SELECT
-        SUM(CASE WHEN al.AlertType = 'Critical' AND al.IsResolved = 0 THEN 1 ELSE 0 END) AS CriticalCount,
-        SUM(CASE WHEN al.AlertType = 'Warning' AND al.IsResolved = 0 THEN 1 ELSE 0 END) AS WarningCount,
-        SUM(CASE WHEN al.AlertType = 'Info' AND al.IsResolved = 0 THEN 1 ELSE 0 END) AS InfoCount,
-        COUNT(CASE WHEN al.IsResolved = 0 THEN 1 END) AS TotalUnresolved
-       FROM Alerts al
-       LEFT JOIN Assets a ON al.AssetID = a.AssetID
-       LEFT JOIN Channels c ON a.ChannelID = c.ChannelID
-       ${channelId ? 'WHERE c.ChannelID = @channelId' : ''}`,
-      channelId ? params : {}
+        SUM(CASE WHEN al.alert_type = 'Critical' AND al.is_resolved = FALSE THEN 1 ELSE 0 END) AS critical_count,
+        SUM(CASE WHEN al.alert_type = 'Warning'  AND al.is_resolved = FALSE THEN 1 ELSE 0 END) AS warning_count,
+        SUM(CASE WHEN al.alert_type = 'Info'     AND al.is_resolved = FALSE THEN 1 ELSE 0 END) AS info_count,
+        COUNT(CASE WHEN al.is_resolved = FALSE THEN 1 END) AS total_unresolved
+       FROM alerts al
+       LEFT JOIN assets a ON al.asset_id = a.asset_id
+       LEFT JOIN channels c ON a.channel_id = c.channel_id
+       ${channelId ? 'WHERE c.channel_id = $1' : ''}`,
+      channelId ? [parseInt(channelId)] : []
     );
 
     res.json({ success: true, data: result.recordset, stats: countResult.recordset[0] });
@@ -80,16 +103,16 @@ const create = async (req, res, next) => {
     }
 
     const result = await query(
-      `INSERT INTO Alerts (AssetID, AlertType, AlertCategory, AlertMessage, AlertSeverity, ThresholdValue, CurrentValue, CreatedBy)
-       OUTPUT INSERTED.*
-       VALUES (@assetId, @alertType, @alertCategory, @alertMessage, @alertSeverity, @thresholdValue, @currentValue, @createdBy)`,
-      {
-        assetId: assetId ? parseInt(assetId) : null,
+      `INSERT INTO alerts (asset_id, alert_type, alert_category, alert_message, alert_severity, threshold_value, current_value, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        assetId ? parseInt(assetId) : null,
         alertType, alertCategory, alertMessage,
-        alertSeverity: parseInt(alertSeverity),
+        parseInt(alertSeverity),
         thresholdValue, currentValue,
-        createdBy: req.user?.username || 'system'
-      }
+        req.user?.username || 'system'
+      ]
     );
     res.status(201).json({ success: true, data: result.recordset[0] });
   } catch (err) {
@@ -104,10 +127,11 @@ const resolve = async (req, res, next) => {
     const { resolutionNotes } = req.body;
 
     const result = await query(
-      `UPDATE Alerts SET IsResolved = 1, ResolvedTime = GETDATE(), ResolutionNotes = @resolutionNotes, ResolvedByUserID = @userId
-       OUTPUT INSERTED.*
-       WHERE AlertID = @id`,
-      { id: parseInt(id), resolutionNotes, userId: req.user?.userId || null }
+      `UPDATE alerts SET is_resolved = TRUE, resolved_time = NOW(),
+         resolution_notes = $1, resolved_by_user_id = $2
+       WHERE alert_id = $3
+       RETURNING *`,
+      [resolutionNotes, req.user?.userId || null, parseInt(id)]
     );
 
     if (!result.recordset[0]) return next(createError('Uyarı bulunamadı.', 404, 'NOT_FOUND'));
@@ -117,15 +141,32 @@ const resolve = async (req, res, next) => {
   }
 };
 
+// POST /alerts/bulk-resolve
+const bulkResolve = async (req, res, next) => {
+  try {
+    const { ids, resolutionNotes = 'Toplu çözüm' } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0)
+      return next(createError('ids dizisi gerekli.', 400));
+
+    await query(
+      `UPDATE alerts SET is_resolved = TRUE, resolved_time = NOW(),
+         resolution_notes = $1, resolved_by_user_id = $2
+       WHERE alert_id = ANY($3) AND is_resolved = FALSE`,
+      [resolutionNotes, req.user?.userId || null, ids.map(Number)]
+    );
+    res.json({ success: true, message: `${ids.length} uyarı çözüldü.` });
+  } catch (err) { next(err); }
+};
+
 // DELETE /alerts/:id
 const remove = async (req, res, next) => {
   try {
     const { id } = req.params;
-    await query(`DELETE FROM Alerts WHERE AlertID = @id`, { id: parseInt(id) });
+    await query(`DELETE FROM alerts WHERE alert_id = $1`, [parseInt(id)]);
     res.json({ success: true, message: 'Uyarı silindi.' });
   } catch (err) {
     next(err);
   }
 };
 
-module.exports = { getAll, getDashboard, create, resolve, remove };
+module.exports = { getAll, getDashboard, create, resolve, bulkResolve, remove };

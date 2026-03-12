@@ -4,29 +4,38 @@ const errorHandler = (err, req, res, next) => {
     console.error(err.stack);
   }
 
-  // SQL Server hataları
-  if (err.number) {
-    if (err.number === 2627 || err.number === 2601) {
-      return res.status(409).json({
-        success: false,
-        error: 'DUPLICATE_ENTRY',
-        message: 'Bu kayıt zaten mevcut.',
-      });
-    }
-    if (err.number === 547) {
-      return res.status(400).json({
-        success: false,
-        error: 'FOREIGN_KEY_VIOLATION',
-        message: 'İlişkili kayıt bulunamadı veya silinemez.',
-      });
-    }
+  // PostgreSQL hataları (err.code string)
+  if (err.code === '23505') {
+    return res.status(409).json({
+      success: false,
+      error: 'DUPLICATE_ENTRY',
+      message: 'Bu kayıt zaten mevcut.',
+    });
+  }
+  if (err.code === '23503') {
+    return res.status(400).json({
+      success: false,
+      error: 'FOREIGN_KEY_VIOLATION',
+      message: 'İlişkili kayıt bulunamadı veya silinemez.',
+    });
+  }
+  if (err.code === '23514') {
+    return res.status(400).json({
+      success: false,
+      error: 'CHECK_VIOLATION',
+      message: 'Geçersiz değer.',
+    });
   }
 
   const statusCode = err.statusCode || 500;
+  // 500+ hatalarında üretimde iç hata detayları sızdırılmaz
+  const safeMessage = (statusCode >= 500 && process.env.NODE_ENV === 'production')
+    ? 'Sunucu hatası oluştu.'
+    : (err.message || 'Sunucu hatası oluştu.');
   res.status(statusCode).json({
     success: false,
     error: err.code || 'INTERNAL_SERVER_ERROR',
-    message: err.message || 'Sunucu hatası oluştu.',
+    message: safeMessage,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };

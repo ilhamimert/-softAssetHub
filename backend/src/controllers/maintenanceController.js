@@ -6,8 +6,8 @@ const getByAsset = async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const result = await query(
-      `SELECT * FROM MaintenanceRecords WHERE AssetID = @assetId ORDER BY MaintenanceDate DESC`,
-      { assetId: parseInt(assetId) }
+      `SELECT * FROM maintenance_records WHERE asset_id = $1 ORDER BY maintenance_date DESC`,
+      [parseInt(assetId)]
     );
     res.json({ success: true, data: result.recordset, total: result.recordset.length });
   } catch (err) {
@@ -20,10 +20,10 @@ const getById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await query(
-      `SELECT m.*, a.AssetName, a.AssetCode FROM MaintenanceRecords m
-       JOIN Assets a ON m.AssetID = a.AssetID
-       WHERE m.MaintenanceID = @id`,
-      { id: parseInt(id) }
+      `SELECT m.*, a.asset_name, a.asset_code FROM maintenance_records m
+       JOIN assets a ON m.asset_id = a.asset_id
+       WHERE m.maintenance_id = $1`,
+      [parseInt(id)]
     );
     const record = result.recordset[0];
     if (!record) return next(createError('Bakım kaydı bulunamadı.', 404, 'NOT_FOUND'));
@@ -47,25 +47,29 @@ const create = async (req, res, next) => {
     }
 
     const result = await query(
-      `INSERT INTO MaintenanceRecords (AssetID, MaintenanceDate, MaintenanceType, Description,
-        TechnicianName, TechnicianEmail, CostAmount, Status,
-        NextMaintenanceDate, MaintenanceInterval, DocumentURL, Notes)
-       OUTPUT INSERTED.*
-       VALUES (@assetId, @maintenanceDate, @maintenanceType, @description,
-        @technicianName, @technicianEmail, @costAmount, @status,
-        @nextMaintenanceDate, @maintenanceInterval, @documentURL, @notes)`,
-      {
-        assetId: parseInt(assetId), maintenanceDate, maintenanceType, description,
-        technicianName, technicianEmail, costAmount, status: status || 'Completed',
+      `INSERT INTO maintenance_records (asset_id, maintenance_date, maintenance_type, description,
+        technician_name, technician_email, cost_amount, status,
+        next_maintenance_date, maintenance_interval, document_url, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       RETURNING *`,
+      [
+        parseInt(assetId), maintenanceDate, maintenanceType, description,
+        technicianName, technicianEmail, costAmount, status || 'Completed',
         nextMaintenanceDate, maintenanceInterval, documentURL, notes
-      }
+      ]
     );
 
-    // Varlık durumunu güncelle (Bakım tamamlandıysa Active'e al)
-    if (status === 'Completed') {
-      await query(`UPDATE Assets SET Status = 'Active', UpdatedDate = GETDATE() WHERE AssetID = @assetId AND Status = 'Maintenance'`, { assetId: parseInt(assetId) });
-    } else if (status === 'Scheduled' || status === 'Pending') {
-      await query(`UPDATE Assets SET Status = 'Maintenance', UpdatedDate = GETDATE() WHERE AssetID = @assetId`, { assetId: parseInt(assetId) });
+    const s = status || 'Completed';
+    if (s === 'Completed') {
+      await query(
+        `UPDATE assets SET status = 'Active', updated_date = NOW() WHERE asset_id = $1 AND status = 'Maintenance'`,
+        [parseInt(assetId)]
+      );
+    } else if (s === 'Scheduled' || s === 'Pending') {
+      await query(
+        `UPDATE assets SET status = 'Maintenance', updated_date = NOW() WHERE asset_id = $1`,
+        [parseInt(assetId)]
+      );
     }
 
     res.status(201).json({ success: true, message: 'Bakım kaydı oluşturuldu.', data: result.recordset[0] });
@@ -85,22 +89,26 @@ const update = async (req, res, next) => {
     } = req.body;
 
     const result = await query(
-      `UPDATE MaintenanceRecords SET
-        MaintenanceDate = COALESCE(@maintenanceDate, MaintenanceDate),
-        MaintenanceType = COALESCE(@maintenanceType, MaintenanceType),
-        Description = COALESCE(@description, Description),
-        TechnicianName = COALESCE(@technicianName, TechnicianName),
-        TechnicianEmail = COALESCE(@technicianEmail, TechnicianEmail),
-        CostAmount = COALESCE(@costAmount, CostAmount),
-        Status = COALESCE(@status, Status),
-        NextMaintenanceDate = COALESCE(@nextMaintenanceDate, NextMaintenanceDate),
-        MaintenanceInterval = COALESCE(@maintenanceInterval, MaintenanceInterval),
-        DocumentURL = COALESCE(@documentURL, DocumentURL),
-        Notes = COALESCE(@notes, Notes),
-        UpdatedDate = GETDATE()
-       OUTPUT INSERTED.*
-       WHERE MaintenanceID = @id`,
-      { id: parseInt(id), maintenanceDate, maintenanceType, description, technicianName, technicianEmail, costAmount, status, nextMaintenanceDate, maintenanceInterval, documentURL, notes }
+      `UPDATE maintenance_records SET
+        maintenance_date      = COALESCE($1, maintenance_date),
+        maintenance_type      = COALESCE($2, maintenance_type),
+        description           = COALESCE($3, description),
+        technician_name       = COALESCE($4, technician_name),
+        technician_email      = COALESCE($5, technician_email),
+        cost_amount           = COALESCE($6, cost_amount),
+        status                = COALESCE($7, status),
+        next_maintenance_date = COALESCE($8, next_maintenance_date),
+        maintenance_interval  = COALESCE($9, maintenance_interval),
+        document_url          = COALESCE($10, document_url),
+        notes                 = COALESCE($11, notes),
+        updated_date          = NOW()
+       WHERE maintenance_id = $12
+       RETURNING *`,
+      [
+        maintenanceDate, maintenanceType, description, technicianName,
+        technicianEmail, costAmount, status, nextMaintenanceDate,
+        maintenanceInterval, documentURL, notes, parseInt(id)
+      ]
     );
 
     if (!result.recordset[0]) return next(createError('Bakım kaydı bulunamadı.', 404, 'NOT_FOUND'));
@@ -114,7 +122,7 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
   try {
     const { id } = req.params;
-    await query(`DELETE FROM MaintenanceRecords WHERE MaintenanceID = @id`, { id: parseInt(id) });
+    await query(`DELETE FROM maintenance_records WHERE maintenance_id = $1`, [parseInt(id)]);
     res.json({ success: true, message: 'Bakım kaydı silindi.' });
   } catch (err) {
     next(err);
@@ -125,22 +133,24 @@ const remove = async (req, res, next) => {
 const getScheduled = async (req, res, next) => {
   try {
     const { days = 30, channelId } = req.query;
-    let whereClause = `WHERE m.Status IN ('Scheduled', 'Pending') AND m.NextMaintenanceDate <= DATEADD(DAY, @days, GETDATE())`;
-    const params = { days: parseInt(days) };
+    const params = [parseInt(days)];
+    let channelFilter = '';
 
     if (channelId) {
-      whereClause += ' AND c.ChannelID = @channelId';
-      params.channelId = parseInt(channelId);
+      params.push(parseInt(channelId));
+      channelFilter = `AND c.channel_id = $${params.length}`;
     }
 
     const result = await query(
-      `SELECT m.*, a.AssetName, a.AssetCode, c.ChannelName, ag.GroupName
-       FROM MaintenanceRecords m
-       JOIN Assets a ON m.AssetID = a.AssetID
-       JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       JOIN Channels c ON a.ChannelID = c.ChannelID
-       ${whereClause}
-       ORDER BY m.NextMaintenanceDate ASC`,
+      `SELECT m.*, a.asset_name, a.asset_code, c.channel_name, ag.group_name
+       FROM maintenance_records m
+       JOIN assets a ON m.asset_id = a.asset_id
+       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       JOIN channels c ON a.channel_id = c.channel_id
+       WHERE m.status IN ('Scheduled', 'Pending')
+         AND m.next_maintenance_date <= (CURRENT_DATE + ($1 || ' days')::INTERVAL)
+         ${channelFilter}
+       ORDER BY m.next_maintenance_date ASC`,
       params
     );
     res.json({ success: true, data: result.recordset, total: result.recordset.length });

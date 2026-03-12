@@ -5,17 +5,17 @@ const createError = require('http-errors');
 const getAll = async (req, res, next) => {
   try {
     const result = await query(`
-      SELECT h.HoldingID, h.HoldingName, h.Description, h.Website, h.ContactEmail,
-             h.LogoUrl, h.CreatedDate, h.UpdatedDate, h.IsActive,
-             COUNT(DISTINCT c.ChannelID) AS ChannelCount,
-             COUNT(DISTINCT a.AssetID)   AS TotalAssets
-      FROM Holdings h
-      LEFT JOIN Channels c ON c.HoldingID = h.HoldingID AND c.IsActive = 1
-      LEFT JOIN Assets   a ON a.ChannelID = c.ChannelID  AND a.IsActive = 1
-      WHERE h.IsActive = 1
-      GROUP BY h.HoldingID, h.HoldingName, h.Description, h.Website,
-               h.ContactEmail, h.LogoUrl, h.CreatedDate, h.UpdatedDate, h.IsActive
-      ORDER BY h.HoldingName
+      SELECT h.holding_id, h.holding_name, h.description, h.website, h.contact_email,
+             h.logo_url, h.created_date, h.updated_date, h.is_active,
+             COUNT(DISTINCT c.channel_id) AS channel_count,
+             COUNT(DISTINCT a.asset_id)   AS total_assets
+      FROM holdings h
+      LEFT JOIN channels c ON c.holding_id = h.holding_id AND c.is_active = TRUE
+      LEFT JOIN assets   a ON a.channel_id = c.channel_id  AND a.is_active = TRUE
+      WHERE h.is_active = TRUE
+      GROUP BY h.holding_id, h.holding_name, h.description, h.website,
+               h.contact_email, h.logo_url, h.created_date, h.updated_date, h.is_active
+      ORDER BY h.holding_name
     `);
     res.json({ success: true, data: result.recordset });
   } catch (err) {
@@ -29,22 +29,21 @@ const getById = async (req, res, next) => {
     const { id } = req.params;
     const result = await query(
       `SELECT h.*,
-              COUNT(DISTINCT c.ChannelID) AS ChannelCount,
-              COUNT(DISTINCT a.AssetID)   AS TotalAssets
-       FROM Holdings h
-       LEFT JOIN Channels c ON c.HoldingID = h.HoldingID AND c.IsActive = 1
-       LEFT JOIN Assets   a ON a.ChannelID = c.ChannelID  AND a.IsActive = 1
-       WHERE h.HoldingID = @id AND h.IsActive = 1
-       GROUP BY h.HoldingID, h.HoldingName, h.Description, h.Website,
-                h.ContactEmail, h.LogoUrl, h.CreatedDate, h.UpdatedDate, h.IsActive`,
-      [{ name: 'id', value: parseInt(id) }]
+              COUNT(DISTINCT c.channel_id) AS channel_count,
+              COUNT(DISTINCT a.asset_id)   AS total_assets
+       FROM holdings h
+       LEFT JOIN channels c ON c.holding_id = h.holding_id AND c.is_active = TRUE
+       LEFT JOIN assets   a ON a.channel_id = c.channel_id  AND a.is_active = TRUE
+       WHERE h.holding_id = $1 AND h.is_active = TRUE
+       GROUP BY h.holding_id, h.holding_name, h.description, h.website,
+                h.contact_email, h.logo_url, h.created_date, h.updated_date, h.is_active`,
+      [parseInt(id)]
     );
     if (!result.recordset.length) return next(createError(404, 'Holding bulunamadı'));
 
-    // Bağlı kanalları da getir
     const channels = await query(
-      `SELECT ChannelID, ChannelName, IsActive FROM Channels WHERE HoldingID = @id AND IsActive = 1`,
-      [{ name: 'id', value: parseInt(id) }]
+      `SELECT channel_id, channel_name, is_active FROM channels WHERE holding_id = $1 AND is_active = TRUE`,
+      [parseInt(id)]
     );
     const holding = result.recordset[0];
     holding.channels = channels.recordset;
@@ -61,22 +60,12 @@ const create = async (req, res, next) => {
     if (!holdingName) return next(createError(400, 'holdingName zorunludur'));
 
     const result = await query(
-      `INSERT INTO Holdings (HoldingName, Description, Website, ContactEmail, LogoUrl)
-       OUTPUT INSERTED.HoldingID
-       VALUES (@holdingName, @description, @website, @contactEmail, @logoUrl)`,
-      [
-        { name: 'holdingName',   value: holdingName },
-        { name: 'description',   value: description   || null },
-        { name: 'website',       value: website        || null },
-        { name: 'contactEmail',  value: contactEmail   || null },
-        { name: 'logoUrl',       value: logoUrl        || null },
-      ]
+      `INSERT INTO holdings (holding_name, description, website, contact_email, logo_url)
+       VALUES ($1, $2, $3, $4, $5) RETURNING holding_id`,
+      [holdingName, description || null, website || null, contactEmail || null, logoUrl || null]
     );
-    const newId = result.recordset[0].HoldingID;
-    const newHolding = await query(
-      `SELECT * FROM Holdings WHERE HoldingID = @id`,
-      [{ name: 'id', value: newId }]
-    );
+    const newId = result.recordset[0].holdingId;
+    const newHolding = await query(`SELECT * FROM holdings WHERE holding_id = $1`, [newId]);
     res.status(201).json({ success: true, data: newHolding.recordset[0] });
   } catch (err) {
     next(err);
@@ -90,33 +79,23 @@ const update = async (req, res, next) => {
     const { holdingName, description, website, contactEmail, logoUrl } = req.body;
 
     const exists = await query(
-      `SELECT HoldingID FROM Holdings WHERE HoldingID = @id AND IsActive = 1`,
-      [{ name: 'id', value: parseInt(id) }]
+      `SELECT holding_id FROM holdings WHERE holding_id = $1 AND is_active = TRUE`,
+      [parseInt(id)]
     );
     if (!exists.recordset.length) return next(createError(404, 'Holding bulunamadı'));
 
     await query(
-      `UPDATE Holdings SET
-         HoldingName  = COALESCE(@holdingName, HoldingName),
-         Description  = COALESCE(@description, Description),
-         Website      = COALESCE(@website, Website),
-         ContactEmail = COALESCE(@contactEmail, ContactEmail),
-         LogoUrl      = COALESCE(@logoUrl, LogoUrl),
-         UpdatedDate  = GETDATE()
-       WHERE HoldingID = @id`,
-      [
-        { name: 'id',           value: parseInt(id) },
-        { name: 'holdingName',  value: holdingName  || null },
-        { name: 'description',  value: description  || null },
-        { name: 'website',      value: website       || null },
-        { name: 'contactEmail', value: contactEmail  || null },
-        { name: 'logoUrl',      value: logoUrl       || null },
-      ]
+      `UPDATE holdings SET
+         holding_name  = COALESCE($1, holding_name),
+         description   = COALESCE($2, description),
+         website       = COALESCE($3, website),
+         contact_email = COALESCE($4, contact_email),
+         logo_url      = COALESCE($5, logo_url),
+         updated_date  = NOW()
+       WHERE holding_id = $6`,
+      [holdingName || null, description || null, website || null, contactEmail || null, logoUrl || null, parseInt(id)]
     );
-    const updated = await query(
-      `SELECT * FROM Holdings WHERE HoldingID = @id`,
-      [{ name: 'id', value: parseInt(id) }]
-    );
+    const updated = await query(`SELECT * FROM holdings WHERE holding_id = $1`, [parseInt(id)]);
     res.json({ success: true, data: updated.recordset[0] });
   } catch (err) {
     next(err);
@@ -128,14 +107,14 @@ const remove = async (req, res, next) => {
   try {
     const { id } = req.params;
     const exists = await query(
-      `SELECT HoldingID FROM Holdings WHERE HoldingID = @id AND IsActive = 1`,
-      [{ name: 'id', value: parseInt(id) }]
+      `SELECT holding_id FROM holdings WHERE holding_id = $1 AND is_active = TRUE`,
+      [parseInt(id)]
     );
     if (!exists.recordset.length) return next(createError(404, 'Holding bulunamadı'));
 
     await query(
-      `UPDATE Holdings SET IsActive = 0, UpdatedDate = GETDATE() WHERE HoldingID = @id`,
-      [{ name: 'id', value: parseInt(id) }]
+      `UPDATE holdings SET is_active = FALSE, updated_date = NOW() WHERE holding_id = $1`,
+      [parseInt(id)]
     );
     res.json({ success: true, message: 'Holding silindi' });
   } catch (err) {

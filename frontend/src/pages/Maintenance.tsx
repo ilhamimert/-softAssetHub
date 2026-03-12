@@ -129,15 +129,15 @@ export function Maintenance() {
 
   // Filtered records
   const filteredRecords = records.filter(r => {
-    if (statusFilter && r.Status !== statusFilter) return false;
+    if (statusFilter && r.status !== statusFilter) return false;
     return true;
   });
 
   // Stats
-  const urgent = records.filter(r => r.DaysUntilMaintenance <= 7).length;
-  const soon = records.filter(r => r.DaysUntilMaintenance <= 30).length;
+  const urgent = records.filter(r => r.daysUntilMaintenance <= 7).length;
+  const soon = records.filter(r => r.daysUntilMaintenance <= 30).length;
   const total = records.length;
-  const completed = (allMaintData?.data?.data ?? []).filter((r: any) => r.Status === 'Completed').length;
+  const completed = (allMaintData?.data?.data ?? []).filter((r: any) => r.status === 'Completed').length;
 
   // Mutations
   const createMut = useMutation({
@@ -168,17 +168,17 @@ export function Maintenance() {
   const openEdit = (r: any) => {
     setEditRecord(r);
     setForm({
-      assetId: String(r.AssetID ?? ''),
-      maintenanceDate: r.MaintenanceDate?.slice(0, 10) ?? '',
-      maintenanceType: r.MaintenanceType ?? '',
-      description: r.Description ?? '',
-      technicianName: r.TechnicianName ?? '',
-      technicianEmail: r.TechnicianEmail ?? '',
-      costAmount: String(r.CostAmount ?? ''),
-      status: r.Status ?? 'Completed',
-      nextMaintenanceDate: r.NextMaintenanceDate?.slice(0, 10) ?? '',
-      maintenanceInterval: String(r.MaintenanceInterval ?? ''),
-      notes: r.Notes ?? '',
+      assetId: String(r.assetId ?? ''),
+      maintenanceDate: r.maintenanceDate?.slice(0, 10) ?? '',
+      maintenanceType: r.maintenanceType ?? '',
+      description: r.description ?? '',
+      technicianName: r.technicianName ?? '',
+      technicianEmail: r.technicianEmail ?? '',
+      costAmount: String(r.costAmount ?? ''),
+      status: r.status ?? 'Completed',
+      nextMaintenanceDate: r.nextMaintenanceDate?.slice(0, 10) ?? '',
+      maintenanceInterval: String(r.maintenanceInterval ?? ''),
+      notes: r.notes ?? '',
     });
     setFormError('');
     setShowForm(true);
@@ -191,6 +191,10 @@ export function Maintenance() {
     setFormError('');
     if (!form.assetId || !form.maintenanceDate) {
       setFormError('Varlık ve bakım tarihi zorunludur.');
+      return;
+    }
+    if (form.nextMaintenanceDate && form.nextMaintenanceDate <= form.maintenanceDate) {
+      setFormError('Sonraki bakım tarihi, bakım tarihinden sonra olmalıdır.');
       return;
     }
     const body = {
@@ -207,7 +211,7 @@ export function Maintenance() {
       notes: form.notes || undefined,
     };
     if (editRecord) {
-      updateMut.mutate({ id: editRecord.MaintenanceID, body });
+      updateMut.mutate({ id: editRecord.maintenanceId, body });
     } else {
       createMut.mutate(body);
     }
@@ -254,7 +258,7 @@ export function Maintenance() {
           className={inputCls + ' w-40'}
         >
           <option value="">Tüm Kanallar</option>
-          {channels.map((c: any) => <option key={c.ChannelID} value={String(c.ChannelID)}>{c.ChannelName}</option>)}
+          {channels.map((c: any) => <option key={c.channelId} value={String(c.channelId)}>{c.channelName}</option>)}
         </select>
 
         <select
@@ -320,50 +324,50 @@ export function Maintenance() {
               )
               : filteredRecords.map(r => (
                 <div
-                  key={`${r.AssetID}-${r.MaintenanceID ?? r.NextMaintenanceDate}`}
+                  key={`${r.assetId}-${r.maintenanceId ?? r.nextMaintenanceDate}`}
                   className="p-3 hover:bg-[#131C2E] transition-colors group"
                 >
                   <div className="flex items-start gap-3">
                     {/* Days badge */}
                     <div className={cn(
                       'flex-shrink-0 text-[10px] font-mono-val font-bold px-2 py-1.5 rounded min-w-[3rem] text-center',
-                      r.DaysUntilMaintenance != null
-                        ? getDaysColor(r.DaysUntilMaintenance)
+                      r.daysUntilMaintenance != null
+                        ? getDaysColor(r.daysUntilMaintenance)
                         : 'text-[#6B84A3] bg-[#1E2D45] border border-[#1E2D45]'
                     )}>
-                      {r.DaysUntilMaintenance != null ? `${r.DaysUntilMaintenance}g` : '—'}
+                      {r.daysUntilMaintenance != null ? `${r.daysUntilMaintenance}g` : '—'}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-xs text-[#E2EAF4] font-medium">{r.AssetName}</p>
-                        <span className="text-[10px] font-mono-val text-cyan-400">{r.AssetCode}</span>
-                        <StatusBadge status={r.Status} />
-                        {r.MaintenanceType && (
-                          <span className="text-[10px] text-amber-400">{r.MaintenanceType}</span>
+                        <p className="text-xs text-[#E2EAF4] font-medium">{r.assetName}</p>
+                        <span className="text-[10px] font-mono-val text-cyan-400">{r.assetCode}</span>
+                        <StatusBadge status={r.status} />
+                        {r.maintenanceType && (
+                          <span className="text-[10px] text-amber-400">{r.maintenanceType}</span>
                         )}
                       </div>
                       <p className="text-[10px] text-[#6B84A3] font-mono-val mt-0.5">
-                        {r.ChannelName} · {r.BuildingName}
+                        {r.channelName} · {r.buildingName}
                       </p>
-                      {r.Description && (
-                        <p className="text-[10px] text-[#3D5275] mt-0.5 line-clamp-1">{r.Description}</p>
+                      {r.description && (
+                        <p className="text-[10px] text-[#3D5275] mt-0.5 line-clamp-1">{r.description}</p>
                       )}
                       <div className="flex flex-wrap gap-4 mt-1.5">
-                        {r.TechnicianName && (
+                        {r.technicianName && (
                           <span className="flex items-center gap-1 text-[10px] text-[#6B84A3]">
-                            <User size={9} />{r.TechnicianName}
+                            <User size={9} />{r.technicianName}
                           </span>
                         )}
-                        {r.CostAmount != null && (
+                        {r.costAmount != null && (
                           <span className="flex items-center gap-1 text-[10px] text-[#6B84A3]">
-                            <DollarSign size={9} />{formatCurrency(r.CostAmount)}
+                            <DollarSign size={9} />{formatCurrency(r.costAmount)}
                           </span>
                         )}
-                        {r.MaintenanceInterval && (
+                        {r.maintenanceInterval && (
                           <span className="flex items-center gap-1 text-[10px] text-[#6B84A3]">
-                            <Clock size={9} />Her {r.MaintenanceInterval}g
+                            <Clock size={9} />Her {r.maintenanceInterval}g
                           </span>
                         )}
                       </div>
@@ -373,11 +377,11 @@ export function Maintenance() {
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs font-mono-val text-amber-400 flex items-center gap-1 justify-end">
                         <Calendar size={10} />
-                        {formatDate(r.NextMaintenanceDate ?? r.MaintenanceDate)}
+                        {formatDate(r.nextMaintenanceDate ?? r.maintenanceDate)}
                       </p>
-                      {r.NextMaintenanceDate && r.MaintenanceDate && (
+                      {r.nextMaintenanceDate && r.maintenanceDate && (
                         <p className="text-[10px] text-[#3D5275] font-mono-val mt-0.5">
-                          Son: {formatDate(r.MaintenanceDate)}
+                          Son: {formatDate(r.maintenanceDate)}
                         </p>
                       )}
                     </div>
@@ -394,7 +398,7 @@ export function Maintenance() {
                       <button
                         onClick={() => {
                           if (confirm('Bu bakım kaydını silmek istiyor musunuz?')) {
-                            deleteMut.mutate(r.MaintenanceID);
+                            deleteMut.mutate(r.maintenanceId);
                           }
                         }}
                         className="p-1.5 rounded text-[#6B84A3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
@@ -428,8 +432,8 @@ export function Maintenance() {
                 >
                   <option value="">— Varlık Seç —</option>
                   {allAssets.map((a: any) => (
-                    <option key={a.AssetID} value={String(a.AssetID)}>
-                      {a.AssetName} {a.AssetCode ? `(${a.AssetCode})` : ''} — {a.ChannelName}
+                    <option key={a.assetId} value={String(a.assetId)}>
+                      {a.assetName} {a.assetCode ? `(${a.assetCode})` : ''} — {a.channelName}
                     </option>
                   ))}
                 </select>

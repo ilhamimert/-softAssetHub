@@ -4,127 +4,128 @@
 // ============================================================
 
 export interface Holding {
-  HoldingID: number;
-  HoldingName: string;
-  Description?: string;
-  Website?: string;
-  ContactEmail?: string;
-  LogoUrl?: string;
-  CreatedDate: string;
-  UpdatedDate?: string;
-  IsActive: boolean;
-  ChannelCount?: number;
-  TotalAssets?: number;
+  holdingId: number;
+  holdingName: string;
+  description?: string;
+  website?: string;
+  contactEmail?: string;
+  logoUrl?: string;
+  createdDate: string;
+  updatedDate?: string;
+  isActive: boolean;
+  channelCount?: number;
+  totalAssets?: number;
 }
 
 export interface Channel {
-  ChannelID: number;
-  HoldingID?: number;
-  HoldingName?: string;
-  ChannelName: string;
-  Description?: string;
-  LogoUrl?: string;
-  EstablishedYear?: number;
-  ContactEmail?: string;
-  ContactPhone?: string;
-  Website?: string;
-  IsActive: boolean;
-  CreatedDate: string;
-  AssetCount?: number;
-  GroupCount?: number;
+  channelId: number;
+  holdingId?: number;
+  holdingName?: string;
+  channelName: string;
+  description?: string;
+  logoUrl?: string;
+  establishedYear?: number;
+  contactEmail?: string;
+  contactPhone?: string;
+  website?: string;
+  isActive: boolean;
+  createdDate: string;
+  assetCount?: number;
+  groupCount?: number;
 }
 
 export type AssetGroupType = 'Playout' | 'Encoding' | 'Transmission' | 'Archive' | 'Storage' | 'General';
 export type AssetGroupStatus = 'operational' | 'degraded' | 'failed';
 
 export interface AssetGroup {
-  AssetGroupID: number;
-  ChannelID: number;
-  ChannelName?: string;
-  GroupName: string;
-  GroupType: AssetGroupType;
-  Description?: string;
-  Status: AssetGroupStatus;
-  CreatedDate: string;
-  UpdatedDate?: string;
-  IsActive: boolean;
-  AssetCount?: number;
-  ActiveCount?: number;
-  MaintenanceCount?: number;
-  FaultyCount?: number;
+  assetGroupId: number;
+  channelId: number;
+  channelName?: string;
+  groupName: string;
+  groupType: AssetGroupType;
+  description?: string;
+  status: AssetGroupStatus;
+  createdDate: string;
+  updatedDate?: string;
+  isActive: boolean;
+  assetCount?: number;
+  activeCount?: number;
+  maintenanceCount?: number;
+  faultyCount?: number;
   // Live monitoring aggregates
-  AvgCPU?: number;
-  AvgTemperature?: number;
-  AvgPower?: number;
+  avgCpu?: number;
+  avgTemperature?: number;
+  avgPower?: number;
 }
 
 export type AssetType = 'GPU' | 'DisplayCard' | 'Server' | 'Disk' | 'Network' | 'Encoder' | 'Router';
 export type AssetStatus = 'Active' | 'Inactive' | 'Maintenance' | 'Retired' | 'Faulty';
 
 export interface Asset {
-  AssetID: number;
-  AssetGroupID: number;
-  ChannelID: number;
-  GroupName?: string;
-  GroupType?: AssetGroupType;
-  ChannelName?: string;
-  HoldingID?: number;
-  HoldingName?: string;
-  AssetName: string;
-  AssetCode?: string;
-  AssetType: AssetType;
-  Model?: string;
-  SerialNumber?: string;
-  Manufacturer?: string;
-  Supplier?: string;
-  PurchaseDate?: string;
-  WarrantyEndDate?: string;
-  WarrantyMonths?: number;
-  PurchaseCost?: number;
-  CurrentValue?: number;
-  DepreciationRate?: number;
-  RackPosition?: string;
-  IPAddress?: string;
-  MACAddress?: string;
-  FirmwareVersion?: string;
-  DriverVersion?: string;
-  Status: AssetStatus;
-  ImageUrl?: string;
-  Notes?: string;
-  CreatedDate: string;
-  UpdatedDate: string;
-  IsActive: boolean;
+  assetId: number;
+  assetGroupId: number;
+  channelId: number;
+  roomId?: number;
+  groupName?: string;
+  groupType?: AssetGroupType;
+  channelName?: string;
+  holdingId?: number;
+  holdingName?: string;
+  assetName: string;
+  assetCode?: string;
+  assetType: AssetType;
+  model?: string;
+  serialNumber?: string;
+  manufacturer?: string;
+  supplier?: string;
+  purchaseDate?: string;
+  warrantyEndDate?: string;
+  warrantyMonths?: number;
+  purchaseCost?: number;
+  currentValue?: number;
+  depreciationRate?: number;
+  rackPosition?: string;
+  ipAddress?: string;
+  macAddress?: string;
+  firmwareVersion?: string;
+  driverVersion?: string;
+  status: AssetStatus;
+  imageUrl?: string;
+  notes?: string;
+  createdDate: string;
+  updatedDate: string;
+  isActive: boolean;
   // From monitoring join
-  LastTemperature?: number;
-  LastPowerConsumption?: number;
-  IsOnline?: boolean;
+  lastTemperature?: number;
+  lastPowerConsumption?: number;
+  isOnline?: boolean;
 }
 
 export type ComponentType = 'GPU' | 'RAM' | 'NIC' | 'Storage' | 'PSU' | 'Cooling' | 'HDD' | 'SSD';
 export type ComponentStatus = 'Active' | 'Faulty' | 'Replaced';
 
 export interface AssetComponent {
-  ComponentID: number;
-  AssetID: number;
-  AssetGroupID: number;
-  ChannelID: number;
-  AssetName?: string;
-  GroupName?: string;
-  GroupType?: AssetGroupType;
-  ChannelName?: string;
-  ComponentName: string;
-  ComponentType: ComponentType;
-  Model?: string;
-  SerialNumber?: string;
-  Manufacturer?: string;
-  Specifications?: string; // JSON
-  PurchaseDate?: string;
-  WarrantyEndDate?: string;
-  Status: ComponentStatus;
-  Notes?: string;
-  CreatedDate: string;
-  UpdatedDate?: string;
-  IsActive: boolean;
+  componentId: number;
+  assetId: number;
+  assetGroupId: number;
+  channelId: number;
+  assetName?: string;
+  groupName?: string;
+  groupType?: AssetGroupType;
+  channelName?: string;
+  componentName: string;
+  componentType: ComponentType;
+  model?: string;
+  serialNumber?: string;
+  manufacturer?: string;
+  specifications?: string; // JSON
+  purchaseDate?: string;
+  warrantyEndDate?: string;
+  status: ComponentStatus;
+  notes?: string;
+  createdDate: string;
+  updatedDate?: string;
+  isActive: boolean;
 }
 
 // DurumBilgisi — asset'in anlık durum bilgisi (live monitoring)
@@ -141,90 +142,93 @@ export interface DurumBilgisi {
 }
 
 export interface AssetMonitoring {
-  MonitoringID: number;
-  AssetID: number;
-  AssetName?: string;
-  AssetType?: string;
-  Status?: string;
-  GroupName?: string;
-  GroupType?: string;
-  ChannelName?: string;
-  MonitoringTime: string;
-  CPUUsage?: number;
-  RAMUsage?: number;
-  DiskUsage?: number;
-  GPUUsage?: number;
-  Temperature?: number;
-  CPUTemperature?: number;
-  PowerConsumption?: number;
-  FanSpeed?: number;
-  MemoryUsedGB?: number;
-  MemoryTotalGB?: number;
-  NetworkInMbps?: number;
-  NetworkOutMbps?: number;
-  NetworkLatency?: number;
-  Uptime?: number;
-  IsOnline: boolean;
-  ErrorCount?: number;
-  PerformanceScore?: number;
-  SignalStrength?: number;
+  monitoringId: number;
+  assetId: number;
+  assetName?: string;
+  assetType?: string;
+  status?: string;
+  groupName?: string;
+  groupType?: string;
+  channelName?: string;
+  monitoringTime: string;
+  cpuUsage?: number;
+  ramUsage?: number;
+  diskUsage?: number;
+  gpuUsage?: number;
+  temperature?: number;
+  cpuTemperature?: number;
+  powerConsumption?: number;
+  fanSpeed?: number;
+  memoryUsedGb?: number;
+  memoryTotalGb?: number;
+  networkInMbps?: number;
+  networkOutMbps?: number;
+  networkLatency?: number;
+  uptime?: number;
+  isOnline: boolean;
+  errorCount?: number;
+  performanceScore?: number;
+  signalStrength?: number;
 }
 
 export interface MaintenanceRecord {
-  MaintenanceID: number;
-  AssetID: number;
-  AssetName?: string;
-  AssetCode?: string;
-  MaintenanceDate: string;
-  MaintenanceType?: string;
-  Description?: string;
-  TechnicianName?: string;
-  TechnicianEmail?: string;
-  CostAmount?: number;
-  Status: 'Completed' | 'Pending' | 'Scheduled' | 'Cancelled';
-  NextMaintenanceDate?: string;
-  MaintenanceInterval?: number;
-  DocumentURL?: string;
-  Notes?: string;
-  CreatedDate: string;
+  maintenanceId: number;
+  assetId: number;
+  assetName?: string;
+  assetCode?: string;
+  channelName?: string;
+  buildingName?: string;
+  maintenanceDate: string;
+  maintenanceType?: string;
+  description?: string;
+  technicianName?: string;
+  technicianEmail?: string;
+  costAmount?: number;
+  status: 'Completed' | 'Pending' | 'Scheduled' | 'Cancelled';
+  nextMaintenanceDate?: string;
+  maintenanceInterval?: number;
+  daysUntilMaintenance?: number;
+  documentUrl?: string;
+  notes?: string;
+  createdDate: string;
 }
 
 export type AlertType = 'Critical' | 'Warning' | 'Info';
 
 export interface Alert {
-  AlertID: number;
-  AssetID?: number;
-  AssetName?: string;
-  AssetCode?: string;
-  ChannelName?: string;
-  GroupName?: string;
-  GroupType?: string;
-  AlertType: AlertType;
-  AlertCategory?: string;
-  AlertMessage: string;
-  AlertSeverity: number;
-  ThresholdValue?: number;
-  CurrentValue?: number;
-  TriggeredTime: string;
-  ResolvedTime?: string;
-  IsResolved: boolean;
-  IsNotified: boolean;
-  ResolutionNotes?: string;
+  alertId: number;
+  assetId?: number;
+  assetName?: string;
+  assetCode?: string;
+  channelName?: string;
+  groupName?: string;
+  groupType?: string;
+  alertType: AlertType;
+  alertCategory?: string;
+  alertMessage: string;
+  alertSeverity: number;
+  thresholdValue?: number;
+  currentValue?: number;
+  triggeredTime: string;
+  resolvedTime?: string;
+  isResolved: boolean;
+  isNotified: boolean;
+  resolutionNotes?: string;
 }
 
 export interface User {
-  UserID: number;
-  Username: string;
-  Email: string;
-  FullName: string;
-  Role: 'Admin' | 'Manager' | 'Technician' | 'Viewer';
-  ChannelID?: number;
-  ChannelName?: string;
-  Phone?: string;
-  Department?: string;
-  IsActive: boolean;
-  LastLogin?: string;
-  CreatedDate: string;
+  userId: number;
+  username: string;
+  email: string;
+  fullName: string;
+  role: 'Admin' | 'Manager' | 'Technician' | 'Viewer';
+  channelId?: number;
+  channelName?: string;
+  phone?: string;
+  department?: string;
+  isActive: boolean;
+  lastLogin?: string;
+  createdDate: string;
 }
 
 // ============================================================
@@ -245,31 +249,50 @@ export interface ApiResponse<T> {
 }
 
 export interface DashboardKPI {
-  TotalAssets: number;
-  ActiveAssets: number;
-  MaintenanceAssets: number;
-  FaultyAssets: number;
-  CriticalAlerts: number;
-  TotalAlerts: number;
-  TotalGroups: number;
+  totalAssets: number;
+  activeAssets: number;
+  maintenanceAssets: number;
+  faultyAssets: number;
+  criticalAlerts: number;
+  totalAlerts: number;
+  totalGroups: number;
 }
 
 export interface AlertStats {
-  CriticalCount: number;
-  WarningCount: number;
-  InfoCount: number;
-  TotalUnresolved: number;
+  criticalCount: number;
+  warningCount: number;
+  infoCount: number;
+  totalUnresolved: number;
 }
 
 export interface ChannelStats {
-  TotalAssets: number;
-  ActiveAssets: number;
-  MaintenanceAssets: number;
-  OfflineAssets: number;
-  TotalGroups: number;
-  AvgTemperature: number;
-  TotalPowerConsumption: number;
-  AvgPerformanceScore: number;
+  totalAssets: number;
+  activeAssets: number;
+  maintenanceAssets: number;
+  offlineAssets: number;
+  totalGroups: number;
+  avgTemperature: number;
+  totalPowerConsumption: number;
+  avgPerformanceScore: number;
+}
+
+export interface License {
+  licenseId: number;
+  assetId: number;
+  assetName?: string;
+  assetCode?: string;
+  channelName?: string;
+  applicationName: string;
+  licenseKey?: string;
+  licenseType?: string;
+  vendor?: string;
+  purchaseDate?: string;
+  expiryDate?: string;
+  daysLeft?: number;
+  maxUsers?: number;
+  notes?: string;
+  isActive: boolean;
+  createdDate: string;
 }
 
 // ============================================================

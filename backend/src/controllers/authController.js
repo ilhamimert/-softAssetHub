@@ -1,16 +1,20 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { query } = require('../config/database');
+const { query, withTransaction } = require('../config/database');
 const { createError } = require('../middleware/errorHandler');
+
+// Refresh token'ı SHA-256 ile hash'ler — DB'de plaintext saklanmaz
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 const generateTokens = (user) => {
   const payload = {
-    userId: user.UserID,
-    username: user.Username,
-    email: user.Email,
-    role: user.Role,
-    channelId: user.ChannelID,
-    fullName: user.FullName,
+    userId:    user.userId,
+    username:  user.username,
+    email:     user.email,
+    role:      user.role,
+    channelId: user.channelId,
+    fullName:  user.fullName,
   };
 
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -18,7 +22,7 @@ const generateTokens = (user) => {
   });
 
   const refreshToken = jwt.sign(
-    { userId: user.UserID },
+    { userId: user.userId },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
   );
@@ -36,34 +40,45 @@ const login = async (req, res, next) => {
     }
 
     const result = await query(
-      `SELECT * FROM Users WHERE (Username = @username OR Email = @username) AND IsActive = 1`,
-      { username }
+      `SELECT * FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE`,
+      [username]
     );
 
     const user = result.recordset[0];
+    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+
     if (!user) {
+      await query(
+        `INSERT INTO activity_log (user_id, action, entity_type, ip_address, user_agent)
+         VALUES (NULL, 'LOGIN_FAILED', 'Auth', $1, $2)`,
+        [ip, req.headers['user-agent'] || '']
+      ).catch(() => {});
       return next(createError('Geçersiz kullanıcı adı veya şifre.', 401, 'INVALID_CREDENTIALS'));
     }
 
-    const isValid = await bcrypt.compare(password, user.PasswordHash);
+    const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
+      await query(
+        `INSERT INTO activity_log (user_id, action, entity_type, ip_address, user_agent)
+         VALUES ($1, 'LOGIN_FAILED', 'Auth', $2, $3)`,
+        [user.userId, ip, req.headers['user-agent'] || '']
+      ).catch(() => {});
       return next(createError('Geçersiz kullanıcı adı veya şifre.', 401, 'INVALID_CREDENTIALS'));
     }
 
     const { accessToken, refreshToken } = generateTokens(user);
 
-    // Refresh token ve last login güncelle
-    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
-    await query(
-      `UPDATE Users SET LastLogin = GETDATE(), LastLoginIP = @ip, RefreshToken = @refreshToken WHERE UserID = @userId`,
-      { ip, refreshToken, userId: user.UserID }
-    );
-
-    // Aktivite logu
-    await query(
-      `INSERT INTO ActivityLog (UserID, Action, EntityType, IPAddress, UserAgent) VALUES (@userId, 'LOGIN', 'Auth', @ip, @userAgent)`,
-      { userId: user.UserID, ip, userAgent: req.headers['user-agent'] || '' }
-    );
+    await withTransaction(async (txQuery) => {
+      await txQuery(
+        `UPDATE users SET last_login = NOW(), last_login_ip = $1, refresh_token_hash = $2 WHERE user_id = $3`,
+        [ip, hashToken(refreshToken), user.userId]
+      );
+      await txQuery(
+        `INSERT INTO activity_log (user_id, action, entity_type, ip_address, user_agent)
+         VALUES ($1, 'LOGIN', 'Auth', $2, $3)`,
+        [user.userId, ip, req.headers['user-agent'] || '']
+      );
+    });
 
     res.json({
       success: true,
@@ -72,12 +87,12 @@ const login = async (req, res, next) => {
         accessToken,
         refreshToken,
         user: {
-          userId: user.UserID,
-          username: user.Username,
-          email: user.Email,
-          fullName: user.FullName,
-          role: user.Role,
-          channelId: user.ChannelID,
+          userId:    user.userId,
+          username:  user.username,
+          email:     user.email,
+          fullName:  user.fullName,
+          role:      user.role,
+          channelId: user.channelId,
         },
       },
     });
@@ -102,8 +117,8 @@ const refresh = async (req, res, next) => {
     }
 
     const result = await query(
-      `SELECT * FROM Users WHERE UserID = @userId AND IsActive = 1 AND RefreshToken = @refreshToken`,
-      { userId: decoded.userId, refreshToken }
+      `SELECT * FROM users WHERE user_id = $1 AND is_active = TRUE AND refresh_token_hash = $2`,
+      [decoded.userId, hashToken(refreshToken)]
     );
 
     const user = result.recordset[0];
@@ -114,8 +129,8 @@ const refresh = async (req, res, next) => {
     const tokens = generateTokens(user);
 
     await query(
-      `UPDATE Users SET RefreshToken = @refreshToken WHERE UserID = @userId`,
-      { refreshToken: tokens.refreshToken, userId: user.UserID }
+      `UPDATE users SET refresh_token_hash = $1 WHERE user_id = $2`,
+      [hashToken(tokens.refreshToken), user.userId]
     );
 
     res.json({
@@ -132,15 +147,18 @@ const logout = async (req, res, next) => {
   try {
     const userId = req.user?.userId;
     if (userId) {
-      await query(
-        `UPDATE Users SET RefreshToken = NULL WHERE UserID = @userId`,
-        { userId }
-      );
       const ip = req.ip || 'unknown';
-      await query(
-        `INSERT INTO ActivityLog (UserID, Action, EntityType, IPAddress) VALUES (@userId, 'LOGOUT', 'Auth', @ip)`,
-        { userId, ip }
-      );
+      await withTransaction(async (txQuery) => {
+        await txQuery(
+          `UPDATE users SET refresh_token_hash = NULL WHERE user_id = $1`,
+          [userId]
+        );
+        await txQuery(
+          `INSERT INTO activity_log (user_id, action, entity_type, ip_address)
+           VALUES ($1, 'LOGOUT', 'Auth', $2)`,
+          [userId, ip]
+        );
+      });
     }
     res.json({ success: true, message: 'Çıkış başarılı.' });
   } catch (err) {
@@ -155,17 +173,16 @@ const changePassword = async (req, res, next) => {
     const { currentPassword, newPassword } = req.body;
     const requestingUserId = req.user.userId;
 
-    // Sadece kendi şifresini veya admin başkasınınkini değiştirebilir
     if (parseInt(id) !== requestingUserId && req.user.role !== 'Admin') {
       return next(createError('Bu işlem için yetkiniz yok.', 403, 'FORBIDDEN'));
     }
 
-    const result = await query(`SELECT * FROM Users WHERE UserID = @id`, { id: parseInt(id) });
+    const result = await query(`SELECT * FROM users WHERE user_id = $1`, [parseInt(id)]);
     const user = result.recordset[0];
     if (!user) return next(createError('Kullanıcı bulunamadı.', 404, 'NOT_FOUND'));
 
     if (req.user.role !== 'Admin') {
-      const isValid = await bcrypt.compare(currentPassword, user.PasswordHash);
+      const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!isValid) return next(createError('Mevcut şifre hatalı.', 400, 'INVALID_PASSWORD'));
     }
 
@@ -175,8 +192,8 @@ const changePassword = async (req, res, next) => {
 
     const hash = await bcrypt.hash(newPassword, 10);
     await query(
-      `UPDATE Users SET PasswordHash = @hash, UpdatedDate = GETDATE() WHERE UserID = @id`,
-      { hash, id: parseInt(id) }
+      `UPDATE users SET password_hash = $1, updated_date = NOW() WHERE user_id = $2`,
+      [hash, parseInt(id)]
     );
 
     res.json({ success: true, message: 'Şifre başarıyla değiştirildi.' });
@@ -189,15 +206,29 @@ const changePassword = async (req, res, next) => {
 const getMe = async (req, res, next) => {
   try {
     const result = await query(
-      `SELECT UserID, Username, Email, FullName, Role, ChannelID, Phone, Department, Avatar, LastLogin, CreatedDate
-       FROM Users WHERE UserID = @userId AND IsActive = 1`,
-      { userId: req.user.userId }
+      `SELECT user_id, username, email, full_name, role, channel_id, phone, department, avatar, last_login, created_date
+       FROM users WHERE user_id = $1 AND is_active = TRUE`,
+      [req.user.userId]
     );
 
-    const user = result.recordset[0];
-    if (!user) return next(createError('Kullanıcı bulunamadı.', 404, 'NOT_FOUND'));
+    const u = result.recordset[0];
+    if (!u) return next(createError('Kullanıcı bulunamadı.', 404, 'NOT_FOUND'));
 
-    res.json({ success: true, data: user });
+    res.json({
+      success: true,
+      data: {
+        userId:     u.userId,
+        username:   u.username,
+        email:      u.email,
+        fullName:   u.fullName,
+        role:       u.role,
+        channelId:  u.channelId,
+        phone:      u.phone,
+        department: u.department,
+        avatar:     u.avatar,
+        lastLogin:  u.lastLogin,
+      },
+    });
   } catch (err) {
     next(err);
   }

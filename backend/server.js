@@ -1,8 +1,9 @@
 require('dotenv').config();
 const http = require('http');
 const app = require('./src/app');
-const { setupWebSocket } = require('./src/websocket/monitoringWS');
+const { setupWebSocket, closeWebSocket } = require('./src/websocket/monitoringWS');
 const { testConnection, closePool } = require('./src/config/database');
+const { startMonitoringScheduler } = require('./src/services/monitoringScheduler');
 
 const PORT = process.env.PORT || 5000;
 
@@ -22,6 +23,7 @@ server.listen(PORT, async () => {
   console.log('========================================\n');
 
   await testConnection();
+  await startMonitoringScheduler();
 });
 
 // Graceful shutdown
@@ -30,6 +32,7 @@ process.on('SIGINT',  shutdown);
 
 async function shutdown() {
   console.log('\n[INFO] Sunucu kapatılıyor...');
+  closeWebSocket();
   server.close(async () => {
     await closePool();
     console.log('[INFO] Sunucu kapatıldı.');

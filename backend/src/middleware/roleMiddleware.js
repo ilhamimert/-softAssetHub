@@ -46,14 +46,14 @@ const requireChannelAccess = (channelIdParam = 'channelId') => {
       return next(); // Admin her şeye erişebilir
     }
 
-    const requestedChannelId = parseInt(
-      req.params[channelIdParam] || req.query[channelIdParam] || req.body[channelIdParam]
-    );
+    const rawId = req.params[channelIdParam] ?? req.query[channelIdParam] ?? req.body?.[channelIdParam];
+    const requestedChannelId = rawId != null ? parseInt(rawId) : null;
 
-    if (requestedChannelId && req.user.channelId && requestedChannelId !== req.user.channelId) {
-      return next(
-        createError('Bu kanala erişim yetkiniz yok.', 403, 'CHANNEL_ACCESS_DENIED')
-      );
+    // Kullanıcının kanalı varsa ve istek belirli bir kanala aitse, eşleşme zorunlu
+    if (req.user.channelId && requestedChannelId !== null && !isNaN(requestedChannelId)) {
+      if (requestedChannelId !== req.user.channelId) {
+        return next(createError('Bu kanala erişim yetkiniz yok.', 403, 'CHANNEL_ACCESS_DENIED'));
+      }
     }
 
     next();

@@ -23,10 +23,10 @@ interface KPICardProps {
 
 function KPICard({ label, value, sub, icon: Icon, accent = 'amber', delay = '0' }: KPICardProps) {
   const accentMap: Record<string, { border: string; text: string; bg: string }> = {
-    amber: { border: 'border-amber-500/25', text: 'text-amber-400',  bg: 'bg-amber-500/8'  },
-    cyan:  { border: 'border-cyan-500/25',  text: 'text-cyan-400',   bg: 'bg-cyan-500/8'   },
-    green: { border: 'border-green-500/25', text: 'text-green-400',  bg: 'bg-green-500/8'  },
-    red:   { border: 'border-red-500/25',   text: 'text-red-400',    bg: 'bg-red-500/8'    },
+    amber: { border: 'border-amber-500/25', text: 'text-amber-400', bg: 'bg-amber-500/8' },
+    cyan: { border: 'border-cyan-500/25', text: 'text-cyan-400', bg: 'bg-cyan-500/8' },
+    green: { border: 'border-green-500/25', text: 'text-green-400', bg: 'bg-green-500/8' },
+    red: { border: 'border-red-500/25', text: 'text-red-400', bg: 'bg-red-500/8' },
   };
   const a = accentMap[accent] ?? accentMap.amber;
 
@@ -60,20 +60,20 @@ function KPICard({ label, value, sub, icon: Icon, accent = 'amber', delay = '0' 
 function AlertRow({ alert }: { alert: Alert }) {
   const icons = {
     Critical: <AlertCircle size={12} className="text-red-400 flex-shrink-0" />,
-    Warning:  <AlertTriangle size={12} className="text-amber-400 flex-shrink-0" />,
-    Info:     <Info size={12} className="text-cyan-400 flex-shrink-0" />,
+    Warning: <AlertTriangle size={12} className="text-amber-400 flex-shrink-0" />,
+    Info: <Info size={12} className="text-cyan-400 flex-shrink-0" />,
   };
 
   return (
     <div className={cn(
       'flex items-start gap-2.5 p-2.5 rounded border text-xs',
-      alertBg(alert.AlertType)
+      alertBg(alert.alertType)
     )}>
-      {icons[alert.AlertType]}
+      {icons[alert.alertType]}
       <div className="flex-1 min-w-0">
-        <p className="leading-snug line-clamp-1">{alert.AlertMessage}</p>
+        <p className="leading-snug line-clamp-1">{alert.alertMessage}</p>
         <p className="mt-0.5 opacity-60 font-mono-val text-[10px]">
-          {alert.AssetName ?? 'Sistem'} · {timeAgo(alert.TriggeredTime)}
+          {alert.assetName ?? 'Sistem'} · {timeAgo(alert.triggeredTime)}
         </p>
       </div>
     </div>
@@ -84,9 +84,9 @@ function AlertRow({ alert }: { alert: Alert }) {
 function HeatCell({ value, label, unit = '' }: { value?: number; label: string; unit?: string }) {
   const pct = value ?? 0;
   const color =
-    pct >= 90 ? 'bg-red-500'   :
-    pct >= 75 ? 'bg-amber-500' :
-    pct >= 50 ? 'bg-yellow-500' : 'bg-green-500';
+    pct >= 90 ? 'bg-red-500' :
+      pct >= 75 ? 'bg-amber-500' :
+        pct >= 50 ? 'bg-yellow-500' : 'bg-green-500';
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -99,7 +99,7 @@ function HeatCell({ value, label, unit = '' }: { value?: number; label: string; 
 }
 
 // ─── Pie label ───────────────────────────────────────────────
-const PIE_COLORS = ['#22D3EE','#F59E0B','#10B981','#EF4444','#6B84A3'];
+const PIE_COLORS = ['#22D3EE', '#F59E0B', '#10B981', '#EF4444', '#6B84A3'];
 
 // ─── Dashboard ───────────────────────────────────────────────
 export function Dashboard() {
@@ -115,15 +115,33 @@ export function Dashboard() {
     refetchInterval: 30000,
   });
 
+  const _today = new Date();
+  // Yayın günü: dün 21:00 → bugün 20:59
+  const _from = new Date(_today); _from.setDate(_from.getDate() - 1); _from.setHours(21, 0, 0, 0);
+  const _to = new Date(_today); _to.setHours(20, 59, 59, 999);
+  const todayLabel = _today.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
   const { data: powerData } = useQuery({
-    queryKey: ['power-consumption'],
-    queryFn: () => analyticsApi.getPowerConsumption({ groupBy: 'day' }),
-    refetchInterval: 300000,
+    queryKey: ['power-consumption-3h', _today.toDateString()],
+    queryFn: () => analyticsApi.getPowerConsumption({
+      groupBy: '3hour',
+      from: _from.toISOString(),
+      to: _to.toISOString(),
+    }),
+    refetchInterval: 60 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: healthData } = useQuery({
     queryKey: ['asset-health'],
     queryFn: () => analyticsApi.getAssetHealth(),
+    refetchInterval: 300000,
+  });
+
+  const { data: physicalDistData } = useQuery({
+    queryKey: ['physical-node-distribution'],
+    queryFn: () => analyticsApi.getPhysicalNodeDistribution(),
     refetchInterval: 300000,
   });
 
@@ -134,34 +152,49 @@ export function Dashboard() {
   });
 
   const kpi: DashboardKPI = kpiData?.data?.data ?? {
-    TotalAssets: 0, ActiveAssets: 0, MaintenanceAssets: 0, CriticalAlerts: 0, TotalAlerts: 0,
+    totalAssets: 0, activeAssets: 0, maintenanceAssets: 0, criticalAlerts: 0, totalAlerts: 0, faultyAssets: 0, totalGroups: 0,
   };
 
   const alerts: Alert[] = alertData?.data?.data ?? [];
-  const alertStats       = alertData?.data?.stats ?? {};
+  const alertStats = alertData?.data?.stats ?? {};
 
-  // Power chart data (son 7 günü al)
-  const rawPower: any[] = powerData?.data?.data ?? [];
-  const powerChart = rawPower.slice(0, 14).reverse().map((r: any) => ({
-    date:  r.Period?.slice(5),  // MM-DD
-    power: Math.round(r.AvgPowerW ?? 0),
-    kwh:   Math.round(r.TotalkWh ?? 0),
-  }));
+  // Yayın günü slotları: 21:00 → 00:00 → ... → 18:00
+  const BROADCAST_SLOTS = ['21:00', '00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00'];
+  const powerChart = (() => {
+    const map = new Map<string, { sumPow: number; totalKwh: number; n: number }>();
+    for (const r of (powerData?.data?.data ?? [])) {
+      const label = (r.period ?? '').slice(-5);
+      const e = map.get(label) ?? { sumPow: 0, totalKwh: 0, n: 0 };
+      e.sumPow += r.avgPowerW ?? 0;
+      e.totalKwh += r.totalKwh ?? 0;
+      e.n += 1;
+      map.set(label, e);
+    }
+    return BROADCAST_SLOTS
+      .filter(slot => map.has(slot))
+      .map(slot => {
+        const e = map.get(slot)!;
+        return { date: slot, power: Math.round(e.sumPow / e.n), kwh: Math.round(e.totalKwh) };
+      });
+  })();
 
-  // Pie chart — asset type distribution from health data
+  // Pie chart — fiziksel ağaç node_type dağılımı (physical_nodes öncelikli, yoksa assets fallback)
+  const physicalNodes: any[] = physicalDistData?.data?.data ?? [];
   const health: any[] = healthData?.data?.data ?? [];
-  const typeMap: Record<string, number> = {};
-  health.forEach((h: any) => {
-    typeMap[h.AssetType] = (typeMap[h.AssetType] ?? 0) + (h.TotalAssets ?? 0);
-  });
-  const pieData = Object.entries(typeMap).map(([name, value]) => ({ name, value }));
+  const pieData = physicalNodes.length > 0
+    ? physicalNodes.map((n: any) => ({ name: n.nodeType, value: n.count }))
+    : (() => {
+        const typeMap: Record<string, number> = {};
+        health.forEach((h: any) => { typeMap[h.assetType] = (typeMap[h.assetType] ?? 0) + (h.totalAssets ?? 0); });
+        return Object.entries(typeMap).map(([name, value]) => ({ name, value }));
+      })();
 
   // Heatmap sample (top 12 by temperature)
   const heatAssets: any[] = (heatmapData?.data?.data ?? [])
     .slice(0, 12);
 
-  const uptime = kpi.TotalAssets > 0
-    ? ((kpi.ActiveAssets / kpi.TotalAssets) * 100).toFixed(1)
+  const uptime = kpi.totalAssets > 0
+    ? ((kpi.activeAssets / kpi.totalAssets) * 100).toFixed(1)
     : '0.0';
 
   return (
@@ -169,15 +202,15 @@ export function Dashboard() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KPICard label="Toplam Varlık"   value={kpi.TotalAssets}      icon={Server}        accent="cyan"  delay="100" />
-        <KPICard label="Aktif Cihazlar"  value={kpi.ActiveAssets}     icon={CheckCircle}   accent="green" delay="200" />
-        <KPICard label="Bakımda"          value={kpi.MaintenanceAssets} icon={Activity}     accent="amber" delay="300"
-          sub={kpi.TotalAssets > 0 ? `%${((kpi.MaintenanceAssets/kpi.TotalAssets)*100).toFixed(1)}` : undefined}
+        <KPICard label="Toplam Varlık" value={kpi.totalAssets} icon={Server} accent="cyan" delay="100" />
+        <KPICard label="Aktif Cihazlar" value={kpi.activeAssets} icon={CheckCircle} accent="green" delay="200" />
+        <KPICard label="Bakımda" value={kpi.maintenanceAssets} icon={Activity} accent="amber" delay="300"
+          sub={kpi.totalAssets > 0 ? `%${((kpi.maintenanceAssets / kpi.totalAssets) * 100).toFixed(1)}` : undefined}
         />
-        <KPICard label="Kritik Uyarı"   value={kpi.CriticalAlerts}   icon={AlertCircle}   accent="red"   delay="400" />
-        <KPICard label="Toplam Uyarı"   value={kpi.TotalAlerts}      icon={AlertTriangle} accent="amber" delay="500" />
-        <KPICard label="Sistem Uptime"  value={`%${uptime}`}         icon={TrendingUp}    accent="cyan"  delay="500"
-          sub={`${kpi.ActiveAssets} / ${kpi.TotalAssets} cihaz`}
+        <KPICard label="Kritik Uyarı" value={kpi.criticalAlerts} icon={AlertCircle} accent="red" delay="400" />
+        <KPICard label="Toplam Uyarı" value={kpi.totalAlerts} icon={AlertTriangle} accent="amber" delay="500" />
+        <KPICard label="Sistem Uptime" value={`%${uptime}`} icon={TrendingUp} accent="cyan" delay="500"
+          sub={`${kpi.activeAssets} / ${kpi.totalAssets} cihaz`}
         />
       </div>
 
@@ -189,7 +222,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Güç Tüketimi</p>
-              <p className="text-sm font-display font-semibold text-white mt-0.5">Son 14 Gün — Ortalama Watt</p>
+              <p className="text-sm font-display font-semibold text-white mt-0.5">{todayLabel} — 3 Saatlik Ortalama Watt</p>
             </div>
             <Zap size={14} className="text-amber-400" />
           </div>
@@ -198,7 +231,7 @@ export function Dashboard() {
               <AreaChart data={powerChart} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="powerGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.25} />
+                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.25} />
                     <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
                   </linearGradient>
                 </defs>
@@ -224,7 +257,7 @@ export function Dashboard() {
         <div className="card p-4 fade-in-up delay-300">
           <div className="mb-4">
             <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Varlık Dağılımı</p>
-            <p className="text-sm font-display font-semibold text-white mt-0.5">Ekipman Türlerine Göre</p>
+            <p className="text-sm font-display font-semibold text-white mt-0.5">{physicalNodes.length > 0 ? 'Fiziksel Ağaç Node Türleri' : 'Ekipman Türlerine Göre'}</p>
           </div>
           {pieData.length > 0 ? (
             <>
@@ -270,20 +303,20 @@ export function Dashboard() {
               <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Aktif Uyarılar</p>
               <div className="flex items-center gap-3 mt-1">
                 <span className="flex items-center gap-1 text-xs text-red-400">
-                  <span className="font-mono-val font-semibold">{alertStats.CriticalCount ?? 0}</span> Kritik
+                  <span className="font-mono-val font-semibold">{alertStats.criticalCount ?? 0}</span> Kritik
                 </span>
                 <span className="flex items-center gap-1 text-xs text-amber-400">
-                  <span className="font-mono-val font-semibold">{alertStats.WarningCount ?? 0}</span> Uyarı
+                  <span className="font-mono-val font-semibold">{alertStats.warningCount ?? 0}</span> Uyarı
                 </span>
                 <span className="flex items-center gap-1 text-xs text-cyan-400">
-                  <span className="font-mono-val font-semibold">{alertStats.InfoCount ?? 0}</span> Bilgi
+                  <span className="font-mono-val font-semibold">{alertStats.infoCount ?? 0}</span> Bilgi
                 </span>
               </div>
             </div>
           </div>
           <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
             {alerts.length > 0
-              ? alerts.slice(0, 8).map(a => <AlertRow key={a.AlertID} alert={a} />)
+              ? alerts.slice(0, 8).map(a => <AlertRow key={a.alertId} alert={a} />)
               : <p className="text-center text-[#3D5275] text-xs font-mono-val py-6">✓ Aktif uyarı yok</p>
             }
           </div>
@@ -298,19 +331,19 @@ export function Dashboard() {
           {heatAssets.length > 0 ? (
             <div className="space-y-2 max-h-52 overflow-y-auto">
               {heatAssets.map((a: any) => (
-                <div key={a.AssetID} className="flex items-center gap-3 p-2 rounded bg-[#131C2E] border border-[#1E2D45]">
+                <div key={a.assetId} className="flex items-center gap-3 p-2 rounded bg-[#131C2E] border border-[#1E2D45]">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-[#E2EAF4] truncate leading-tight">{a.AssetName}</p>
-                    <p className="text-[10px] text-[#3D5275] font-mono-val truncate">{a.ChannelName} · {a.RoomName}</p>
+                    <p className="text-xs text-[#E2EAF4] truncate leading-tight">{a.assetName}</p>
+                    <p className="text-[10px] text-[#3D5275] font-mono-val truncate">{a.channelName} · {a.roomName}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <HeatCell value={a.Temperature} label="°C" />
-                    <HeatCell value={a.CPUUsage ?? a.GPUUsage} label="Kull." unit="%" />
-                    <HeatCell value={a.PowerConsumption ? Math.min((a.PowerConsumption / 1000) * 100, 100) : undefined} label="Güç" unit="%" />
+                    <HeatCell value={a.temperature} label="°C" />
+                    <HeatCell value={a.cpuUsage ?? a.gpuUsage} label="Kull." unit="%" />
+                    <HeatCell value={a.powerConsumption ? Math.min((a.powerConsumption / 1000) * 100, 100) : undefined} label="Güç" unit="%" />
                   </div>
                   <span className={cn(
                     'w-1.5 h-1.5 rounded-full flex-shrink-0',
-                    a.IsOnline ? 'bg-green-400 pulse-dot' : 'bg-red-400'
+                    a.isOnline ? 'bg-green-400 pulse-dot' : 'bg-red-400'
                   )} />
                 </div>
               ))}
@@ -350,13 +383,13 @@ export function Dashboard() {
           <ResponsiveContainer width="100%" height={160}>
             <BarChart
               data={health.reduce((acc: any[], curr: any) => {
-                const ex = acc.find(x => x.channel === curr.ChannelName);
+                const ex = acc.find(x => x.channel === curr.channelName);
                 if (ex) {
-                  ex.aktif    += curr.ActiveCount ?? 0;
-                  ex.bakim    += curr.MaintenanceCount ?? 0;
-                  ex.arizali  += curr.FaultyCount ?? 0;
+                  ex.aktif += curr.activeCount ?? 0;
+                  ex.bakim += curr.maintenanceCount ?? 0;
+                  ex.arizali += curr.faultyCount ?? 0;
                 } else {
-                  acc.push({ channel: curr.ChannelName, aktif: curr.ActiveCount ?? 0, bakim: curr.MaintenanceCount ?? 0, arizali: curr.FaultyCount ?? 0 });
+                  acc.push({ channel: curr.channelName, aktif: curr.activeCount ?? 0, bakim: curr.maintenanceCount ?? 0, arizali: curr.faultyCount ?? 0 });
                 }
                 return acc;
               }, [])}
@@ -366,12 +399,13 @@ export function Dashboard() {
               <XAxis dataKey="channel" tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
               <Tooltip
+                cursor={{ fill: 'rgba(30,45,69,0.45)' }}
                 contentStyle={{ background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' }}
                 labelStyle={{ color: '#6B84A3' }}
               />
-              <Bar dataKey="aktif"   stackId="a" fill="#10B981" radius={[0,0,0,0]} name="Aktif" />
-              <Bar dataKey="bakim"   stackId="a" fill="#F59E0B" name="Bakım" />
-              <Bar dataKey="arizali" stackId="a" fill="#EF4444" radius={[2,2,0,0]} name="Arızalı" />
+              <Bar dataKey="aktif" stackId="a" fill="#10B981" radius={[0, 0, 0, 0]} name="Aktif" />
+              <Bar dataKey="bakim" stackId="a" fill="#F59E0B" name="Bakım" />
+              <Bar dataKey="arizali" stackId="a" fill="#EF4444" radius={[2, 2, 0, 0]} name="Arızalı" />
             </BarChart>
           </ResponsiveContainer>
         </div>

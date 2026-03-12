@@ -1,8 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/authStore';
 import { Layout } from '@/components/layout/Layout';
-import { Login }      from '@/pages/Login';
 import { Dashboard }  from '@/pages/Dashboard';
 import { Assets }     from '@/pages/Assets';
 import { AssetList }  from '@/pages/AssetList';
@@ -10,7 +8,9 @@ import { Monitoring } from '@/pages/Monitoring';
 import { Alerts }     from '@/pages/Alerts';
 import { Maintenance } from '@/pages/Maintenance';
 import { Analytics }  from '@/pages/Analytics';
-import { Settings }   from '@/pages/Settings';
+import { Settings }    from '@/pages/Settings';
+import { AssetDetail } from '@/pages/AssetDetail';
+import { Licenses }    from '@/pages/Licenses';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,29 +21,18 @@ const queryClient = new QueryClient({
   },
 });
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
-
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<Layout />}>
             <Route index              element={<Dashboard />}  />
             <Route path="assets"      element={<Assets />}     />
+            <Route path="assets/:id"  element={<AssetDetail />} />
             <Route path="asset-list"  element={<AssetList />}  />
+            <Route path="licenses"    element={<Licenses />}   />
             <Route path="monitoring"  element={<Monitoring />} />
             <Route path="alerts"      element={<Alerts />}     />
             <Route path="maintenance" element={<Maintenance />} />

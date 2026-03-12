@@ -104,15 +104,15 @@ function UserFormModal({
 
   const [form, setForm] = useState<UserFormData>(
     editUser ? {
-      username: editUser.Username ?? '',
-      email: editUser.Email ?? '',
-      fullName: editUser.FullName ?? '',
-      role: editUser.Role ?? 'Technician',
-      channelId: editUser.ChannelID ? String(editUser.ChannelID) : '',
-      phone: editUser.Phone ?? '',
-      department: editUser.Department ?? '',
+      username: editUser.username ?? '',
+      email: editUser.email ?? '',
+      fullName: editUser.fullName ?? '',
+      role: editUser.role ?? 'Technician',
+      channelId: editUser.channelId ? String(editUser.channelId) : '',
+      phone: editUser.phone ?? '',
+      department: editUser.department ?? '',
       password: '',
-      isActive: editUser.IsActive ?? true,
+      isActive: editUser.isActive ?? true,
     } : EMPTY_USER
   );
   const [error, setError] = useState('');
@@ -126,7 +126,7 @@ function UserFormModal({
   });
 
   const updateMut = useMutation({
-    mutationFn: (body: object) => userApi.update(editUser.UserID, body),
+    mutationFn: (body: object) => userApi.update(editUser.userId, body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); onClose(); },
     onError: (e: any) => setError(e?.response?.data?.message ?? 'Güncelleme başarısız.'),
   });
@@ -162,7 +162,7 @@ function UserFormModal({
   const isPending = createMut.isPending || updateMut.isPending;
 
   return (
-    <Modal open onClose={onClose} title={isEdit ? `Kullanıcıyı Düzenle: ${editUser.FullName}` : 'Yeni Kullanıcı'}>
+    <Modal open onClose={onClose} title={isEdit ? `Kullanıcıyı Düzenle: ${editUser.fullName}` : 'Yeni Kullanıcı'}>
       <form onSubmit={handleSubmit} className="space-y-3">
         {!isEdit && (
           <FormField label="Kullanıcı Adı" required>
@@ -187,7 +187,7 @@ function UserFormModal({
           <FormField label="Kanal">
             <select className={inputCls} value={form.channelId} onChange={e => setField('channelId', e.target.value)}>
               <option value="">Tüm Kanallar</option>
-              {channels.map((c: any) => <option key={c.ChannelID} value={String(c.ChannelID)}>{c.ChannelName}</option>)}
+              {channels.map((c: any) => <option key={c.channelId} value={String(c.channelId)}>{c.channelName}</option>)}
             </select>
           </FormField>
           <FormField label="Telefon">
@@ -441,33 +441,33 @@ export function Settings() {
               </thead>
               <tbody>
                 {users.map(u => (
-                  <tr key={u.UserID} className="border-b border-[#1E2D45] hover:bg-[#131C2E] transition-colors group">
+                  <tr key={u.userId} className="border-b border-[#1E2D45] hover:bg-[#131C2E] transition-colors group">
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded bg-[#1E2D45] flex items-center justify-center flex-shrink-0">
-                          <span className="text-[9px] font-bold text-[#6B84A3]">{u.FullName?.charAt(0)}</span>
+                          <span className="text-[9px] font-bold text-[#6B84A3]">{u.fullName?.charAt(0)}</span>
                         </div>
-                        <span className="text-xs text-[#E2EAF4]">{u.FullName}</span>
+                        <span className="text-xs text-[#E2EAF4]">{u.fullName}</span>
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3] font-mono-val">{u.Username}</td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{u.Email}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#6B84A3] font-mono-val">{u.username}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{u.email}</td>
                     <td className="py-2.5 px-3">
-                      <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val', roleColor[u.Role] ?? 'text-[#6B84A3]')}>
-                        {roleLabel(u.Role)}
+                      <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val', roleColor[u.role] ?? 'text-[#6B84A3]')}>
+                        {roleLabel(u.role)}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{u.ChannelName ?? 'Tümü'}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{u.channelName ?? 'Tümü'}</td>
                     <td className="py-2.5 px-3 text-[10px] text-[#3D5275] font-mono-val">
-                      {u.LastLogin ? formatDateTime(u.LastLogin) : '-'}
+                      {u.lastLogin ? formatDateTime(u.lastLogin) : '-'}
                     </td>
                     <td className="py-2.5 px-3">
                       <span className={cn(
                         'text-[10px] px-2 py-0.5 rounded font-mono-val flex items-center gap-1 w-fit',
-                        u.IsActive ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'
+                        u.isActive ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'
                       )}>
-                        <span className={cn('w-1.5 h-1.5 rounded-full', u.IsActive ? 'bg-green-400 pulse-dot' : 'bg-red-400')} />
-                        {u.IsActive ? 'Aktif' : 'Pasif'}
+                        <span className={cn('w-1.5 h-1.5 rounded-full', u.isActive ? 'bg-green-400 pulse-dot' : 'bg-red-400')} />
+                        {u.isActive ? 'Aktif' : 'Pasif'}
                       </span>
                     </td>
                     <td className="py-2.5 px-3">
@@ -479,7 +479,7 @@ export function Settings() {
                         >
                           <Edit size={12} />
                         </button>
-                        {u.UserID !== (user as any)?.userId && (
+                        {u.userId !== (user as any)?.userId && (
                           <button
                             onClick={() => setDeleteTarget(u)}
                             className="p-1.5 rounded text-[#6B84A3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
@@ -507,9 +507,9 @@ export function Settings() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-1">
           {[
             { label: 'Versiyon', value: 'v1.0.0' },
-            { label: 'API', value: 'http://localhost:5000/api/v1' },
+            { label: 'API', value: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1' },
             { label: 'Veritabanı', value: 'SQL Server 2019+' },
-            { label: 'Real-time', value: 'WebSocket (ws://localhost:5000)' },
+            { label: 'Real-time', value: `WebSocket (${import.meta.env.VITE_API_URL?.replace('http', 'ws') || 'ws://localhost:5000'})` },
             { label: 'Frontend', value: 'Vite + React 18 + TypeScript' },
             { label: 'Backend', value: 'Node.js + Express.js' },
           ].map(({ label, value }) => (
@@ -545,7 +545,7 @@ export function Settings() {
               <AlertTriangle size={22} className="text-red-400" />
             </div>
             <div>
-              <p className="text-sm text-[#E2EAF4] font-medium">{deleteTarget.FullName}</p>
+              <p className="text-sm text-[#E2EAF4] font-medium">{deleteTarget.fullName}</p>
               <p className="text-[11px] text-[#6B84A3] mt-1 font-mono-val">
                 Bu kullanıcıyı devre dışı bırakmak istediğinize emin misiniz?
               </p>
@@ -555,7 +555,7 @@ export function Settings() {
                 VAZGEÇ
               </button>
               <button
-                onClick={() => deleteMut.mutate(deleteTarget.UserID)}
+                onClick={() => deleteMut.mutate(deleteTarget.userId)}
                 disabled={deleteMut.isPending}
                 className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 disabled:opacity-50 font-mono-val transition-all"
               >

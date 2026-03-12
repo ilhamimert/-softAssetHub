@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Server, List, Bell, BarChart3,
-  Wrench, Settings, LogOut, ChevronRight, Wifi, Layers, Building2,
+  Wrench, Settings, LogOut, ChevronRight, Wifi, Layers, Building2, KeyRound,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/',           icon: LayoutDashboard, label: 'Dashboard',      exact: true },
   { to: '/assets',     icon: Layers,          label: 'Varlık Ağacı'  },
   { to: '/asset-list', icon: List,            label: 'Varlık Listesi' },
+  { to: '/licenses',   icon: KeyRound,        label: 'Lisanslar'      },
   { to: '/monitoring', icon: Wifi,            label: 'Monitoring'     },
   { to: '/alerts',     icon: Bell,            label: 'Uyarılar'       },
   { to: '/maintenance',icon: Wrench,          label: 'Bakım'           },

@@ -4,35 +4,38 @@ const { query } = require('../config/database');
 const getPowerConsumption = async (req, res, next) => {
   try {
     const { channelId, from, to, groupBy = 'day' } = req.query;
-    const params = {};
+    const params = [];
+    let idx = 1;
     let whereClause = 'WHERE 1=1';
 
-    if (channelId) { whereClause += ' AND a.ChannelID = @channelId'; params.channelId = parseInt(channelId); }
-    if (from) { whereClause += ' AND m.MonitoringTime >= @from'; params.from = new Date(from); }
-    if (to)   { whereClause += ' AND m.MonitoringTime <= @to';   params.to   = new Date(to);   }
+    if (channelId) { whereClause += ` AND a.channel_id = $${idx++}`; params.push(parseInt(channelId)); }
+    if (from)      { whereClause += ` AND m.monitoring_time >= $${idx++}`; params.push(new Date(from)); }
+    if (to)        { whereClause += ` AND m.monitoring_time <= $${idx++}`; params.push(new Date(to)); }
 
     const dateGroup = groupBy === 'month'
-      ? "FORMAT(m.MonitoringTime, 'yyyy-MM')"
+      ? `TO_CHAR(m.monitoring_time, 'YYYY-MM')`
       : groupBy === 'hour'
-      ? "FORMAT(m.MonitoringTime, 'yyyy-MM-dd HH')"
-      : "FORMAT(m.MonitoringTime, 'yyyy-MM-dd')";
+      ? `TO_CHAR(m.monitoring_time, 'YYYY-MM-DD HH24')`
+      : groupBy === '3hour'
+      ? `TO_CHAR(m.monitoring_time + INTERVAL '3 hours', 'YYYY-MM-DD') || ' ' || LPAD((FLOOR(EXTRACT(HOUR FROM (m.monitoring_time + INTERVAL '3 hours')) / 3) * 3)::TEXT, 2, '0') || ':00'`
+      : `TO_CHAR(m.monitoring_time, 'YYYY-MM-DD')`;
 
     const result = await query(
       `SELECT
-         ${dateGroup} AS Period,
-         c.ChannelName,
-         ag.GroupType,
-         AVG(m.PowerConsumption) AS AvgPowerW,
-         MAX(m.PowerConsumption) AS MaxPowerW,
-         MIN(m.PowerConsumption) AS MinPowerW,
-         SUM(m.PowerConsumption) / 1000.0 AS TotalkWh
-       FROM AssetMonitoring m
-       JOIN Assets      a  ON m.AssetID      = a.AssetID
-       JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       JOIN Channels    c  ON a.ChannelID    = c.ChannelID
+         ${dateGroup} AS period,
+         c.channel_name,
+         ag.group_type,
+         AVG(m.power_consumption) AS avg_power_w,
+         MAX(m.power_consumption) AS max_power_w,
+         MIN(m.power_consumption) AS min_power_w,
+         SUM(m.power_consumption) / 1000.0 AS total_kwh
+       FROM asset_monitoring m
+       JOIN assets      a  ON m.asset_id      = a.asset_id
+       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       JOIN channels    c  ON a.channel_id    = c.channel_id
        ${whereClause}
-       GROUP BY ${dateGroup}, c.ChannelID, c.ChannelName, ag.GroupType
-       ORDER BY Period DESC, c.ChannelName`,
+       GROUP BY ${dateGroup}, c.channel_id, c.channel_name, ag.group_type
+       ORDER BY period DESC, c.channel_name`,
       params
     );
     res.json({ success: true, data: result.recordset });
@@ -45,34 +48,38 @@ const getPowerConsumption = async (req, res, next) => {
 const getAssetHealth = async (req, res, next) => {
   try {
     const { channelId } = req.query;
-    let whereClause = 'WHERE a.IsActive = 1';
-    const params = {};
-    if (channelId) { whereClause += ' AND a.ChannelID = @channelId'; params.channelId = parseInt(channelId); }
+    const params = [];
+    let whereClause = 'WHERE a.is_active = TRUE';
+    if (channelId) {
+      params.push(parseInt(channelId));
+      whereClause += ` AND a.channel_id = $1`;
+    }
 
     const result = await query(
       `SELECT
-         c.ChannelName,
-         ag.GroupName, ag.GroupType,
-         a.AssetType,
-         COUNT(*) AS TotalAssets,
-         SUM(CASE WHEN a.Status = 'Active'      THEN 1 ELSE 0 END) AS ActiveCount,
-         SUM(CASE WHEN a.Status = 'Maintenance' THEN 1 ELSE 0 END) AS MaintenanceCount,
-         SUM(CASE WHEN a.Status = 'Faulty'      THEN 1 ELSE 0 END) AS FaultyCount,
-         SUM(CASE WHEN a.WarrantyEndDate < GETDATE() THEN 1 ELSE 0 END) AS ExpiredWarrantyCount,
-         AVG(DATEDIFF(YEAR, a.PurchaseDate, GETDATE())) AS AvgAgeYears,
-         AVG(lm.PerformanceScore) AS AvgPerformanceScore,
-         SUM(CASE WHEN lm.IsOnline = 0 THEN 1 ELSE 0 END) AS OfflineCount
-       FROM Assets a
-       JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       JOIN Channels    c  ON a.ChannelID    = c.ChannelID
-       LEFT JOIN (
-         SELECT AssetID, PerformanceScore, IsOnline,
-           ROW_NUMBER() OVER (PARTITION BY AssetID ORDER BY MonitoringTime DESC) AS rn
-         FROM AssetMonitoring
-       ) lm ON lm.AssetID = a.AssetID AND lm.rn = 1
+         c.channel_name,
+         ag.group_name, ag.group_type,
+         a.asset_type,
+         COUNT(*)::INT AS total_assets,
+         SUM(CASE WHEN a.status = 'Active'      THEN 1 ELSE 0 END)::INT AS active_count,
+         SUM(CASE WHEN a.status = 'Maintenance' THEN 1 ELSE 0 END)::INT AS maintenance_count,
+         SUM(CASE WHEN a.status = 'Faulty'      THEN 1 ELSE 0 END)::INT AS faulty_count,
+         SUM(CASE WHEN a.warranty_end_date < NOW() THEN 1 ELSE 0 END)::INT AS expired_warranty_count,
+         AVG(EXTRACT(YEAR FROM AGE(NOW(), a.purchase_date)))::INT AS avg_age_years,
+         AVG(lm.performance_score) AS avg_performance_score,
+         SUM(CASE WHEN lm.is_online = FALSE THEN 1 ELSE 0 END)::INT AS offline_count
+       FROM assets a
+       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       JOIN channels    c  ON a.channel_id    = c.channel_id
+       LEFT JOIN LATERAL (
+         SELECT performance_score, is_online
+         FROM asset_monitoring m2
+         WHERE m2.asset_id = a.asset_id
+         ORDER BY m2.monitoring_time DESC LIMIT 1
+       ) lm ON true
        ${whereClause}
-       GROUP BY c.ChannelID, c.ChannelName, ag.AssetGroupID, ag.GroupName, ag.GroupType, a.AssetType
-       ORDER BY c.ChannelName, ag.GroupType, a.AssetType`,
+       GROUP BY c.channel_id, c.channel_name, ag.asset_group_id, ag.group_name, ag.group_type, a.asset_type
+       ORDER BY c.channel_name, ag.group_type, a.asset_type`,
       params
     );
     res.json({ success: true, data: result.recordset });
@@ -85,30 +92,31 @@ const getAssetHealth = async (req, res, next) => {
 const getBudget = async (req, res, next) => {
   try {
     const { channelId, year } = req.query;
-    const params = {};
-    let whereClause = 'WHERE a.IsActive = 1';
+    const params = [];
+    let idx = 1;
+    let whereClause = 'WHERE a.is_active = TRUE';
 
-    if (channelId) { whereClause += ' AND a.ChannelID = @channelId'; params.channelId = parseInt(channelId); }
-    if (year) { whereClause += ' AND YEAR(a.PurchaseDate) = @year'; params.year = parseInt(year); }
+    if (channelId) { whereClause += ` AND a.channel_id = $${idx++}`;                       params.push(parseInt(channelId)); }
+    if (year)      { whereClause += ` AND EXTRACT(YEAR FROM a.purchase_date) = $${idx++}`; params.push(parseInt(year)); }
 
     const result = await query(
       `SELECT
-         c.ChannelName,
-         ag.GroupName, ag.GroupType,
-         a.AssetType,
-         COUNT(*) AS AssetCount,
-         SUM(a.PurchaseCost) AS TotalPurchaseCost,
-         SUM(a.CurrentValue) AS TotalCurrentValue,
-         SUM(a.PurchaseCost - a.CurrentValue) AS TotalDepreciation,
-         AVG(a.DepreciationRate) AS AvgDepreciationRate,
-         SUM(mr.CostAmount) AS TotalMaintenanceCost
-       FROM Assets a
-       JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       JOIN Channels    c  ON a.ChannelID    = c.ChannelID
-       LEFT JOIN MaintenanceRecords mr ON a.AssetID = mr.AssetID AND mr.Status = 'Completed'
+         c.channel_name,
+         ag.group_name, ag.group_type,
+         a.asset_type,
+         COUNT(*)::INT AS asset_count,
+         SUM(a.purchase_cost) AS total_purchase_cost,
+         SUM(a.current_value) AS total_current_value,
+         SUM(a.purchase_cost - a.current_value) AS total_depreciation,
+         AVG(a.depreciation_rate) AS avg_depreciation_rate,
+         SUM(mr.cost_amount) AS total_maintenance_cost
+       FROM assets a
+       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       JOIN channels    c  ON a.channel_id    = c.channel_id
+       LEFT JOIN maintenance_records mr ON a.asset_id = mr.asset_id AND mr.status = 'Completed'
        ${whereClause}
-       GROUP BY c.ChannelID, c.ChannelName, ag.AssetGroupID, ag.GroupName, ag.GroupType, a.AssetType
-       ORDER BY c.ChannelName, ag.GroupType`,
+       GROUP BY c.channel_id, c.channel_name, ag.asset_group_id, ag.group_name, ag.group_type, a.asset_type
+       ORDER BY c.channel_name, ag.group_type`,
       params
     );
     res.json({ success: true, data: result.recordset });
@@ -121,32 +129,43 @@ const getBudget = async (req, res, next) => {
 const getMaintenanceForecast = async (req, res, next) => {
   try {
     const { channelId, days = 90 } = req.query;
-    const params = { days: parseInt(days) };
-    let whereClause = `WHERE (
-      mr.NextMaintenanceDate IS NOT NULL AND mr.NextMaintenanceDate <= DATEADD(DAY, @days, GETDATE())
-      OR a.WarrantyEndDate <= DATEADD(DAY, @days, GETDATE())
-    )`;
+    const params = [parseInt(days)];
+    let idx = 2;
+    let channelFilter = '';
 
-    if (channelId) { whereClause += ' AND a.ChannelID = @channelId'; params.channelId = parseInt(channelId); }
+    if (channelId) {
+      channelFilter = ` AND a.channel_id = $${idx++}`;
+      params.push(parseInt(channelId));
+    }
 
     const result = await query(
       `SELECT DISTINCT
-         a.AssetID, a.AssetName, a.AssetCode, a.AssetType, a.WarrantyEndDate,
-         c.ChannelName,
-         ag.GroupName, ag.GroupType,
-         mr.NextMaintenanceDate, mr.MaintenanceInterval, mr.MaintenanceType,
-         DATEDIFF(DAY, GETDATE(), mr.NextMaintenanceDate) AS DaysUntilMaintenance,
-         DATEDIFF(DAY, GETDATE(), a.WarrantyEndDate)      AS DaysUntilWarrantyExpiry
-       FROM Assets a
-       JOIN AssetGroups ag ON a.AssetGroupID = ag.AssetGroupID
-       JOIN Channels    c  ON a.ChannelID    = c.ChannelID
-       LEFT JOIN (
-         SELECT AssetID, NextMaintenanceDate, MaintenanceInterval, MaintenanceType,
-           ROW_NUMBER() OVER (PARTITION BY AssetID ORDER BY NextMaintenanceDate ASC) AS rn
-         FROM MaintenanceRecords WHERE Status IN ('Scheduled','Pending') AND NextMaintenanceDate IS NOT NULL
-       ) mr ON mr.AssetID = a.AssetID AND mr.rn = 1
-       ${whereClause} AND a.IsActive = 1
-       ORDER BY mr.NextMaintenanceDate ASC`,
+         a.asset_id, a.asset_name, a.asset_code, a.asset_type, a.warranty_end_date,
+         c.channel_name, b.building_name,
+         ag.group_name, ag.group_type,
+         mr.next_maintenance_date, mr.maintenance_interval, mr.maintenance_type,
+         (mr.next_maintenance_date::date - CURRENT_DATE) AS days_until_maintenance,
+         (a.warranty_end_date::date - CURRENT_DATE)      AS days_until_warranty_expiry
+       FROM assets a
+       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       JOIN channels    c  ON a.channel_id    = c.channel_id
+       LEFT JOIN rooms      r  ON a.room_id       = r.room_id
+       LEFT JOIN buildings  b  ON r.building_id   = b.building_id
+       LEFT JOIN LATERAL (
+         SELECT next_maintenance_date, maintenance_interval, maintenance_type
+         FROM maintenance_records mr2
+         WHERE mr2.asset_id = a.asset_id
+           AND mr2.status IN ('Scheduled','Pending')
+           AND mr2.next_maintenance_date IS NOT NULL
+         ORDER BY mr2.next_maintenance_date ASC LIMIT 1
+       ) mr ON true
+       WHERE (
+         (mr.next_maintenance_date IS NOT NULL AND mr.next_maintenance_date <= (CURRENT_DATE + ($1 || ' days')::INTERVAL))
+         OR a.warranty_end_date <= (CURRENT_DATE + ($1 || ' days')::INTERVAL)
+       )
+       AND a.is_active = TRUE
+       ${channelFilter}
+       ORDER BY mr.next_maintenance_date ASC`,
       params
     );
     res.json({ success: true, data: result.recordset });
@@ -156,26 +175,34 @@ const getMaintenanceForecast = async (req, res, next) => {
 };
 
 // GET /analytics/dashboard-kpi
+// mv_dashboard_kpi artık kanal bazlı (Migration 004).
+// channelId varsa → tek kanal satırı, yoksa → tüm kanalların toplamı.
 const getDashboardKPI = async (req, res, next) => {
   try {
     const { channelId } = req.query;
-    const params = {};
-    const chFilter = channelId ? 'AND a.ChannelID = @channelId' : '';
-    if (channelId) params.channelId = parseInt(channelId);
 
+    if (channelId) {
+      // Belirli kanal → MV'den tek satır
+      const result = await query(
+        `SELECT * FROM mv_dashboard_kpi WHERE channel_id = $1`,
+        [parseInt(channelId)]
+      );
+      return res.json({ success: true, data: result.recordset[0] || null });
+    }
+
+    // Global toplam → tüm kanalları MV'den topla
     const result = await query(
       `SELECT
-         (SELECT COUNT(*) FROM Assets a WHERE a.IsActive = 1 ${chFilter}) AS TotalAssets,
-         (SELECT COUNT(*) FROM Assets a WHERE a.Status = 'Active'      AND a.IsActive = 1 ${chFilter}) AS ActiveAssets,
-         (SELECT COUNT(*) FROM Assets a WHERE a.Status = 'Maintenance' AND a.IsActive = 1 ${chFilter}) AS MaintenanceAssets,
-         (SELECT COUNT(*) FROM Assets a WHERE a.Status = 'Faulty'      AND a.IsActive = 1 ${chFilter}) AS FaultyAssets,
-         (SELECT COUNT(*) FROM Alerts al LEFT JOIN Assets a ON al.AssetID = a.AssetID
-          WHERE al.IsResolved = 0 AND al.AlertType = 'Critical' ${chFilter}) AS CriticalAlerts,
-         (SELECT COUNT(*) FROM Alerts al LEFT JOIN Assets a ON al.AssetID = a.AssetID
-          WHERE al.IsResolved = 0 ${chFilter}) AS TotalAlerts,
-         (SELECT COUNT(DISTINCT AssetGroupID) FROM AssetGroups ag WHERE ag.IsActive = 1
-          ${channelId ? 'AND ag.ChannelID = @channelId' : ''}) AS TotalGroups`,
-      params
+         SUM(total_assets)::INT       AS total_assets,
+         SUM(active_assets)::INT      AS active_assets,
+         SUM(maintenance_assets)::INT AS maintenance_assets,
+         SUM(faulty_assets)::INT      AS faulty_assets,
+         SUM(retired_assets)::INT     AS retired_assets,
+         SUM(critical_alerts)::INT    AS critical_alerts,
+         SUM(total_alerts)::INT       AS total_alerts,
+         SUM(total_groups)::INT       AS total_groups,
+         MAX(refreshed_at)            AS refreshed_at
+       FROM mv_dashboard_kpi`
     );
     res.json({ success: true, data: result.recordset[0] });
   } catch (err) {
@@ -183,4 +210,32 @@ const getDashboardKPI = async (req, res, next) => {
   }
 };
 
-module.exports = { getPowerConsumption, getAssetHealth, getBudget, getMaintenanceForecast, getDashboardKPI };
+// GET /analytics/dashboard-kpi/channels  — tüm kanalların KPI'larını listeler
+const getDashboardKPIByChannel = async (req, res, next) => {
+  try {
+    const result = await query(`SELECT * FROM mv_dashboard_kpi ORDER BY channel_name`);
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /analytics/physical-node-distribution
+// physical_nodes tablosundaki node_type dağılımını döndürür
+const getPhysicalNodeDistribution = async (req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT
+         node_type   AS "nodeType",
+         COUNT(*)::INT AS "count"
+       FROM physical_nodes
+       GROUP BY node_type
+       ORDER BY count DESC`
+    );
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getPowerConsumption, getAssetHealth, getBudget, getMaintenanceForecast, getDashboardKPI, getDashboardKPIByChannel, getPhysicalNodeDistribution };
