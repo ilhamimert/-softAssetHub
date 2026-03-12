@@ -144,13 +144,14 @@ export function Analytics() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
                 data={health.reduce((acc: any[], curr: any) => {
-                  const ex = acc.find(x => x.channel === curr.channelName);
+                  const name = curr.channelName || 'Bilinmeyen';
+                  const ex = acc.find(x => x.channel === name.slice(0, 8));
                   if (ex) {
                     ex.aktif += curr.activeCount ?? 0;
                     ex.bakim += curr.maintenanceCount ?? 0;
                     ex.arizali += curr.faultyCount ?? 0;
                   } else {
-                    acc.push({ channel: curr.channelName?.slice(0, 8), aktif: curr.activeCount ?? 0, bakim: curr.maintenanceCount ?? 0, arizali: curr.faultyCount ?? 0 });
+                    acc.push({ channel: name.slice(0, 8), aktif: curr.activeCount ?? 0, bakim: curr.maintenanceCount ?? 0, arizali: curr.faultyCount ?? 0 });
                   }
                   return acc;
                 }, [])}
@@ -178,12 +179,13 @@ export function Analytics() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
                 data={budget.reduce((acc: any[], curr: any) => {
-                  const ex = acc.find(x => x.channel === curr.channelName);
+                  const name = curr.channelName || 'Bilinmeyen';
+                  const ex = acc.find(x => x.channel === name.slice(0, 8));
                   if (ex) {
                     ex.maliyet += curr.totalPurchaseCost ?? 0;
                     ex.deger += curr.totalCurrentValue ?? 0;
                   } else {
-                    acc.push({ channel: curr.channelName?.slice(0, 8), maliyet: curr.totalPurchaseCost ?? 0, deger: curr.totalCurrentValue ?? 0 });
+                    acc.push({ channel: name.slice(0, 8), maliyet: curr.totalPurchaseCost ?? 0, deger: curr.totalCurrentValue ?? 0 });
                   }
                   return acc;
                 }, [])}
