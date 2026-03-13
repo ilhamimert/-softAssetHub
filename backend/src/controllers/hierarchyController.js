@@ -1,6 +1,8 @@
 const { query } = require('../config/database');
 const crypto = require('crypto');
 
+const VALID_NODE_TYPES = ['holding', 'kanal', 'bina', 'oda', 'bilgisayar', 'eklenti'];
+
 async function addAudit(action_type, node_type, node_name) {
     try {
         await query(
@@ -44,6 +46,10 @@ exports.createNode = async (req, res, next) => {
     const { nodeType } = req.params; // holding, kanal, bina vs
     const Name = req.body.Name || req.body.name;
     const ParentId = req.body.ParentId || req.body.parentId;
+
+    if (!VALID_NODE_TYPES.includes(nodeType)) {
+        return res.status(400).json({ message: 'Geçersiz node tipi.' });
+    }
 
     try {
         const parent = ParentId ? ParentId : null;

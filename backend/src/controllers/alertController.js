@@ -5,7 +5,8 @@ const { createError } = require('../middleware/errorHandler');
 const getAll = async (req, res, next) => {
   try {
     const { severity, alertType, isResolved, channelId, assetId, page = 1, limit = 50 } = req.query;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 200);
+    const offset = (parseInt(page) - 1) * safeLimit;
     const params = [];
     let idx = 1;
     let whereClause = 'WHERE 1=1';
@@ -31,7 +32,7 @@ const getAll = async (req, res, next) => {
       params.push(parseInt(assetId));
     }
 
-    params.push(parseInt(limit), offset);
+    params.push(safeLimit, offset);
 
     const result = await query(
       `SELECT al.*, a.asset_name, a.asset_code, c.channel_name, ag.group_name
@@ -61,8 +62,8 @@ const getAll = async (req, res, next) => {
       pagination: {
         total,
         page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / parseInt(limit))
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit)
       }
     });
   } catch (err) {

@@ -186,8 +186,8 @@ const changePassword = async (req, res, next) => {
       if (!isValid) return next(createError('Mevcut şifre hatalı.', 400, 'INVALID_PASSWORD'));
     }
 
-    if (!newPassword || newPassword.length < 8) {
-      return next(createError('Yeni şifre en az 8 karakter olmalı.', 400));
+    if (!newPassword || newPassword.length < 8 || !/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword)) {
+      return next(createError('Yeni şifre en az 8 karakter ve bir rakam veya özel karakter içermeli.', 400));
     }
 
     const hash = await bcrypt.hash(newPassword, 10);

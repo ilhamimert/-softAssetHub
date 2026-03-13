@@ -28,13 +28,17 @@ const errorHandler = (err, req, res, next) => {
   }
 
   const statusCode = err.statusCode || 500;
+  const isProduction = process.env.NODE_ENV === 'production';
   // 500+ hatalarında üretimde iç hata detayları sızdırılmaz
-  const safeMessage = (statusCode >= 500 && process.env.NODE_ENV === 'production')
+  const safeMessage = (statusCode >= 500 && isProduction)
     ? 'Sunucu hatası oluştu.'
     : (err.message || 'Sunucu hatası oluştu.');
+  const safeCode = (statusCode >= 500 && isProduction)
+    ? 'INTERNAL_SERVER_ERROR'
+    : (err.code || 'INTERNAL_SERVER_ERROR');
   res.status(statusCode).json({
     success: false,
-    error: err.code || 'INTERNAL_SERVER_ERROR',
+    error: safeCode,
     message: safeMessage,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });

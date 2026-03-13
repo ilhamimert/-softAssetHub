@@ -54,7 +54,8 @@ const getAll = async (req, res, next) => {
     const sortCol   = ALLOWED_SORT[req.query.sortBy] || 'a.asset_name';
     const sortOrder = ALLOWED_ORDER.includes((req.query.sortOrder || '').toUpperCase())
       ? req.query.sortOrder.toUpperCase() : 'ASC';
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 25, 1), 200);
+    const offset = (parseInt(page) - 1) * safeLimit;
 
     const params = [];
     let idx = 1;
@@ -78,7 +79,7 @@ const getAll = async (req, res, next) => {
     );
     const total = parseInt(countResult.recordset[0].total);
 
-    params.push(parseInt(limit), offset);
+    params.push(safeLimit, offset);
 
     const result = await query(
       `SELECT a.asset_id, a.asset_name, a.asset_code, a.asset_type, a.model, a.manufacturer,
@@ -112,8 +113,8 @@ const getAll = async (req, res, next) => {
       pagination: {
         total,
         page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / parseInt(limit)),
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
       },
     });
   } catch (err) { next(err); }

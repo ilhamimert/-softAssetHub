@@ -66,8 +66,8 @@ const create = async (req, res, next) => {
     if (!username || !email || !password || !fullName || !role) {
       return next(createError('Username, email, şifre, ad ve rol gerekli.', 400));
     }
-    if (password.length < 8) {
-      return next(createError('Şifre en az 8 karakter olmalı.', 400));
+    if (password.length < 8 || !/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+      return next(createError('Şifre en az 8 karakter ve bir rakam veya özel karakter içermeli.', 400));
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -146,7 +146,8 @@ const remove = async (req, res, next) => {
 const getActivityLog = async (req, res, next) => {
   try {
     const { userId, assetId, entityType, page = 1, limit = 50 } = req.query;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 200);
+    const offset = (parseInt(page) - 1) * safeLimit;
     const params = [];
     let idx = 1;
     let whereClause = 'WHERE 1=1';
@@ -155,7 +156,7 @@ const getActivityLog = async (req, res, next) => {
     if (assetId)    { whereClause += ` AND al.entity_id = $${idx++}`; params.push(parseInt(assetId)); }
     if (entityType) { whereClause += ` AND al.entity_type = $${idx++}`; params.push(entityType); }
 
-    params.push(parseInt(limit), offset);
+    params.push(safeLimit, offset);
 
     const result = await query(
       `SELECT al.*, u.full_name, u.username FROM activity_log al
@@ -181,8 +182,8 @@ const changePassword = async (req, res, next) => {
       return next(createError('Sadece kendi şifrenizi değiştirebilirsiniz.', 403, 'FORBIDDEN'));
     }
 
-    if (!newPassword || newPassword.length < 8) {
-      return next(createError('Yeni şifre en az 8 karakter olmalı.', 400));
+    if (!newPassword || newPassword.length < 8 || !/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword)) {
+      return next(createError('Yeni şifre en az 8 karakter ve bir rakam veya özel karakter içermeli.', 400));
     }
 
     const userResult = await query(`SELECT password_hash FROM users WHERE user_id = $1`, [parseInt(id)]);

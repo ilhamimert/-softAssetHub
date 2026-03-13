@@ -93,10 +93,10 @@ const loginLimiter = rateLimit({
   message: { success: false, error: 'TOO_MANY_REQUESTS', message: 'Çok fazla giriş denemesi. 15 dakika sonra tekrar deneyin.' },
 });
 
-// Genel API: 300 istek / dakika
+// Genel API: 150 istek / dakika
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 300,
+  max: 150,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'TOO_MANY_REQUESTS', message: 'İstek limiti aşıldı. Lütfen bekleyin.' },

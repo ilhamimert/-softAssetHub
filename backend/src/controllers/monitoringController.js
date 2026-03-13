@@ -30,6 +30,7 @@ const getHistory = async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { from, to, limit = 100 } = req.query;
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 100, 1), 500);
 
     const params = [parseInt(assetId)];
     let idx = 2;
@@ -38,7 +39,7 @@ const getHistory = async (req, res, next) => {
     if (from) { whereClause += ` AND m.monitoring_time >= $${idx++}`; params.push(new Date(from)); }
     if (to)   { whereClause += ` AND m.monitoring_time <= $${idx++}`; params.push(new Date(to)); }
 
-    params.push(parseInt(limit));
+    params.push(safeLimit);
 
     const result = await query(
       `SELECT m.monitoring_id, m.monitoring_time, m.cpu_usage, m.ram_usage, m.disk_usage,
