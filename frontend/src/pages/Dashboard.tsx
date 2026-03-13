@@ -4,9 +4,10 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import {
-  Server, Zap, AlertTriangle, Activity,
   TrendingUp, CheckCircle, AlertCircle, Info,
+  Server, Zap, AlertTriangle, Activity
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { analyticsApi, alertApi, monitoringApi } from '@/api/client';
 import { cn, alertBg, timeAgo, statusBg } from '@/lib/utils';
 import type { Alert, DashboardKPI } from '@/types';
@@ -103,6 +104,7 @@ const PIE_COLORS = ['#22D3EE', '#F59E0B', '#10B981', '#EF4444', '#6B84A3'];
 
 // ─── Dashboard ───────────────────────────────────────────────
 export function Dashboard() {
+  const { t, i18n } = useTranslation();
   const { data: kpiData } = useQuery({
     queryKey: ['dashboard-kpi'],
     queryFn: () => analyticsApi.getDashboardKPI(),
@@ -117,19 +119,19 @@ export function Dashboard() {
 
   const _today = new Date();
   // Yayın günü: dün 21:00 → bugün 20:59
-  const _from = new Date(_today); _from.setDate(_from.getDate() - 1); _from.setHours(21, 0, 0, 0);
-  const _to = new Date(_today); _to.setHours(20, 59, 59, 999);
-  const todayLabel = _today.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const _from = new Date(_today); _from.setHours(_today.getHours() - 12, 0, 0, 0);
+  const _to = new Date(_today);
+  const todayLabel = _today.toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const { data: powerData } = useQuery({
-    queryKey: ['power-consumption-3h', _today.toDateString()],
+    queryKey: ['power-consumption-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
     queryFn: () => analyticsApi.getPowerConsumption({
       groupBy: '3hour',
       from: _from.toISOString(),
       to: _to.toISOString(),
     }),
-    refetchInterval: 60 * 60 * 1000,
-    staleTime: 60 * 60 * 1000,
+    refetchInterval: 3 * 60 * 60 * 1000,
+    staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
@@ -202,15 +204,15 @@ export function Dashboard() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KPICard label="Toplam Varlık" value={kpi.totalAssets} icon={Server} accent="cyan" delay="100" />
-        <KPICard label="Aktif Cihazlar" value={kpi.activeAssets} icon={CheckCircle} accent="green" delay="200" />
-        <KPICard label="Bakımda" value={kpi.maintenanceAssets} icon={Activity} accent="amber" delay="300"
+        <KPICard label={t('dashboard.kpi.total_assets')} value={kpi.totalAssets} icon={Server} accent="cyan" delay="100" />
+        <KPICard label={t('dashboard.kpi.active_devices')} value={kpi.activeAssets} icon={CheckCircle} accent="green" delay="200" />
+        <KPICard label={t('dashboard.kpi.in_maintenance')} value={kpi.maintenanceAssets} icon={Activity} accent="amber" delay="300"
           sub={kpi.totalAssets > 0 ? `%${((kpi.maintenanceAssets / kpi.totalAssets) * 100).toFixed(1)}` : undefined}
         />
-        <KPICard label="Kritik Uyarı" value={kpi.criticalAlerts} icon={AlertCircle} accent="red" delay="400" />
-        <KPICard label="Toplam Uyarı" value={kpi.totalAlerts} icon={AlertTriangle} accent="amber" delay="500" />
-        <KPICard label="Sistem Uptime" value={`%${uptime}`} icon={TrendingUp} accent="cyan" delay="500"
-          sub={`${kpi.activeAssets} / ${kpi.totalAssets} cihaz`}
+        <KPICard label={t('dashboard.kpi.critical_alerts')} value={kpi.criticalAlerts} icon={AlertCircle} accent="red" delay="400" />
+        <KPICard label={t('dashboard.kpi.total_alerts')} value={kpi.totalAlerts} icon={AlertTriangle} accent="amber" delay="500" />
+        <KPICard label={t('dashboard.kpi.system_uptime')} value={`%${uptime}`} icon={TrendingUp} accent="cyan" delay="500"
+          sub={`${kpi.activeAssets} / ${kpi.totalAssets} ${t('common.assets').toLowerCase()}`}
         />
       </div>
 
@@ -221,8 +223,8 @@ export function Dashboard() {
         <div className="card p-4 lg:col-span-2 fade-in-up delay-200">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Güç Tüketimi</p>
-              <p className="text-sm font-display font-semibold text-white mt-0.5">{todayLabel} — 3 Saatlik Ortalama Watt</p>
+              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.power_consumption')}</p>
+              <p className="text-sm font-display font-semibold text-white mt-0.5">{todayLabel} — {i18n.language === 'tr' ? 'Son 12 Saat — 3 Saatlik Dilimler' : 'Last 12 Hours — 3H Slots'}</p>
             </div>
             <Zap size={14} className="text-amber-400" />
           </div>
@@ -256,8 +258,8 @@ export function Dashboard() {
         {/* Asset type pie */}
         <div className="card p-4 fade-in-up delay-300">
           <div className="mb-4">
-            <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Varlık Dağılımı</p>
-            <p className="text-sm font-display font-semibold text-white mt-0.5">{physicalNodes.length > 0 ? 'Fiziksel Ağaç Node Türleri' : 'Ekipman Türlerine Göre'}</p>
+            <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.asset_distribution')}</p>
+            <p className="text-sm font-display font-semibold text-white mt-0.5">{physicalNodes.length > 0 ? (i18n.language === 'tr' ? 'Fiziksel Ağaç Node Türleri' : 'Physical Tree Node Types') : (i18n.language === 'tr' ? 'Ekipman Türlerine Göre' : 'By Equipment Types')}</p>
           </div>
           {pieData.length > 0 ? (
             <>
@@ -300,16 +302,16 @@ export function Dashboard() {
         <div className="card p-4 fade-in-up delay-300">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Aktif Uyarılar</p>
+              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.active_alerts')}</p>
               <div className="flex items-center gap-3 mt-1">
                 <span className="flex items-center gap-1 text-xs text-red-400">
-                  <span className="font-mono-val font-semibold">{alertStats.criticalCount ?? 0}</span> Kritik
+                  <span className="font-mono-val font-semibold">{alertStats.criticalCount ?? 0}</span> {t('dashboard.alerts.critical')}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-amber-400">
-                  <span className="font-mono-val font-semibold">{alertStats.warningCount ?? 0}</span> Uyarı
+                  <span className="font-mono-val font-semibold">{alertStats.warningCount ?? 0}</span> {t('dashboard.alerts.warning')}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-cyan-400">
-                  <span className="font-mono-val font-semibold">{alertStats.infoCount ?? 0}</span> Bilgi
+                  <span className="font-mono-val font-semibold">{alertStats.infoCount ?? 0}</span> {t('dashboard.alerts.info')}
                 </span>
               </div>
             </div>
@@ -317,7 +319,7 @@ export function Dashboard() {
           <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
             {alerts.length > 0
               ? alerts.slice(0, 8).map(a => <AlertRow key={a.alertId} alert={a} />)
-              : <p className="text-center text-[#3D5275] text-xs font-mono-val py-6">✓ Aktif uyarı yok</p>
+              : <p className="text-center text-[#3D5275] text-xs font-mono-val py-6">{t('dashboard.alerts.no_alerts')}</p>
             }
           </div>
         </div>
@@ -325,8 +327,8 @@ export function Dashboard() {
         {/* Heatmap */}
         <div className="card p-4 fade-in-up delay-400">
           <div className="mb-3">
-            <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Sıcaklık & Kullanım Haritası</p>
-            <p className="text-sm font-display font-semibold text-white mt-0.5">Anlık Cihaz Metrikleri</p>
+            <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.heatmap')}</p>
+            <p className="text-sm font-display font-semibold text-white mt-0.5">{t('dashboard.charts.live_metrics')}</p>
           </div>
           {heatAssets.length > 0 ? (
             <div className="space-y-2 max-h-52 overflow-y-auto">
@@ -376,8 +378,8 @@ export function Dashboard() {
         <div className="card p-4 fade-in-up delay-500">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Kanal Sağlık Durumu</p>
-              <p className="text-sm font-display font-semibold text-white mt-0.5">Kanal Bazlı Aktif / Bakım / Arızalı</p>
+              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.channel_health')}</p>
+              <p className="text-sm font-display font-semibold text-white mt-0.5">{i18n.language === 'tr' ? 'Kanal Bazlı Aktif / Bakım / Arızalı' : 'Channel-based Active / Maintenance / Faulty'}</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={160}>

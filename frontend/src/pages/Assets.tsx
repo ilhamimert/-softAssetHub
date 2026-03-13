@@ -11,7 +11,7 @@ import { assetApi } from '@/api/client';
 import { cn } from '@/lib/utils';
 
 // ─── API ──────────────────────────────────────────────────────
-const PHYS_API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/hierarchy` : 'http://localhost:5000/api/v1/hierarchy';
+const PHYS_API = '/api/v1/hierarchy';
 
 // ─── Types ────────────────────────────────────────────────────
 interface PhysNode {
@@ -81,7 +81,7 @@ function TreeNode({
   onToggle, onSelect, onDelete, onAddChild,
   multiSel, onMultiToggle,
   onlineMap, dragLevel, dropTargetId,
-  onDragStart, onDragEnter, onDragLeave, onDrop,
+  onDragStart, onDragEnter, onDragLeave, onDrop, onRename,
 }: {
   node: PhysNode;
   depth: number;
@@ -101,8 +101,27 @@ function TreeNode({
   onDragEnter: (e: React.DragEvent, node: PhysNode, level: PhysLevel) => void;
   onDragLeave: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, node: PhysNode, level: PhysLevel) => void;
+  onRename: (id: string, level: PhysLevel, newName: string) => Promise<void>;
 }) {
   const level = PHYS_LEVELS[depth] ?? 'eklenti';
+  const [isEditing, setIsEditing] = useState(false);
+  const [editVal, setEditVal] = useState('');
+  const editRef = useRef<HTMLInputElement>(null);
+
+  const startEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditVal(node.name);
+    setIsEditing(true);
+    setTimeout(() => editRef.current?.focus(), 10);
+  };
+
+  const submitEdit = async () => {
+    if (!editVal.trim() || editVal.trim() === node.name) { setIsEditing(false); return; }
+    await onRename(node.id, level, editVal.trim());
+    setIsEditing(false);
+  };
+
+  const cancelEdit = () => { setIsEditing(false); setEditVal(''); };
   const { Icon, color, label } = LEVEL_CFG[level];
   const isOpen = expanded.has(node.id);
   const isSel = selectedId === node.id;
@@ -177,9 +196,25 @@ function TreeNode({
         </span>
 
         {/* Name */}
-        <span className="flex-1 truncate">
-          <Highlight text={node.name} term={searchTerm} />
-        </span>
+        {isEditing ? (
+          <input
+            ref={editRef}
+            value={editVal}
+            onChange={e => setEditVal(e.target.value)}
+            onKeyDown={e => {
+              e.stopPropagation();
+              if (e.key === 'Enter') { e.preventDefault(); submitEdit(); }
+              if (e.key === 'Escape') cancelEdit();
+            }}
+            onBlur={submitEdit}
+            onClick={e => e.stopPropagation()}
+            className="flex-1 min-w-0 text-[11px] bg-[#070B14] border border-amber-500/50 rounded px-1 py-0 text-[#E2EAF4] font-mono-val focus:outline-none"
+          />
+        ) : (
+          <span className="flex-1 truncate" onDoubleClick={startEdit} title="Çift tıkla: Yeniden adlandır">
+            <Highlight text={node.name} term={searchTerm} />
+          </span>
+        )}
 
         {/* Online status dot */}
         {isOnline !== undefined && (
@@ -242,6 +277,7 @@ function TreeNode({
           onDragEnter={onDragEnter}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
+          onRename={onRename}
         />
       ))}
     </div>
@@ -289,8 +325,15 @@ export function Assets() {
   const [linkSearch, setLinkSearch] = useState('');
   const [showAudit, setShowAudit] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [toasts, setToasts] = useState<Array<{ id: number; msg: string; ok: boolean }>>([]);
 
   const treeInputRef = useRef<HTMLInputElement>(null);
+
+  const toast = (msg: string, ok = true) => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg, ok }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000);
+  };
   const qc = useQueryClient();
 
   // ── Queries ─────────────────────────────────────────────────
@@ -405,10 +448,16 @@ export function Assets() {
   // ── API actions ─────────────────────────────────────────────
   const doDelete = async (id: string, level: PhysLevel, name: string) => {
     if (!confirm(`"${name}" ve tüm alt öğeler silinecek. Onaylıyor musunuz?`)) return;
-    await fetch(`${PHYS_API}/${level}/${id}`, { method: 'DELETE' });
-    if (sel?.node.id === id) setSel(null);
-    qc.invalidateQueries({ queryKey: ['phys-tree'] });
-    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+    try {
+      const r = await fetch(`${PHYS_API}/${level}/${id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error();
+      if (sel?.node.id === id) setSel(null);
+      qc.invalidateQueries({ queryKey: ['phys-tree'] });
+      qc.invalidateQueries({ queryKey: ['phys-audit'] });
+      toast(`"${name}" silindi`);
+    } catch {
+      toast('Silme başarısız', false);
+    }
   };
 
   const doBulkDelete = async () => {
@@ -427,27 +476,39 @@ export function Assets() {
   const doAdd = async (parentId: string, parentLevel: PhysLevel, name: string) => {
     const endpoint = CHILD_OF[parentLevel];
     if (!endpoint || !name.trim()) return;
-    await fetch(`${PHYS_API}/${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ parentId, name: name.trim() }),
-    });
-    expand(parentId);
-    qc.invalidateQueries({ queryKey: ['phys-tree'] });
-    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+    try {
+      const r = await fetch(`${PHYS_API}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentId, name: name.trim() }),
+      });
+      if (!r.ok) throw new Error();
+      expand(parentId);
+      qc.invalidateQueries({ queryKey: ['phys-tree'] });
+      qc.invalidateQueries({ queryKey: ['phys-audit'] });
+      toast(`${LEVEL_CFG[endpoint].label} eklendi`);
+    } catch {
+      toast('Ekleme başarısız', false);
+    }
   };
 
   const doAddRoot = async (name: string) => {
     if (!name.trim()) return;
-    await fetch(`${PHYS_API}/holding`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name.trim() }),
-    });
-    setAddRootName('');
-    setShowRootForm(false);
-    qc.invalidateQueries({ queryKey: ['phys-tree'] });
-    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+    try {
+      const r = await fetch(`${PHYS_API}/holding`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      if (!r.ok) throw new Error();
+      setAddRootName('');
+      setShowRootForm(false);
+      qc.invalidateQueries({ queryKey: ['phys-tree'] });
+      qc.invalidateQueries({ queryKey: ['phys-audit'] });
+      toast('Holding eklendi');
+    } catch {
+      toast('Holding eklenemedi', false);
+    }
   };
 
   const loadDemo = async () => {
@@ -456,25 +517,72 @@ export function Assets() {
     qc.invalidateQueries({ queryKey: ['phys-audit'] });
   };
 
+  const doAutoLink = async () => {
+    try {
+      const r = await fetch(`${PHYS_API}/auto-link`, { method: 'POST' });
+      if (!r.ok) {
+        const text = await r.text().catch(() => '');
+        console.error('[auto-link]', r.status, text);
+        throw new Error(`HTTP ${r.status}`);
+      }
+      const data = await r.json();
+      qc.invalidateQueries({ queryKey: ['phys-tree'] });
+      qc.invalidateQueries({ queryKey: ['phys-audit'] });
+      qc.invalidateQueries({ queryKey: ['sql-assets-all'] });
+      toast(`${data.matched} bilgisayar eşleştirildi`);
+    } catch (err) {
+      console.error('[auto-link]', err);
+      toast(`Eşleştirme başarısız: ${err instanceof Error ? err.message : String(err)}`, false);
+    }
+  };
+
   const doMove = async (nodeId: string, level: PhysLevel, newParentId: string) => {
-    await fetch(`${PHYS_API}/move`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nodeType: level, nodeId, newParentId }),
-    });
-    qc.invalidateQueries({ queryKey: ['phys-tree'] });
-    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+    try {
+      const r = await fetch(`${PHYS_API}/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodeType: level, nodeId, newParentId }),
+      });
+      if (!r.ok) throw new Error();
+      qc.invalidateQueries({ queryKey: ['phys-tree'] });
+      qc.invalidateQueries({ queryKey: ['phys-audit'] });
+      toast('Taşındı');
+    } catch {
+      toast('Taşıma başarısız', false);
+    }
   };
 
   const doLink = async (pcId: string, assetId: number | null) => {
-    await fetch(`${PHYS_API}/bilgisayar/${pcId}/link`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ assetId }),
-    });
-    setLinkSearch('');
-    qc.invalidateQueries({ queryKey: ['phys-tree'] });
-    qc.invalidateQueries({ queryKey: ['phys-audit'] });
+    try {
+      const r = await fetch(`${PHYS_API}/bilgisayar/${pcId}/link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assetId }),
+      });
+      if (!r.ok) throw new Error();
+      setLinkSearch('');
+      qc.invalidateQueries({ queryKey: ['phys-tree'] });
+      qc.invalidateQueries({ queryKey: ['phys-audit'] });
+      toast(assetId ? 'Bağlantı kuruldu' : 'Bağlantı kaldırıldı');
+    } catch {
+      toast('Bağlantı işlemi başarısız', false);
+    }
+  };
+
+  const doRename = async (id: string, level: PhysLevel, newName: string) => {
+    try {
+      const r = await fetch(`${PHYS_API}/${level}/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      });
+      if (!r.ok) throw new Error();
+      qc.invalidateQueries({ queryKey: ['phys-tree'] });
+      qc.invalidateQueries({ queryKey: ['phys-audit'] });
+      toast('Ad güncellendi');
+    } catch {
+      toast('Yeniden adlandırma başarısız', false);
+    }
   };
 
   // ── Drag & Drop handlers ─────────────────────────────────────
@@ -606,6 +714,13 @@ export function Assets() {
                 Gerçek Veri Yükle
               </button>
               <button
+                onClick={doAutoLink}
+                title="Bilgisayarları SQL Assets ile isim benzerliğine göre otomatik eşleştir"
+                className="flex-1 text-[9px] font-mono-val py-1.5 rounded bg-[#111827] text-[#6B84A3] hover:text-green-400 hover:bg-green-500/10 border border-[#1E2D45] hover:border-green-500/20 transition-all flex items-center justify-center gap-1"
+              >
+                <Link2 size={8} /> Otomatik Eşleştir
+              </button>
+              <button
                 onClick={() => {
                   setShowRootForm(v => !v);
                   setTimeout(() => document.getElementById('rootInput')?.focus(), 50);
@@ -683,6 +798,7 @@ export function Assets() {
                   onDragEnter={handleDragEnter}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
+                  onRename={doRename}
                 />
               ))
             )}
@@ -863,7 +979,7 @@ export function Assets() {
                     <div className="flex items-start gap-4">
                       <div className="p-3 bg-white rounded-xl flex-shrink-0">
                         <QRCodeSVG
-                          value={`${PHYS_API}/api/packet/${liveNode.id}`}
+                          value={`${PHYS_API}/packet/${liveNode.id}`}
                           size={128}
                           bgColor="#ffffff"
                           fgColor="#0D1421"
@@ -873,7 +989,7 @@ export function Assets() {
                       <div className="min-w-0">
                         <p className="text-xs text-[#E2EAF4] font-medium mb-1">{liveNode.name}</p>
                         <p className="text-[10px] text-[#3D5275] font-mono-val break-all leading-relaxed">
-                          {PHYS_API}/api/packet/{liveNode.id}
+                          {PHYS_API}/packet/{liveNode.id}
                         </p>
                         <p className="text-[10px] text-[#2A3F5F] font-mono-val mt-2">
                           QR kodu okutarak cihaz paketine erişin
@@ -1059,6 +1175,7 @@ export function Assets() {
                   e.action === 'link' && 'bg-purple-500/10 text-purple-400',
                   e.action === 'unlink' && 'bg-orange-500/10 text-orange-400',
                   e.action === 'demo' && 'bg-amber-500/10 text-amber-400',
+                  e.action === 'rename' && 'bg-yellow-500/10 text-yellow-400',
                 )}>
                   {e.action}
                 </span>
@@ -1069,6 +1186,23 @@ export function Assets() {
           </div>
         )}
       </div>
+
+      {/* Toast bildirimler */}
+      {toasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50 pointer-events-none">
+          {toasts.map(t => (
+            <div key={t.id} className={cn(
+              'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono-val border shadow-lg',
+              t.ok
+                ? 'bg-[#0D2018] text-green-400 border-green-500/30'
+                : 'bg-[#1F0D0D] text-red-400 border-red-500/30',
+            )}>
+              {t.ok ? <Check size={11} /> : <AlertCircle size={11} />}
+              {t.msg}
+            </div>
+          ))}
+        </div>
+      )}
 
     </div>
   );

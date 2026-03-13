@@ -143,8 +143,7 @@ function startPeriodicBroadcast() {
            WHERE m2.asset_id = a.asset_id
            ORDER BY m2.monitoring_time DESC LIMIT 1
          ) lm ON true
-         WHERE a.is_active = TRUE
-         LIMIT 50`
+         WHERE a.is_active = TRUE`
       );
 
       if (result.recordset.length > 0) {

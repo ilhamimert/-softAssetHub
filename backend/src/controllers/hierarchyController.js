@@ -42,7 +42,8 @@ exports.getTree = async (req, res, next) => {
 
 exports.createNode = async (req, res, next) => {
     const { nodeType } = req.params; // holding, kanal, bina vs
-    const { Name, ParentId } = req.body;
+    const Name = req.body.Name || req.body.name;
+    const ParentId = req.body.ParentId || req.body.parentId;
 
     try {
         const parent = ParentId ? ParentId : null;
@@ -84,7 +85,9 @@ exports.deleteNode = async (req, res, next) => {
 };
 
 exports.moveNode = async (req, res, next) => {
-    const { NodeType, NodeId, NewParentId } = req.body;
+    const NodeType = req.body.NodeType || req.body.nodeType;
+    const NodeId = req.body.NodeId || req.body.nodeId;
+    const NewParentId = req.body.NewParentId || req.body.newParentId;
 
     try {
         const { recordset } = await query('UPDATE physical_nodes SET parent_id = $1 WHERE node_id = $2 RETURNING *', [NewParentId, NodeId]);
@@ -100,7 +103,7 @@ exports.moveNode = async (req, res, next) => {
 
 exports.linkNode = async (req, res, next) => {
     const { id } = req.params;
-    const { AssetId } = req.body; // int or null
+    const AssetId = req.body.AssetId ?? req.body.assetId ?? null;
 
     try {
         const { recordset } = await query('UPDATE physical_nodes SET linked_asset_id = $1 WHERE node_id = $2 RETURNING *', [AssetId || null, id]);
@@ -108,6 +111,23 @@ exports.linkNode = async (req, res, next) => {
 
         await addAudit(AssetId ? 'link' : 'unlink', 'bilgisayar', recordset[0].name);
         res.json({ id: recordset[0].nodeId, linkedAssetId: recordset[0].linkedAssetId });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.renameNode = async (req, res, next) => {
+    const { type, id } = req.params;
+    const name = (req.body.name || req.body.Name || '').trim();
+    if (!name) return res.status(400).json({ message: 'Ad gerekli' });
+    try {
+        const { recordset } = await query(
+            'UPDATE physical_nodes SET name = $1 WHERE node_id = $2 RETURNING *',
+            [name, id]
+        );
+        if (recordset.length === 0) return res.status(404).json({ message: 'Node bulunamadi' });
+        await addAudit('rename', type, name);
+        res.json({ id: recordset[0].nodeId, name: recordset[0].name });
     } catch (err) {
         next(err);
     }
@@ -141,6 +161,48 @@ exports.getAuditLog = async (req, res, next) => {
 };
 
 // Demo Data Loader API
+exports.autoLinkNodes = async (req, res, next) => {
+    try {
+        // 1. Exact name match (case-insensitive)
+        const { recordset: exact } = await query(`
+            UPDATE physical_nodes pn
+            SET linked_asset_id = a.asset_id
+            FROM assets a
+            WHERE pn.node_type = 'bilgisayar'
+              AND pn.linked_asset_id IS NULL
+              AND LOWER(pn.name) = LOWER(a.asset_name)
+            RETURNING pn.node_id, pn.name, a.asset_id, a.asset_name
+        `);
+
+        // 2. Partial match: asset_name contains or is contained in node name
+        const { recordset: partial } = await query(`
+            UPDATE physical_nodes pn
+            SET linked_asset_id = a.asset_id
+            FROM assets a
+            WHERE pn.node_type = 'bilgisayar'
+              AND pn.linked_asset_id IS NULL
+              AND (
+                LOWER(a.asset_name) LIKE '%' || LOWER(pn.name) || '%'
+                OR LOWER(pn.name) LIKE '%' || LOWER(a.asset_name) || '%'
+              )
+            RETURNING pn.node_id, pn.name, a.asset_id, a.asset_name
+        `);
+
+        const matched = [...exact, ...partial];
+        for (const m of matched) {
+            await addAudit('link', 'bilgisayar', m.name);
+        }
+
+        res.json({
+            success: true,
+            matched: matched.length,
+            details: matched.map(m => ({ nodeName: m.name, assetName: m.assetName, assetId: m.assetId }))
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.loadDemoData = async (req, res, next) => {
     try {
         await query('DELETE FROM physical_nodes'); // CASCADE deletes all

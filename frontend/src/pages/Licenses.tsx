@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { KeyRound, Search, AlertTriangle, CheckCircle2, Clock, XCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { licenseApi } from '@/api/client';
@@ -18,12 +19,12 @@ function expiryColor(daysLeft: number | null, isActive: boolean): string {
   return 'text-green-400';
 }
 
-function expiryBadge(daysLeft: number | null, isActive: boolean) {
+function expiryBadge(daysLeft: number | null, isActive: boolean, t: any) {
   if (!isActive) return null;
   if (daysLeft === null) return null;
-  if (daysLeft < 0) return { label: 'Süresi Doldu', cls: 'bg-red-500/10 border-red-500/20 text-red-400' };
-  if (daysLeft <= 7) return { label: `${daysLeft}g kaldı`, cls: 'bg-red-500/10 border-red-500/20 text-red-400' };
-  if (daysLeft <= 60) return { label: `${daysLeft}g kaldı`, cls: 'bg-amber-500/10 border-amber-500/20 text-amber-400' };
+  if (daysLeft < 0) return { label: t('licenses.expiry.expired'), cls: 'bg-red-500/10 border-red-500/20 text-red-400' };
+  if (daysLeft <= 7) return { label: t('licenses.expiry.days_left', { days: daysLeft }), cls: 'bg-red-500/10 border-red-500/20 text-red-400' };
+  if (daysLeft <= 60) return { label: t('licenses.expiry.days_left', { days: daysLeft }), cls: 'bg-amber-500/10 border-amber-500/20 text-amber-400' };
   return null;
 }
 
@@ -41,6 +42,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export function Licenses() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [search, setSearch] = useState('');
@@ -67,11 +69,11 @@ export function Licenses() {
   const licenses = data ?? [];
 
   const statusButtons: { key: StatusFilter; label: string; icon: React.ReactNode }[] = [
-    { key: 'all', label: 'Tümü', icon: <KeyRound size={12} /> },
-    { key: 'active', label: 'Aktif', icon: <CheckCircle2 size={12} /> },
-    { key: 'expiring', label: '60g İçinde', icon: <Clock size={12} /> },
-    { key: 'expired', label: 'Süresi Dolmuş', icon: <XCircle size={12} /> },
-    { key: 'inactive', label: 'Pasif', icon: <AlertTriangle size={12} /> },
+    { key: 'all', label: t('common.all'), icon: <KeyRound size={12} /> },
+    { key: 'active', label: t('common.active'), icon: <CheckCircle2 size={12} /> },
+    { key: 'expiring', label: t('licenses.filter.expiring'), icon: <Clock size={12} /> },
+    { key: 'expired', label: t('licenses.filter.expired'), icon: <XCircle size={12} /> },
+    { key: 'inactive', label: t('common.passive'), icon: <AlertTriangle size={12} /> },
   ];
 
   return (
@@ -84,10 +86,10 @@ export function Licenses() {
           </div>
           <div>
             <h1 className="font-display text-base font-semibold text-[#E2EAF4] tracking-wide">
-              Lisans Yönetimi
+              {t('licenses.title')}
             </h1>
             <p className="text-[10px] text-[#3D5275] font-mono tracking-wider">
-              {isLoading ? '...' : `${licenses.length} lisans`}
+              {isLoading ? '...' : `${licenses.length} ${t('common.licenses').toLowerCase()}`}
             </p>
           </div>
         </div>
@@ -101,7 +103,7 @@ export function Licenses() {
           <input
             value={search}
             onChange={e => handleSearch(e.target.value)}
-            placeholder="Uygulama adı veya anahtar..."
+            placeholder={t('licenses.toolbar.search_placeholder')}
             className="w-full pl-8 pr-3 py-1.5 bg-[#0D1421] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] placeholder-[#3D5275] focus:outline-none focus:border-amber-500/40"
           />
         </div>
@@ -132,26 +134,26 @@ export function Licenses() {
       ) : licenses.length === 0 ? (
         <div className="card p-12 text-center">
           <KeyRound size={28} className="text-[#1E2D45] mx-auto mb-3" />
-          <p className="text-sm text-[#3D5275] font-mono-val">Lisans bulunamadı</p>
+          <p className="text-sm text-[#3D5275] font-mono-val">{t('licenses.no_licenses')}</p>
         </div>
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[#1E2D45]">
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">UYGULAMA</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">VARLIK</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">LİSANS ANAHTARI</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">MAC ID</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">BİTİŞ TARİHİ</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">ÖZELLİKLER</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">DURUM</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.app')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.asset')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.key')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.mac')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.expiry')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.features')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1E2D45]/60">
               {licenses.map((lic: any) => {
                 const daysLeft = lic.daysLeft ?? null;
-                const badge = expiryBadge(daysLeft, lic.isActive);
+                const badge = expiryBadge(daysLeft, lic.isActive, t);
                 const flags: string[] = (() => {
                   try { return lic.featureFlags ? JSON.parse(lic.featureFlags) : []; }
                   catch { return []; }
@@ -228,7 +230,7 @@ export function Licenses() {
                       {lic.expiryDate ? (
                         <div className="space-y-0.5">
                           <p className={`font-mono-val text-[11px] ${expiryColor(daysLeft, lic.isActive)}`}>
-                            {new Date(lic.expiryDate).toLocaleDateString('tr-TR')}
+                            {new Date(lic.expiryDate).toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US')}
                           </p>
                           {badge && (
                             <span className={`inline-flex px-1.5 py-0.5 rounded border text-[9px] font-mono ${badge.cls}`}>
@@ -263,7 +265,7 @@ export function Licenses() {
                           : 'bg-[#1E2D45]/40 border-[#1E2D45] text-[#3D5275]'
                         }`}>
                         <span className={`w-1 h-1 rounded-full ${lic.isActive ? 'bg-green-400' : 'bg-[#3D5275]'}`} />
-                        {lic.isActive ? 'Aktif' : 'Pasif'}
+                        {lic.isActive ? t('common.active') : t('common.passive')}
                       </span>
                     </td>
                   </tr>

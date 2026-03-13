@@ -117,11 +117,11 @@ router.get('/analytics/maintenance-forecast',       authenticate, analyticsCtrl.
 router.get('/analytics/physical-node-distribution', authenticate, analyticsCtrl.getPhysicalNodeDistribution);
 
 // ── Users ─────────────────────────────────────────────────────────────────────
-router.get('/users', authenticate, requireAdmin, userCtrl.getAll);
+router.get('/users', authenticate, userCtrl.getAll); // userCtrl handles inside
 router.get('/users/:id', authenticate, userCtrl.getById);
 router.post('/users', authenticate, requireAdmin, userCtrl.create);
 router.put('/users/:id', authenticate, userCtrl.update);
-router.put('/users/:id/password', authenticate, userCtrl.update);
+router.put('/users/:id/password', authenticate, userCtrl.changePassword);
 router.delete('/users/:id', authenticate, requireAdmin, userCtrl.remove);
 
 // ── Licenses ──────────────────────────────────────────────────────────────────

@@ -1,23 +1,30 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
-const pageTitles: Record<string, string> = {
-  '/':            'Dashboard',
-  '/assets':      'Varlık Yönetimi',
-  '/asset-list':  'Varlık Listesi',
-  '/monitoring':  'Canlı İzleme',
-  '/alerts':      'Uyarılar',
-  '/maintenance': 'Bakım Yönetimi',
-  '/analytics':   'Analitik & Raporlar',
-  '/settings':    'Ayarlar',
-};
-
 export function Layout() {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const title = pageTitles[location.pathname] ?? 'Broadcast Asset Management';
+
+  const getTitle = () => {
+    switch (location.pathname) {
+      case '/': return t('layout.titles.dashboard');
+      case '/assets': return t('layout.titles.assets');
+      case '/asset-list': return t('layout.titles.assetList');
+      case '/monitoring': return t('layout.titles.monitoring');
+      case '/alerts': return t('layout.titles.alerts');
+      case '/maintenance': return t('layout.titles.maintenance');
+      case '/analytics': return t('layout.titles.analytics');
+      case '/settings': return t('layout.titles.settings');
+      case '/licenses': return t('layout.titles.licenses');
+      default: return t('layout.titles.default');
+    }
+  };
+
+  const title = getTitle();
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#070B14]">

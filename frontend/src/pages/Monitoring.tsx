@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { monitoringApi, alertApi } from '@/api/client';
 import { cn, tempColor, usageColor } from '@/lib/utils';
 import {
@@ -75,6 +76,7 @@ const WS_DELAYS = [2000, 4000, 8000, 16000, 30000];
 
 // ─── Main Component ───────────────────────────────────────────────
 export function Monitoring() {
+  const { t } = useTranslation();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectCount = useRef(0);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,7 +138,8 @@ export function Monitoring() {
   // ── WebSocket with auto-reconnect ─────────────────────────────
   const connectWs = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
-    const url = `ws://${window.location.hostname}:5000/monitoring/realtime`;
+    const wsProto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const url = `${wsProto}://${window.location.host}/monitoring/realtime`;
     setWsStatus('connecting');
     try {
       const ws = new WebSocket(url);
@@ -421,11 +424,11 @@ export function Monitoring() {
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         {[
-          { label: 'ONLİNE', value: onlineCount, color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
-          { label: 'OFFLİNE', value: offlineCount, color: offlineCount > 0 ? 'text-red-400' : 'text-[#6B84A3]', bg: offlineCount > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#1E2D45]/30 border-[#1E2D45]' },
-          { label: 'TOPLAM GÜÇ', value: `${totalPowerKW.toFixed(1)} kW`, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-          { label: 'ORT. SICAKLIK', value: avgTemp > 0 ? `${avgTemp.toFixed(1)}°C` : '—', color: tempColor(avgTemp), bg: 'bg-[#1E2D45]/30 border-[#1E2D45]' },
-          { label: 'AKTİF ALERT', value: totalAlerts, color: totalAlerts > 0 ? 'text-red-400' : 'text-[#6B84A3]', bg: totalAlerts > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#1E2D45]/30 border-[#1E2D45]' },
+          { label: t('common.online'), value: onlineCount, color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
+          { label: t('common.offline'), value: offlineCount, color: offlineCount > 0 ? 'text-red-400' : 'text-[#6B84A3]', bg: offlineCount > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#1E2D45]/30 border-[#1E2D45]' },
+          { label: t('monitoring.stats.total_power'), value: `${totalPowerKW.toFixed(1)} kW`, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+          { label: t('monitoring.stats.avg_temp'), value: avgTemp > 0 ? `${avgTemp.toFixed(1)}°C` : '—', color: tempColor(avgTemp), bg: 'bg-[#1E2D45]/30 border-[#1E2D45]' },
+          { label: t('dashboard.charts.active_alert_short'), value: totalAlerts, color: totalAlerts > 0 ? 'text-red-400' : 'text-[#6B84A3]', bg: totalAlerts > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#1E2D45]/30 border-[#1E2D45]' },
         ].map((s) => (
           <div key={s.label} className={cn('card px-3 py-2.5 border', s.bg)}>
             <p className="text-[9px] text-[#6B84A3] font-mono-val uppercase tracking-wider mb-0.5">{s.label}</p>
@@ -448,7 +451,7 @@ export function Monitoring() {
             wsStatus === 'connected' ? 'bg-green-400 pulse-dot' :
               wsStatus === 'connecting' ? 'bg-amber-400 pulse-dot' : 'bg-red-400'
           )} />
-          {wsStatus === 'connected' ? 'CANLI' : wsStatus === 'connecting' ? 'BAĞLANIYOR...' : 'BAĞLANTI YOK'}
+          {wsStatus === 'connected' ? t('common.live') : wsStatus === 'connecting' ? t('common.connecting') : t('common.no_connection')}
         </div>
 
         {/* Search */}
@@ -457,7 +460,7 @@ export function Monitoring() {
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cihaz ara..."
+            placeholder={t('monitoring.toolbar.search_placeholder')}
             className="pl-6 pr-2 py-1.5 text-xs bg-[#0D1421] border border-[#1E2D45] rounded text-[#E2EAF4] placeholder-[#3D5275] focus:outline-none focus:border-amber-500/50 w-36"
           />
         </div>
@@ -468,7 +471,7 @@ export function Monitoring() {
           onChange={(e) => setFilterChannel(e.target.value)}
           className="px-2 py-1.5 text-xs bg-[#0D1421] border border-[#1E2D45] rounded text-[#E2EAF4] focus:outline-none focus:border-amber-500/50"
         >
-          <option value="">Tüm Kanallar</option>
+          <option value="">{t('monitoring.toolbar.all_channels')}</option>
           {channels.map((ch) => <option key={ch} value={ch}>{ch}</option>)}
         </select>
 
@@ -483,7 +486,7 @@ export function Monitoring() {
                 filterStatus === s ? 'bg-amber-500/20 text-amber-400' : 'text-[#6B84A3] hover:text-[#E2EAF4]'
               )}
             >
-              {s === 'all' ? 'Tümü' : s === 'online' ? 'Online' : 'Offline'}
+              {s === 'all' ? t('monitoring.toolbar.all') : s === 'online' ? t('common.online') : t('common.offline')}
             </button>
           ))}
         </div>
@@ -494,11 +497,11 @@ export function Monitoring() {
           onChange={(e) => setSortBy(e.target.value as any)}
           className="px-2 py-1.5 text-xs bg-[#0D1421] border border-[#1E2D45] rounded text-[#E2EAF4] focus:outline-none focus:border-amber-500/50"
         >
-          <option value="status">Offline Önce</option>
-          <option value="cpu">En Yüksek CPU</option>
-          <option value="temp">En Yüksek Sıcaklık</option>
-          <option value="power">En Yüksek Güç</option>
-          <option value="name">İsim A–Z</option>
+          <option value="status">{t('monitoring.toolbar.sort_status')}</option>
+          <option value="cpu">{t('monitoring.toolbar.sort_cpu')}</option>
+          <option value="temp">{t('monitoring.toolbar.sort_temp')}</option>
+          <option value="power">{t('monitoring.toolbar.sort_power')}</option>
+          <option value="name">{t('monitoring.toolbar.sort_name')}</option>
         </select>
 
         {/* Group by channel */}
@@ -509,7 +512,7 @@ export function Monitoring() {
             groupByChannel ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4]'
           )}
         >
-          KANAL GRUBU
+          {t('monitoring.toolbar.channel_group')}
         </button>
 
         {/* View toggle */}
@@ -546,11 +549,14 @@ export function Monitoring() {
               <table className="w-full min-w-[700px]">
                 <thead>
                   <tr className="border-b border-[#1E2D45]">
-                    {['CİHAZ', 'DURUM', 'CPU', 'SICAKLIK', 'GÜÇ', 'RAM', 'TREND', 'GÜNCELLEME'].map((h) => (
-                      <th key={h} className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left last:text-right">
-                        {h}
-                      </th>
-                    ))}
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.device')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.status')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.cpu')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.temp')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.power')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.ram')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.trend')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-right">{t('monitoring.table.update')}</th>
                   </tr>
                 </thead>
                 <tbody>{group.items.map(renderRow)}</tbody>

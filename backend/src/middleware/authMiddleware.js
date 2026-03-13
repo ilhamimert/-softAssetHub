@@ -8,17 +8,15 @@ const authenticate = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>"
 
   if (!token) {
-    req.user = DEFAULT_USER;
-    return next();
+    return next(createError('Giriş yapmalısınız.', 401, 'UNAUTHORIZED'));
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
-  } catch {
-    req.user = DEFAULT_USER;
-    next();
+  } catch (err) {
+    return next(createError('Geçersiz veya süresi dolmuş oturum.', 401, 'INVALID_TOKEN'));
   }
 };
 

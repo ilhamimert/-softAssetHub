@@ -16,12 +16,12 @@ export default defineConfig({
     hmr: { overlay: true },
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         ws: true,
       },
       '/monitoring': {
-        target: 'ws://localhost:5000',
+        target: 'ws://127.0.0.1:5000',
         ws: true,
         changeOrigin: true,
       },

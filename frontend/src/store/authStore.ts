@@ -19,10 +19,10 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      user: { userId: 1, username: 'admin', email: 'admin@system.local', fullName: 'Admin', role: 'Admin' as const },
-      accessToken: null,
-      refreshToken: null,
-      isAuthenticated: true,
+      user: null as AuthUser | null,
+      accessToken: localStorage.getItem('accessToken'),
+      refreshToken: localStorage.getItem('refreshToken'),
+      isAuthenticated: !!localStorage.getItem('accessToken'),
       isLoading: false,
 
       login: async (username, password) => {
@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
         try { await authApi.logout(); } catch { /* ignore */ }
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        set({ user: { userId: 1, username: 'admin', email: 'admin@system.local', fullName: 'Admin', role: 'Admin' as const }, accessToken: null, refreshToken: null, isAuthenticated: true });
+        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
       },
 
       setTokens: (access, refresh) => {

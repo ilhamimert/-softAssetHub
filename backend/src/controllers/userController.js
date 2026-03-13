@@ -94,6 +94,18 @@ const update = async (req, res, next) => {
       return next(createError('Rol değiştirme yetkisi yok.', 403, 'FORBIDDEN'));
     }
 
+    if (req.user.role === 'Manager') {
+      const targetResult = await query(`SELECT role, channel_id FROM users WHERE user_id = $1`, [parseInt(id)]);
+      const targetUser = targetResult.recordset[0];
+      if (!targetUser) return next(createError('Kullanıcı bulunamadı.', 404, 'NOT_FOUND'));
+      if (targetUser.role === 'Admin') {
+        return next(createError('Yöneticiler yetkili Admin hesaplarını düzenleyemez.', 403, 'FORBIDDEN'));
+      }
+      if (req.user.channelId && targetUser.channel_id !== req.user.channelId) {
+        return next(createError('Sadece yetkili olduğunuz kanaldaki kullanıcıları düzenleyebilirsiniz.', 403, 'FORBIDDEN'));
+      }
+    }
+
     const result = await query(
       `UPDATE users SET
         full_name  = COALESCE($1, full_name),
@@ -159,4 +171,38 @@ const getActivityLog = async (req, res, next) => {
   }
 };
 
-module.exports = { getAll, getById, create, update, remove, getActivityLog };
+// PUT /users/:id/password
+const changePassword = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { currentPassword, newPassword } = req.body;
+
+    if (parseInt(id) !== req.user.userId && req.user.role !== 'Admin') {
+      return next(createError('Sadece kendi şifrenizi değiştirebilirsiniz.', 403, 'FORBIDDEN'));
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+      return next(createError('Yeni şifre en az 8 karakter olmalı.', 400));
+    }
+
+    const userResult = await query(`SELECT password_hash FROM users WHERE user_id = $1`, [parseInt(id)]);
+    const user = userResult.recordset[0];
+    
+    if (!user) return next(createError('Kullanıcı bulunamadı.', 404, 'NOT_FOUND'));
+
+    if (req.user.role !== 'Admin' || parseInt(id) === req.user.userId) {
+       if (!currentPassword) return next(createError('Mevcut şifrenizi girmelisiniz.', 400));
+       const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+       if (!isValid) return next(createError('Mevcut şifre hatalı.', 400));
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await query(`UPDATE users SET password_hash = $1, updated_date = NOW() WHERE user_id = $2`, [newHash, parseInt(id)]);
+    
+    res.json({ success: true, message: 'Şifre başarıyla güncellendi.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getAll, getById, create, update, changePassword, remove, getActivityLog };

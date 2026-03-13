@@ -142,15 +142,16 @@ const getScheduled = async (req, res, next) => {
     }
 
     const result = await query(
-      `SELECT m.*, a.asset_name, a.asset_code, c.channel_name, ag.group_name
+      `SELECT m.*, a.asset_name, a.asset_code, c.channel_name, ag.group_name,
+        EXTRACT(DAY FROM (COALESCE(m.next_maintenance_date, m.maintenance_date) - CURRENT_DATE))::int AS "daysUntilMaintenance"
        FROM maintenance_records m
        JOIN assets a ON m.asset_id = a.asset_id
-       JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       LEFT JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
        JOIN channels c ON a.channel_id = c.channel_id
-       WHERE m.status IN ('Scheduled', 'Pending')
-         AND m.next_maintenance_date <= (CURRENT_DATE + ($1 || ' days')::INTERVAL)
+       WHERE COALESCE(m.next_maintenance_date, m.maintenance_date) <= (CURRENT_DATE + ($1 || ' days')::INTERVAL)
+         AND COALESCE(m.next_maintenance_date, m.maintenance_date) >= (CURRENT_DATE - ($1 || ' days')::INTERVAL)
          ${channelFilter}
-       ORDER BY m.next_maintenance_date ASC`,
+       ORDER BY COALESCE(m.next_maintenance_date, m.maintenance_date) ASC`,
       params
     );
     res.json({ success: true, data: result.recordset, total: result.recordset.length });

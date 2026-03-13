@@ -115,7 +115,7 @@ export function Maintenance() {
 
   const { data: assetsData } = useQuery({
     queryKey: ['assets-dropdown'],
-    queryFn: () => assetApi.getAll({ limit: 500 }),
+    queryFn: () => assetApi.getAll({ limit: 5000 }),
   });
 
   const { data: channelsData } = useQuery({
@@ -134,9 +134,12 @@ export function Maintenance() {
   });
 
   // Stats
-  const urgent = records.filter(r => r.daysUntilMaintenance <= 7).length;
-  const soon = records.filter(r => r.daysUntilMaintenance <= 30).length;
-  const total = records.length;
+  const activeStatuses = ['Scheduled', 'Pending', 'InProgress'];
+  const activeRecords = records.filter(r => activeStatuses.includes(r.status));
+  
+  const urgent = activeRecords.filter(r => r.daysUntilMaintenance != null && r.daysUntilMaintenance <= 7).length;
+  const soon = activeRecords.filter(r => r.daysUntilMaintenance != null && r.daysUntilMaintenance <= 30).length;
+  const total = activeRecords.length;
   const completed = (allMaintData?.data?.data ?? []).filter((r: any) => r.status === 'Completed').length;
 
   // Mutations

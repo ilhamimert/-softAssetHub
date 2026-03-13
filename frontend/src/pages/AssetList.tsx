@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Search, Filter, Download, ChevronUp, ChevronDown, ChevronsUpDown,
   Eye, Edit, Trash2, X, Server, Building2, MapPin, Zap, Thermometer,
@@ -72,6 +73,7 @@ const inputCls = "w-full bg-[#131C2E] border border-[#1E2D45] rounded text-xs te
 
 // ─── View Modal ───────────────────────────────────────────────
 function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: () => void; onEdit: () => void }) {
+  const { t } = useTranslation();
   if (!asset) return null;
   return (
     <Modal open={!!asset} onClose={onClose} title={asset.assetName} size="lg">
@@ -102,46 +104,46 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
           onClick={onEdit}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 font-mono-val transition-all"
         >
-          <Edit size={11} /> DÜZENLE
+          <Edit size={11} /> {t('common.edit').toUpperCase()}
         </button>
       </div>
 
       {/* Details grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">Cihaz Bilgileri</p>
-          <InfoRow label="Tür" value={assetTypeLabel(asset.assetType)} />
-          <InfoRow label="Model" value={asset.model} />
-          <InfoRow label="Seri No" value={asset.serialNumber} mono />
-          <InfoRow label="Üretici" value={asset.manufacturer} />
-          <InfoRow label="Tedarikçi" value={asset.supplier} />
-          <InfoRow label="IP Adresi" value={asset.ipAddress} mono />
-          <InfoRow label="MAC Adresi" value={asset.macAddress} mono />
-          <InfoRow label="Firmware" value={asset.firmwareVersion} mono />
-          <InfoRow label="Rack Pozisyon" value={asset.rackPosition} mono />
+          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">{t('assets.details.device_info')}</p>
+          <InfoRow label={t('assets.details.type')} value={assetTypeLabel(asset.assetType)} />
+          <InfoRow label={t('assets.details.model')} value={asset.model} />
+          <InfoRow label={t('assets.details.serial_no')} value={asset.serialNumber} mono />
+          <InfoRow label={t('assets.details.manufacturer')} value={asset.manufacturer} />
+          <InfoRow label={t('assets.details.supplier')} value={asset.supplier} />
+          <InfoRow label={t('assets.details.ip_address')} value={asset.ipAddress} mono />
+          <InfoRow label={t('assets.details.mac_address')} value={asset.macAddress} mono />
+          <InfoRow label={t('assets.details.firmware')} value={asset.firmwareVersion} mono />
+          <InfoRow label={t('assets.details.rack')} value={asset.rackPosition} mono />
         </div>
         <div>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">Mali Bilgiler</p>
-          <InfoRow label="Satın Alma" value={formatDate(asset.purchaseDate ?? undefined)} />
-          <InfoRow label="Garanti Bitiş" value={formatDate(asset.warrantyEndDate ?? undefined)} />
-          <InfoRow label="Maliyet" value={formatCurrency(asset.purchaseCost ?? undefined)} />
-          <InfoRow label="Güncel Değer" value={formatCurrency(asset.currentValue ?? undefined)} />
-          <InfoRow label="Amortisman" value={asset.depreciationRate != null ? `%${asset.depreciationRate} / Yıl` : null} />
+          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">{t('assets.details.finance_info')}</p>
+          <InfoRow label={t('assets.details.purchase')} value={formatDate(asset.purchaseDate ?? undefined)} />
+          <InfoRow label={t('assets.details.warranty')} value={formatDate(asset.warrantyEndDate ?? undefined)} />
+          <InfoRow label={t('assets.details.cost')} value={formatCurrency(asset.purchaseCost ?? undefined)} />
+          <InfoRow label={t('assets.details.value')} value={formatCurrency(asset.currentValue ?? undefined)} />
+          <InfoRow label={t('assets.details.depreciation')} value={asset.depreciationRate != null ? `%${asset.depreciationRate}${t('analytics.charts.health_sub').includes('/') ? ' / Yıl' : ' / Year'}` : null} />
 
           {/* Live stats if available */}
           {asset.lastTemperature != null && (
             <>
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2 mt-4">Anlık Durum</p>
-              <InfoRow label="Sıcaklık" value={`${asset.lastTemperature}°C`} mono />
+              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2 mt-4">{t('assets.details.live_status')}</p>
+              <InfoRow label={t('monitoring.table.temp')} value={`${asset.lastTemperature}°C`} mono />
               {asset.lastPowerConsumption != null && (
-                <InfoRow label="Güç Tük." value={`${asset.lastPowerConsumption}W`} mono />
+                <InfoRow label={t('monitoring.table.power')} value={`${asset.lastPowerConsumption}W`} mono />
               )}
             </>
           )}
 
           {asset.notes && (
             <div className="mt-3">
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-1">Notlar</p>
+              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-1">{t('assets.details.notes')}</p>
               <p className="text-xs text-[#E2EAF4] bg-[#131C2E] rounded p-2 leading-relaxed">{asset.notes}</p>
             </div>
           )}
@@ -153,6 +155,7 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
 
 // ─── Edit Modal ───────────────────────────────────────────────
 function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [form, setForm] = useState<any>(
     asset ? {
@@ -213,16 +216,16 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
 
   if (!asset) return null;
   return (
-    <Modal open={!!asset} onClose={onClose} title={`Düzenle: ${asset.assetName}`} size="lg">
+    <Modal open={!!asset} onClose={onClose} title={`${t('common.edit')}: ${asset.assetName}`} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Varlık Adı" required>
+          <FormField label={t('assets.toolbar.search_placeholder').split(':')[1]?.split(',')[0]?.trim() || 'Varlık Adı'} required>
             <input className={inputCls} value={(form as any).assetName ?? ''} onChange={e => setField('assetName', e.target.value)} required />
           </FormField>
-          <FormField label="Varlık Kodu">
+          <FormField label={t('dashboard.charts.heatmap').includes('Sıcaklık') ? 'Varlık Kodu' : 'Asset Code'}>
             <input className={inputCls} value={(form as any).assetCode ?? ''} onChange={e => setField('assetCode', e.target.value)} placeholder="BC-001" />
           </FormField>
-          <FormField label="Tür" required>
+          <FormField label={t('assets.details.type')} required>
             <select className={inputCls} value={(form as any).assetType} onChange={e => setField('assetType', e.target.value)} required>
               <option value="GPU">GPU Kartı</option>
               <option value="DisplayCard">Görüntü Kartı</option>
@@ -231,13 +234,13 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
               <option value="Network">Ağ Ekipmanı</option>
             </select>
           </FormField>
-          <FormField label="Durum">
+          <FormField label={t('common.status')}>
             <select className={inputCls} value={(form as any).status} onChange={e => setField('status', e.target.value)}>
-              <option value="Active">Aktif</option>
-              <option value="Inactive">İnaktif</option>
-              <option value="Maintenance">Bakımda</option>
-              <option value="Faulty">Arızalı</option>
-              <option value="Retired">Kullanım Dışı</option>
+              <option value="Active">{t('common.active')}</option>
+              <option value="Inactive">{t('common.inactive')}</option>
+              <option value="Maintenance">{t('common.maintenance_short')}</option>
+              <option value="Faulty">{t('common.faulty')}</option>
+              <option value="Retired">{t('common.retired')}</option>
             </select>
           </FormField>
           <FormField label="Model">
@@ -261,11 +264,11 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
           <FormField label="Firmware Versiyonu">
             <input className={inputCls} value={(form as any).firmwareVersion ?? ''} onChange={e => setField('firmwareVersion', e.target.value)} />
           </FormField>
-          <FormField label="Rack Pozisyon">
+          <FormField label={t('assets.details.rack')}>
             <input className={inputCls} value={(form as any).rackPosition ?? ''} onChange={e => setField('rackPosition', e.target.value)} placeholder="U1-U2" />
           </FormField>
 
-          <p className="col-span-2 text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val pt-2 border-t border-[#1E2D45]">Mali Bilgiler</p>
+          <p className="col-span-2 text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val pt-2 border-t border-[#1E2D45]">{t('assets.details.finance_info')}</p>
 
           <FormField label="Satın Alma Tarihi">
             <input type="date" className={inputCls} value={(form as any).purchaseDate ?? ''} onChange={e => setField('purchaseDate', e.target.value)} />
@@ -296,7 +299,7 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
 
         <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#1E2D45]">
           <button type="button" onClick={onClose} className="px-4 py-2 rounded text-xs text-[#6B84A3] hover:text-[#E2EAF4] border border-[#1E2D45] transition-colors font-mono-val">
-            İPTAL
+            {t('common.cancel').toUpperCase()}
           </button>
           <button
             type="submit"
@@ -304,7 +307,7 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
             className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 font-mono-val transition-all"
           >
             {updateMut.isPending && <span className="w-3 h-3 border border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />}
-            <Save size={11} /> KAYDET
+            <Save size={11} /> {t('common.save').toUpperCase()}
           </button>
         </div>
       </form>
@@ -314,6 +317,7 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
 
 // ─── Delete Confirm Modal ─────────────────────────────────────
 function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const deleteMut = useMutation({
     mutationFn: () => assetApi.delete(asset!.assetId),
@@ -321,7 +325,7 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
   });
   if (!asset) return null;
   return (
-    <Modal open={!!asset} onClose={onClose} title="Varlığı Sil" size="sm">
+    <Modal open={!!asset} onClose={onClose} title={t('assets.delete.title')} size="sm">
       <div className="space-y-4 text-center">
         <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto">
           <Trash2 size={22} className="text-red-400" />
@@ -329,8 +333,8 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
         <div>
           <p className="text-sm text-[#E2EAF4] font-medium">{asset.assetName}</p>
           <p className="text-[11px] text-[#6B84A3] mt-1 font-mono-val">
-            Bu varlığı silmek istediğinize emin misiniz?<br />
-            Varlık "Kullanım Dışı" olarak işaretlenecek.
+            {t('assets.delete.confirm')}<br />
+            {t('assets.delete.warning')}
           </p>
         </div>
         {deleteMut.isError && (
@@ -340,7 +344,7 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
         )}
         <div className="flex items-center justify-center gap-3">
           <button onClick={onClose} className="px-4 py-2 rounded text-xs text-[#6B84A3] hover:text-[#E2EAF4] border border-[#1E2D45] transition-colors font-mono-val">
-            VAZGEÇ
+            {t('common.cancel').toUpperCase()}
           </button>
           <button
             onClick={() => deleteMut.mutate()}
@@ -348,7 +352,7 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
             className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 disabled:opacity-50 font-mono-val transition-all"
           >
             {deleteMut.isPending && <span className="w-3 h-3 border border-red-400/30 border-t-red-400 rounded-full animate-spin" />}
-            EVET, SİL
+            {t('assets.delete.yes')}
           </button>
         </div>
       </div>
@@ -358,6 +362,7 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
 
 // ─── AssetList Page ───────────────────────────────────────────
 export function AssetList() {
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const [search, setSearch] = useState('');
@@ -390,7 +395,7 @@ export function AssetList() {
 
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); setSearchQ(search); setPage(1); };
   const toggleSort = (col: string) => {
-    if (sortBy === col) setSortOrder(o => o === 'ASC' ? 'DESC' : 'ASC');
+    if (sortBy === col) setSortOrder((o: string) => o === 'ASC' ? 'DESC' : 'ASC');
     else { setSortBy(col); setSortOrder('ASC'); }
     setPage(1);
   };
@@ -438,12 +443,12 @@ export function AssetList() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Ara: ad, kod, seri no..."
+              placeholder={t('assets.toolbar.search_placeholder')}
               className="w-full bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] placeholder-[#3D5275] pl-7 pr-3 py-2 outline-none focus:border-amber-500/40"
             />
           </div>
           <button type="submit" className="text-[10px] px-2.5 py-2 rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 font-mono-val">
-            ARA
+            {t('common.search').includes('...') ? t('common.search').replace('...', '').toUpperCase() : t('common.search').toUpperCase()}
           </button>
         </form>
 
@@ -452,21 +457,21 @@ export function AssetList() {
         {[
           {
             value: channelId, onChange: (v: string) => { setChannelId(v); setPage(1); },
-            options: [{ value: '', label: 'Tüm Kanallar' }, ...channels.map((c: any) => ({ value: String(c.channelId), label: c.channelName }))],
+            options: [{ value: '', label: t('assets.toolbar.all_channels') }, ...channels.map((c: any) => ({ value: String(c.channelId), label: c.channelName }))],
           },
           {
             value: status, onChange: (v: string) => { setStatus(v); setPage(1); },
             options: [
-              { value: '', label: 'Tüm Durumlar' }, { value: 'Active', label: 'Aktif' },
-              { value: 'Maintenance', label: 'Bakımda' }, { value: 'Inactive', label: 'İnaktif' },
-              { value: 'Faulty', label: 'Arızalı' }, { value: 'Retired', label: 'Kullanım Dışı' },
+              { value: '', label: t('assets.toolbar.all_statuses') }, { value: 'Active', label: t('common.active') },
+              { value: 'Maintenance', label: t('common.maintenance_short') }, { value: 'Inactive', label: t('common.inactive') },
+              { value: 'Faulty', label: t('common.faulty') }, { value: 'Retired', label: t('common.retired') },
             ],
           },
           {
             value: assetType, onChange: (v: string) => { setAssetType(v); setPage(1); },
             options: [
-              { value: '', label: 'Tüm Türler' }, { value: 'GPU', label: 'GPU' }, { value: 'DisplayCard', label: 'Görüntü Kartı' },
-              { value: 'Server', label: 'Sunucu' }, { value: 'Disk', label: 'Disk' }, { value: 'Network', label: 'Ağ' },
+              { value: '', label: t('assets.toolbar.all_types') }, { value: 'GPU', label: 'GPU' }, { value: 'DisplayCard', label: t('monitoring.charts.heatmap').includes('Sıcaklık') ? 'Görüntü Kartı' : 'Display Card' },
+              { value: 'Server', label: t('monitoring.charts.heatmap').includes('Sıcaklık') ? 'Sunucu' : 'Server' }, { value: 'Disk', label: 'Disk' }, { value: 'Network', label: t('monitoring.charts.heatmap').includes('Sıcaklık') ? 'Ağ' : 'Network' },
             ],
           },
         ].map((sel, i) => (
@@ -487,21 +492,21 @@ export function AssetList() {
           onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
           className="bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#6B84A3] px-2 py-2 outline-none"
         >
-          {PAGE_SIZES.map(s => <option key={s} value={s}>{s} satır</option>)}
+          {PAGE_SIZES.map(s => <option key={s} value={s}>{s} {t('assets.toolbar.rows')}</option>)}
         </select>
 
         <button
           onClick={handleExport}
           className="flex items-center gap-1.5 text-[10px] px-2.5 py-2 rounded bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] transition-colors font-mono-val"
         >
-          <Download size={11} /> DIŞA AKTAR
+          <Download size={11} /> {t('assets.toolbar.export')}
         </button>
       </div>
 
       {/* Count */}
       <div className="flex items-center gap-2 px-1">
         <span className="text-[11px] text-[#3D5275] font-mono-val">
-          {pagination.total.toLocaleString()} varlık bulundu
+          {pagination.total.toLocaleString()} {t('assets.toolbar.found')}
         </span>
         {isFetching && <span className="w-3 h-3 border border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />}
       </div>
@@ -513,16 +518,16 @@ export function AssetList() {
             <thead className="border-b border-[#1E2D45] bg-[#131C2E]">
               <tr>
                 <Th label="#" className="w-10" />
-                <Th label="Varlık Adı" col="AssetName" />
-                <Th label="Kod" col="AssetCode" />
-                <Th label="Tür" col="AssetType" />
-                <Th label="Model" />
-                <Th label="Kanal/Konum" />
-                <Th label="Durum" col="Status" />
-                <Th label="Sıcaklık" />
-                <Th label="Güç" />
-                <Th label="Satın Alma" col="PurchaseDate" />
-                <Th label="Maliyet" col="PurchaseCost" />
+                <Th label={t('common.dashboard').includes('Dashboard') ? 'Asset Name' : 'Varlık Adı'} col="AssetName" />
+                <Th label={t('common.dashboard').includes('Dashboard') ? 'Code' : 'Kod'} col="AssetCode" />
+                <Th label={t('assets.details.type')} col="AssetType" />
+                <Th label={t('assets.details.model')} />
+                <Th label={i18n.language === 'tr' ? 'Kanal/Konum' : 'Channel/Location'} />
+                <Th label={t('common.status')} col="Status" />
+                <Th label={t('monitoring.table.temp')} />
+                <Th label={t('monitoring.table.power')} />
+                <Th label={t('assets.details.purchase')} col="PurchaseDate" />
+                <Th label={t('assets.details.cost')} col="PurchaseCost" />
                 <Th label="" className="w-24" />
               </tr>
             </thead>
@@ -610,7 +615,7 @@ export function AssetList() {
               {!isLoading && assets.length === 0 && (
                 <tr>
                   <td colSpan={12} className="py-12 text-center text-[#3D5275] text-sm font-mono-val">
-                    Varlık bulunamadı
+                    {i18n.language === 'tr' ? 'Varlık bulunamadı' : 'No assets found'}
                   </td>
                 </tr>
               )}
@@ -622,15 +627,15 @@ export function AssetList() {
         {pagination.totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-[#1E2D45] bg-[#070B14]">
             <span className="text-[10px] text-[#3D5275] font-mono-val">
-              Sayfa {pagination.page} / {pagination.totalPages} · {pagination.total.toLocaleString()} kayıt
+              {t('common.page')} {pagination.page} / {pagination.totalPages} · {pagination.total.toLocaleString()} {i18n.language === 'tr' ? 'kayıt' : 'records'}
             </span>
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p: number) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                ‹ Önceki
+                ‹ {t('common.previous')}
               </button>
               {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                 const p = Math.max(1, Math.min(pagination.totalPages - 4, page - 2)) + i;
@@ -650,11 +655,11 @@ export function AssetList() {
                 );
               })}
               <button
-                onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                onClick={() => setPage((p: number) => Math.min(pagination.totalPages, p + 1))}
                 disabled={page === pagination.totalPages}
                 className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Sonraki ›
+                {t('common.next')} ›
               </button>
             </div>
           </div>

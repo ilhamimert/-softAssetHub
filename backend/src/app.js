@@ -9,6 +9,9 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
+// ── Nginx reverse proxy güveni ────────────────────────────────────
+app.set('trust proxy', 1);
+
 // ── Gzip sıkıştırma ───────────────────────────────────────────────
 app.use(compression({ level: 6, threshold: 1024 }));
 
@@ -20,7 +23,7 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:'],
-      connectSrc: ["'self'", 'ws://localhost:5000', 'ws://localhost:3000'],
+      connectSrc: ["'self'", 'ws://localhost:5000', 'ws://localhost:3000', 'wss://ilhami.yesiloz.net'],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],

@@ -20,6 +20,12 @@ router.get('/audit-log', hierarchyController.getAuditLog);
 // PostgreSQL Veri Yükleme Demostrasyonu
 router.post('/demo', hierarchyController.loadDemoData);
 
+// Auto-Link: physical_nodes bilgisayarları ile assets'leri isim benzerliğine göre eşleştir
+router.post('/auto-link', hierarchyController.autoLinkNodes);
+
+// Rename Node
+router.patch('/:type/:id', hierarchyController.renameNode);
+
 // Delete Nodes
 router.delete('/:type/:id', hierarchyController.deleteNode);
 

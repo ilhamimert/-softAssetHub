@@ -17,7 +17,9 @@ const getPowerConsumption = async (req, res, next) => {
       : groupBy === 'hour'
       ? `TO_CHAR(m.monitoring_time, 'YYYY-MM-DD HH24')`
       : groupBy === '3hour'
-      ? `TO_CHAR(m.monitoring_time + INTERVAL '3 hours', 'YYYY-MM-DD') || ' ' || LPAD((FLOOR(EXTRACT(HOUR FROM (m.monitoring_time + INTERVAL '3 hours')) / 3) * 3)::TEXT, 2, '0') || ':00'`
+      ? `TO_CHAR(m.monitoring_time, 'YYYY-MM-DD') || ' ' || LPAD((FLOOR(EXTRACT(HOUR FROM m.monitoring_time) / 3) * 3)::TEXT, 2, '0') || ':00'`
+      : groupBy === '12hour'
+      ? `TO_CHAR(m.monitoring_time, 'YYYY-MM-DD') || ' ' || LPAD((FLOOR(EXTRACT(HOUR FROM m.monitoring_time) / 12) * 12)::TEXT, 2, '0') || ':00'`
       : `TO_CHAR(m.monitoring_time, 'YYYY-MM-DD')`;
 
     const result = await query(
@@ -28,7 +30,12 @@ const getPowerConsumption = async (req, res, next) => {
          AVG(m.power_consumption) AS avg_power_w,
          MAX(m.power_consumption) AS max_power_w,
          MIN(m.power_consumption) AS min_power_w,
-         SUM(m.power_consumption) / 1000.0 AS total_kwh
+         (AVG(m.power_consumption) * CASE
+           WHEN '${groupBy}' = '12hour' THEN 12
+           WHEN '${groupBy}' = '3hour'  THEN 3
+           WHEN '${groupBy}' = 'hour'   THEN 1
+           ELSE 24
+         END) / 1000.0 AS total_kwh
        FROM asset_monitoring m
        JOIN assets      a  ON m.asset_id      = a.asset_id
        JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
@@ -161,7 +168,7 @@ const getMaintenanceForecast = async (req, res, next) => {
        ) mr ON true
        WHERE (
          (mr.next_maintenance_date IS NOT NULL AND mr.next_maintenance_date <= (CURRENT_DATE + ($1 || ' days')::INTERVAL))
-         OR a.warranty_end_date <= (CURRENT_DATE + ($1 || ' days')::INTERVAL)
+         OR (a.warranty_end_date IS NOT NULL AND a.warranty_end_date BETWEEN (CURRENT_DATE - INTERVAL '30 days') AND (CURRENT_DATE + ($1 || ' days')::INTERVAL))
        )
        AND a.is_active = TRUE
        ${channelFilter}

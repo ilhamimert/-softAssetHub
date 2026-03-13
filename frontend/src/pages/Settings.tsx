@@ -348,6 +348,9 @@ export function Settings() {
   const [showChangePw, setShowChangePw] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   const { data } = useQuery({
     queryKey: ['users'],
     queryFn: () => userApi.getAll(),
@@ -368,6 +371,8 @@ export function Settings() {
   });
 
   const isAdminOrManager = user?.role === 'Admin' || user?.role === 'Manager';
+  const totalPages = Math.ceil(users.length / limit);
+  const paginatedUsers = users.slice((page - 1) * limit, page * limit);
 
   return (
     <div className="space-y-4 fade-in-up max-w-4xl">
@@ -440,7 +445,7 @@ export function Settings() {
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
+                {paginatedUsers.map(u => (
                   <tr key={u.userId} className="border-b border-[#1E2D45] hover:bg-[#131C2E] transition-colors group">
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
@@ -495,6 +500,49 @@ export function Settings() {
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between p-3 border-t border-[#1E2D45] bg-[#131C2E] rounded-b-lg">
+              <span className="text-[10px] text-[#3D5275] font-mono-val">
+                Sayfa {page} / {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-2.5 py-1 text-[10px] font-mono-val bg-[#0D1421] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 rounded transition-colors"
+                >
+                  ‹ Önceki
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const p = Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
+                  if (p < 1 || p > totalPages) return null;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={cn(
+                        'w-7 h-7 rounded text-[10px] font-mono-val border transition-colors',
+                        p === page
+                          ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                          : 'bg-[#0D1421] border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4]'
+                      )}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-2.5 py-1 text-[10px] font-mono-val bg-[#0D1421] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 rounded transition-colors"
+                >
+                  Sonraki ›
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
@@ -508,7 +556,7 @@ export function Settings() {
           {[
             { label: 'Versiyon', value: 'v1.0.0' },
             { label: 'API', value: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1' },
-            { label: 'Veritabanı', value: 'SQL Server 2019+' },
+            { label: 'Veritabanı', value: 'PostgreSQL 15+' },
             { label: 'Real-time', value: `WebSocket (${import.meta.env.VITE_API_URL?.replace('http', 'ws') || 'ws://localhost:5000'})` },
             { label: 'Frontend', value: 'Vite + React 18 + TypeScript' },
             { label: 'Backend', value: 'Node.js + Express.js' },

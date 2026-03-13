@@ -14,10 +14,55 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor — hataları ilet
+// Response interceptor — 401'de token yenile, sonra isteği tekrarla
+let isRefreshing = false;
+let failedQueue: { resolve: (v: string) => void; reject: (e: unknown) => void }[] = [];
+
+const processQueue = (error: unknown, token: string | null) => {
+  failedQueue.forEach((p) => (token ? p.resolve(token) : p.reject(error)));
+  failedQueue = [];
+};
+
 api.interceptors.response.use(
   (res) => res,
-  async (error) => Promise.reject(error)
+  async (error) => {
+    const original = error.config;
+    if (error.response?.status !== 401 || original._retry) return Promise.reject(error);
+
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return Promise.reject(error);
+
+    if (isRefreshing) {
+      return new Promise<string>((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then((token) => {
+        original.headers.Authorization = `Bearer ${token}`;
+        return api(original);
+      });
+    }
+
+    original._retry = true;
+    isRefreshing = true;
+
+    try {
+      const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
+      const { accessToken, refreshToken: newRefresh } = data.data;
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', newRefresh);
+      api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+      original.headers.Authorization = `Bearer ${accessToken}`;
+      processQueue(null, accessToken);
+      return api(original);
+    } catch (err) {
+      processQueue(err, null);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = '/login';
+      return Promise.reject(err);
+    } finally {
+      isRefreshing = false;
+    }
+  }
 );
 
 // ============================================================

@@ -31,13 +31,16 @@ export function Alerts() {
   const [tab, setTab] = useState<'unresolved' | 'all'>('unresolved');
   const [typeFilter, setTypeFilter] = useState('');
   const [selected, setSelected] = useState<number[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['alerts', { tab, typeFilter }],
+    queryKey: ['alerts', { tab, typeFilter, page, limit }],
     queryFn: () => alertApi.getAll({
       isResolved: tab === 'unresolved' ? 0 : undefined,
       alertType: typeFilter || undefined,
-      limit: 100,
+      page,
+      limit,
     }),
     refetchInterval: 20000,
   });
@@ -59,14 +62,27 @@ export function Alerts() {
 
   const alerts: Alert[] = data?.data?.data ?? [];
 
+  const pagination = data?.data?.pagination ?? { page: 1, limit, total: 0, totalPages: 1 };
+
   const stats = {
     critical: alerts.filter(a => a.alertType === 'Critical').length,
     warning: alerts.filter(a => a.alertType === 'Warning').length,
     info: alerts.filter(a => a.alertType === 'Info').length,
   };
 
+  const unresolvedAlertsOnPage = alerts.filter(a => !a.isResolved);
+  const allSelected = unresolvedAlertsOnPage.length > 0 && selected.length === unresolvedAlertsOnPage.length;
+
   const toggleSelect = (id: number) =>
     setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelected([]);
+    } else {
+      setSelected(unresolvedAlertsOnPage.map(a => a.alertId));
+    }
+  };
 
   return (
     <div className="space-y-4 fade-in-up">
@@ -97,7 +113,7 @@ export function Alerts() {
           {(['unresolved', 'all'] as const).map(t => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => { setTab(t); setPage(1); setSelected([]); }}
               className={cn(
                 'px-3 py-1.5 rounded text-xs font-mono-val transition-all',
                 tab === t
@@ -113,7 +129,7 @@ export function Alerts() {
         {/* Type filter */}
         <select
           value={typeFilter}
-          onChange={e => setTypeFilter(e.target.value)}
+          onChange={e => { setTypeFilter(e.target.value); setPage(1); setSelected([]); }}
           className="bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] px-2 py-1.5 outline-none"
         >
           <option value="">Tüm Türler</option>
@@ -123,6 +139,18 @@ export function Alerts() {
         </select>
 
         <div className="flex-1" />
+
+        {!isLoading && unresolvedAlertsOnPage.length > 0 && (
+          <label className="flex items-center gap-2 text-[10px] uppercase font-mono-val tracking-widest text-[#6B84A3] cursor-pointer hover:text-[#E2EAF4] mr-2">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleSelectAll}
+              className="accent-amber-500"
+            />
+            Tümünü Seç
+          </label>
+        )}
 
         {selected.length > 0 && (
           <button
@@ -217,6 +245,58 @@ export function Alerts() {
             ))
         }
       </div>
+
+      {/* Pagination Container */}
+      {pagination.totalPages > 1 && (
+        <div className="card px-4 py-3 flex items-center justify-between fade-in-up">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-[#3D5275] font-mono-val">
+              Sayfa {pagination.page} / {pagination.totalPages} · {pagination.total.toLocaleString()} kayıt
+            </span>
+            <select
+              value={limit}
+              onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
+              className="bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#6B84A3] px-2 py-1 outline-none"
+            >
+              {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} satır</option>)}
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              ‹ Önceki
+            </button>
+            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+              const p = Math.max(1, Math.min(pagination.totalPages - 4, page - 2)) + i;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={cn(
+                    'w-7 h-7 rounded text-[10px] font-mono-val border transition-colors',
+                    p === page
+                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                      : 'bg-[#131C2E] border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4]'
+                  )}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={page === pagination.totalPages}
+              className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Sonraki ›
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

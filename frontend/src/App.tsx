@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '@/components/layout/Layout';
 import { Dashboard }  from '@/pages/Dashboard';
@@ -12,6 +12,9 @@ import { Settings }    from '@/pages/Settings';
 import { AssetDetail } from '@/pages/AssetDetail';
 import { Licenses }    from '@/pages/Licenses';
 
+import { useAuthStore } from '@/store/authStore';
+import { Login } from '@/pages/Login';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -21,13 +24,29 @@ const queryClient = new QueryClient({
   },
 });
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
+
 export default function App() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Navigate to="/" replace />} />
-          <Route path="/" element={<Layout />}>
+          <Route 
+            path="/login" 
+            element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} 
+          />
+          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index              element={<Dashboard />}  />
             <Route path="assets"      element={<Assets />}     />
             <Route path="assets/:id"  element={<AssetDetail />} />

@@ -45,7 +45,26 @@ const getAll = async (req, res, next) => {
       params
     );
 
-    res.json({ success: true, data: result.recordset, total: result.recordset.length });
+    const countParams = params.slice(0, params.length - 2); // remove limit and offset
+    const countResult = await query(
+      `SELECT COUNT(*) as total FROM alerts al
+       LEFT JOIN assets a ON al.asset_id = a.asset_id
+       LEFT JOIN channels c ON a.channel_id = c.channel_id
+       ${whereClause}`,
+      countParams
+    );
+    const total = parseInt(countResult.recordset[0].total);
+
+    res.json({
+      success: true,
+      data: result.recordset,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
   } catch (err) {
     next(err);
   }
