@@ -1,9 +1,17 @@
 const { query } = require('../config/database');
+const { createError } = require('../middleware/errorHandler');
+
+const VALID_GROUP_BY = ['month', 'hour', '3hour', '12hour', 'day'];
 
 // GET /analytics/power-consumption
 const getPowerConsumption = async (req, res, next) => {
   try {
     const { channelId, from, to, groupBy = 'day' } = req.query;
+
+    if (!VALID_GROUP_BY.includes(groupBy)) {
+      return next(createError('Geçersiz groupBy parametresi.', 400, 'INVALID_PARAM'));
+    }
+
     const params = [];
     let idx = 1;
     let whereClause = 'WHERE 1=1';
@@ -22,6 +30,10 @@ const getPowerConsumption = async (req, res, next) => {
       ? `TO_CHAR(m.monitoring_time, 'YYYY-MM-DD') || ' ' || LPAD((FLOOR(EXTRACT(HOUR FROM m.monitoring_time) / 12) * 12)::TEXT, 2, '0') || ':00'`
       : `TO_CHAR(m.monitoring_time, 'YYYY-MM-DD')`;
 
+    const kwhMultiplier = groupBy === '12hour' ? 12 : groupBy === '3hour' ? 3 : groupBy === 'hour' ? 1 : 24;
+    params.push(kwhMultiplier);
+    const kwhIdx = idx++;
+
     const result = await query(
       `SELECT
          ${dateGroup} AS period,
@@ -30,12 +42,7 @@ const getPowerConsumption = async (req, res, next) => {
          AVG(m.power_consumption) AS avg_power_w,
          MAX(m.power_consumption) AS max_power_w,
          MIN(m.power_consumption) AS min_power_w,
-         (AVG(m.power_consumption) * CASE
-           WHEN '${groupBy}' = '12hour' THEN 12
-           WHEN '${groupBy}' = '3hour'  THEN 3
-           WHEN '${groupBy}' = 'hour'   THEN 1
-           ELSE 24
-         END) / 1000.0 AS total_kwh
+         (AVG(m.power_consumption) * $${kwhIdx}) / 1000.0 AS total_kwh
        FROM asset_monitoring m
        JOIN assets      a  ON m.asset_id      = a.asset_id
        JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
