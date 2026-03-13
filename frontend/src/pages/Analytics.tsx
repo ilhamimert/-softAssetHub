@@ -33,14 +33,16 @@ export function Analytics() {
 
   const today = new Date();
   const { data: powerData } = useQuery({
-    queryKey: ['power-chart-12h', Math.floor(Date.now() / (5 * 60 * 1000))],
+    queryKey: ['power-chart-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
     queryFn: () => {
-      const now = new Date();
-      const from = new Date(now); from.setHours(now.getHours() - 12, 0, 0, 0);
+      const slot = 3 * 60 * 60 * 1000;
+      const toMs = Math.floor(Date.now() / slot) * slot;
+      const to = new Date(toMs);
+      const from = new Date(toMs - 12 * 60 * 60 * 1000);
       return analyticsApi.getPowerConsumption({
         groupBy: '3hour',
         from: from.toISOString(),
-        to: now.toISOString(),
+        to: to.toISOString(),
       });
     },
     refetchInterval: 5 * 60 * 1000,
