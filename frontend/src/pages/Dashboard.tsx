@@ -119,19 +119,21 @@ export function Dashboard() {
 
   const _today = new Date();
   // Yayın günü: dün 21:00 → bugün 20:59
-  const _from = new Date(_today); _from.setHours(_today.getHours() - 12, 0, 0, 0);
-  const _to = new Date(_today);
   const todayLabel = _today.toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const { data: powerData } = useQuery({
-    queryKey: ['power-consumption-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
-    queryFn: () => analyticsApi.getPowerConsumption({
-      groupBy: '3hour',
-      from: _from.toISOString(),
-      to: _to.toISOString(),
-    }),
-    refetchInterval: 3 * 60 * 60 * 1000,
-    staleTime: 3 * 60 * 60 * 1000,
+    queryKey: ['power-consumption-12h', Math.floor(Date.now() / (5 * 60 * 1000))],
+    queryFn: () => {
+      const now = new Date();
+      const from = new Date(now); from.setHours(now.getHours() - 12, 0, 0, 0);
+      return analyticsApi.getPowerConsumption({
+        groupBy: '3hour',
+        from: from.toISOString(),
+        to: now.toISOString(),
+      });
+    },
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 

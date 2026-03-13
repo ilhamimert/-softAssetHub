@@ -32,19 +32,19 @@ export function Analytics() {
   const limit = 10;
 
   const today = new Date();
-  // Yayın günü dün 21:00'dan bugün 20:59'a kadar (Türkiye saati)
-  const from = new Date(today); from.setHours(today.getHours() - 12, 0, 0, 0);
-  const to = new Date(today);
-
   const { data: powerData } = useQuery({
-    queryKey: ['power-chart-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
-    queryFn: () => analyticsApi.getPowerConsumption({
-      groupBy: '3hour',
-      from: from.toISOString(),
-      to: to.toISOString(),
-    }),
-    refetchInterval: 3 * 60 * 60 * 1000,
-    staleTime: 3 * 60 * 60 * 1000,
+    queryKey: ['power-chart-12h', Math.floor(Date.now() / (5 * 60 * 1000))],
+    queryFn: () => {
+      const now = new Date();
+      const from = new Date(now); from.setHours(now.getHours() - 12, 0, 0, 0);
+      return analyticsApi.getPowerConsumption({
+        groupBy: '3hour',
+        from: from.toISOString(),
+        to: now.toISOString(),
+      });
+    },
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
