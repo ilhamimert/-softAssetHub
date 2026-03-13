@@ -1,0 +1,213 @@
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "assets": "Asset Tree",
+    "assetList": "Asset List",
+    "licenses": "Licenses",
+    "monitoring": "Monitoring",
+    "alerts": "Alerts",
+    "maintenance": "Maintenance",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "logout": "Secure Logout",
+    "system_admin": "SYSTEM ADMIN",
+    "search": "Search...",
+    "live": "LIVE",
+    "online": "ONLINE",
+    "offline": "OFFLINE",
+    "active": "Active",
+    "passive": "Passive",
+    "status": "Status",
+    "actions": "Actions",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "connecting": "CONNECTING...",
+    "no_connection": "NO CONNECTION",
+    "previous": "Prev",
+    "next": "Next",
+    "page": "Page",
+    "edit": "Edit",
+    "view": "View",
+    "all": "All",
+    "inactive": "Inactive",
+    "faulty": "Faulty",
+    "retired": "Retired",
+    "maintenance_short": "Maint."
+  },
+  "login": {
+    "title": "İSOFT ASSET",
+    "subtitle": "Enterprise Asset Management System",
+    "username": "USERNAME",
+    "password": "PASSWORD",
+    "button": "LOGIN TO SYSTEM",
+    "error": "Login failed. Please check your credentials.",
+    "server_active": "Server Active"
+  },
+  "dashboard": {
+    "kpi": {
+      "total_assets": "Total Assets",
+      "active_devices": "Active Devices",
+      "in_maintenance": "In Maintenance",
+      "critical_alerts": "Critical Alerts",
+      "total_alerts": "Total Alerts",
+      "system_uptime": "System Uptime"
+    },
+    "charts": {
+      "power_consumption": "Power Consumption",
+      "asset_distribution": "Asset Distribution",
+      "active_alerts": "Active Alerts",
+      "heatmap": "Temperature & Usage Map",
+      "live_metrics": "Real-time Metrics",
+      "channel_health": "Channel Health Status",
+      "active_alert_short": "ACTIVE ALERT"
+    },
+    "alerts": {
+      "no_alerts": "✓ No active alerts",
+      "critical": "Critical",
+      "warning": "Warning",
+      "info": "Info"
+    }
+  },
+  "monitoring": {
+    "stats": {
+      "avg_temp": "AVG. TEMP",
+      "total_power": "TOTAL POWER"
+    },
+    "toolbar": {
+      "search_placeholder": "Search device...",
+      "all_channels": "All Channels",
+      "all": "All",
+      "channel_group": "CHANNEL GROUP",
+      "sort_status": "Offline First",
+      "sort_cpu": "Highest CPU",
+      "sort_temp": "Highest Temp",
+      "sort_power": "Highest Power",
+      "sort_name": "Name A–Z"
+    },
+    "table": {
+      "device": "DEVICE",
+      "status": "STATUS",
+      "cpu": "CPU",
+      "temp": "TEMP",
+      "power": "POWER",
+      "ram": "RAM",
+      "trend": "TREND",
+      "update": "UPDATE"
+    }
+  },
+  "analytics": {
+    "finance": {
+      "purchase_cost": "Total Purchase Cost",
+      "current_value": "Current Total Value",
+      "maintenance_cost": "Total Maintenance Cost"
+    },
+    "charts": {
+      "power_trend": "Power Consumption Trend",
+      "avg_power": "Average Power (W)",
+      "health_sub": "Active / Maintenance / Faulty",
+      "budget_analysis": "Channel Budget Analysis",
+      "cost_vs_value": "Cost / Current Value"
+    },
+    "maintenance": {
+      "upcoming": "Upcoming Maintenance",
+      "next_90_days": "Next 90 Days",
+      "no_maintenance": "No upcoming maintenance (90 days)",
+      "table": {
+        "asset": "Asset",
+        "type": "Type",
+        "channel": "Channel",
+        "building": "Building",
+        "date": "Maint. Date",
+        "days_left": "Days Left",
+        "warranty": "Warranty End"
+      }
+    }
+  },
+  "assets": {
+    "toolbar": {
+      "search_placeholder": "Search: name, code, serial...",
+      "all_channels": "All Channels",
+      "all_statuses": "All Statuses",
+      "all_types": "All Types",
+      "export": "EXPORT",
+      "rows": "rows",
+      "found": "assets found"
+    },
+    "details": {
+      "device_info": "Device Information",
+      "finance_info": "Financial Information",
+      "live_status": "Live Status",
+      "notes": "Notes",
+      "type": "Type",
+      "model": "Model",
+      "serial_no": "Serial No",
+      "manufacturer": "Manufacturer",
+      "supplier": "Supplier",
+      "ip_address": "IP Address",
+      "mac_address": "MAC Address",
+      "firmware": "Firmware",
+      "rack": "Rack Position",
+      "purchase": "Purchase",
+      "warranty": "Warranty End",
+      "cost": "Cost",
+      "value": "Current Value",
+      "depreciation": "Depreciation"
+    },
+    "delete": {
+      "title": "Delete Asset",
+      "confirm": "Are you sure you want to delete this asset?",
+      "warning": "Asset will be marked as \"Retired\".",
+      "failed": "Deletion failed.",
+      "yes": "YES, DELETE"
+    }
+  },
+  "licenses": {
+    "title": "License Management",
+    "toolbar": {
+      "search_placeholder": "App name or key..."
+    },
+    "filter": {
+      "expiring": "Expiring (60d)",
+      "expired": "Expired"
+    },
+    "no_licenses": "No licenses found",
+    "table": {
+      "app": "APPLICATION",
+      "asset": "ASSET",
+      "key": "LICENSE KEY",
+      "mac": "MAC ID",
+      "expiry": "EXPIRY DATE",
+      "features": "FEATURES",
+      "status": "STATUS"
+    },
+    "expiry": {
+      "expired": "Expired",
+      "days_left": "{{days}}d left"
+    }
+  },
+  "header": {
+    "logged_in_as": "Logged In As",
+    "profile_settings": "Profile Settings",
+    "search_placeholder": "Search asset, serial or channel...",
+    "no_results": "No results found"
+  },
+  "sidebar": {
+    "live_monitoring": "LIVE MONITORING",
+    "hierarchy": "Holding → Channel → Group → Asset → Plugin"
+  },
+  "layout": {
+    "titles": {
+      "dashboard": "Dashboard",
+      "assets": "Asset Management",
+      "assetList": "Asset List",
+      "monitoring": "Live Monitoring",
+      "alerts": "Alerts",
+      "maintenance": "Maintenance Management",
+      "analytics": "Analytics & Reports",
+      "settings": "Settings",
+      "licenses": "License Management",
+      "default": "Broadcast Asset Management"
+    }
+  }
+}

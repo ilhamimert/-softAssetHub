@@ -1,0 +1,213 @@
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "assets": "Varlık Ağacı",
+    "assetList": "Varlık Listesi",
+    "licenses": "Lisanslar",
+    "monitoring": "Monitoring",
+    "alerts": "Uyarılar",
+    "maintenance": "Bakım",
+    "analytics": "Analitik",
+    "settings": "Ayarlar",
+    "logout": "Güvenli Çıkış",
+    "system_admin": "SİSTEM ADMİNİ",
+    "search": "Ara...",
+    "live": "CANLI",
+    "online": "ONLİNE",
+    "offline": "OFFLİNE",
+    "active": "Aktif",
+    "passive": "Pasif",
+    "status": "Durum",
+    "actions": "İşlemler",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "connecting": "BAĞLANIYOR...",
+    "no_connection": "BAĞLANTI YOK",
+    "previous": "Geri",
+    "next": "İleri",
+    "page": "Sayfa",
+    "edit": "Düzenle",
+    "view": "Görüntüle",
+    "all": "Tümü",
+    "inactive": "İnaktif",
+    "faulty": "Arızalı",
+    "retired": "Kullanım Dışı",
+    "maintenance_short": "Bakımda"
+  },
+  "login": {
+    "title": "İSOFT ASSET",
+    "subtitle": "Kurumsal Varlık Yönetim Sistemi",
+    "username": "KULLANICI ADI",
+    "password": "ŞİFRE",
+    "button": "SİSTEME GİRİŞ YAP",
+    "error": "Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.",
+    "server_active": "Sunucu Aktif"
+  },
+  "dashboard": {
+    "kpi": {
+      "total_assets": "Toplam Varlık",
+      "active_devices": "Aktif Cihazlar",
+      "in_maintenance": "Bakımda",
+      "critical_alerts": "Kritik Uyarı",
+      "total_alerts": "Toplam Uyarı",
+      "system_uptime": "Sistem Uptime"
+    },
+    "charts": {
+      "power_consumption": "Güç Tüketimi",
+      "asset_distribution": "Varlık Dağılımı",
+      "active_alerts": "Aktif Uyarılar",
+      "heatmap": "Sıcaklık & Kullanım Haritası",
+      "live_metrics": "Anlık Cihaz Metrikleri",
+      "channel_health": "Kanal Sağlık Durumu",
+      "active_alert_short": "AKTİF ALERT"
+    },
+    "alerts": {
+      "no_alerts": "✓ Aktif uyarı yok",
+      "critical": "Kritik",
+      "warning": "Uyarı",
+      "info": "Bilgi"
+    }
+  },
+  "monitoring": {
+    "stats": {
+      "avg_temp": "ORT. SICAKLIK",
+      "total_power": "TOPLAM GÜÇ"
+    },
+    "toolbar": {
+      "search_placeholder": "Cihaz ara...",
+      "all_channels": "Tüm Kanallar",
+      "all": "Tümü",
+      "channel_group": "KANAL GRUBU",
+      "sort_status": "Offline Önce",
+      "sort_cpu": "En Yüksek CPU",
+      "sort_temp": "En Yüksek Sıcaklık",
+      "sort_power": "En Yüksek Güç",
+      "sort_name": "İsim A–Z"
+    },
+    "table": {
+      "device": "CİHAZ",
+      "status": "DURUM",
+      "cpu": "CPU",
+      "temp": "SICAKLIK",
+      "power": "GÜÇ",
+      "ram": "RAM",
+      "trend": "TREND",
+      "update": "GÜNCELLEME"
+    }
+  },
+  "analytics": {
+    "finance": {
+      "purchase_cost": "Toplam Satın Alma Maliyeti",
+      "current_value": "Güncel Toplam Değer",
+      "maintenance_cost": "Toplam Bakım Maliyeti"
+    },
+    "charts": {
+      "power_trend": "Güç Tüketimi Trendi",
+      "avg_power": "Ortalama Güç (W)",
+      "health_sub": "Aktif / Bakım / Arızalı",
+      "budget_analysis": "Kanal Bütçe Analizi",
+      "cost_vs_value": "Maliyet / Güncel Değer"
+    },
+    "maintenance": {
+      "upcoming": "Yaklaşan Bakımlar",
+      "next_90_days": "Sonraki 90 Gün",
+      "no_maintenance": "Yaklaşan bakım yok (90 gün)",
+      "table": {
+        "asset": "Varlık",
+        "type": "Tür",
+        "channel": "Kanal",
+        "building": "Bina",
+        "date": "Bakım Tarihi",
+        "days_left": "Kalan Gün",
+        "warranty": "Garanti Bitiş"
+      }
+    }
+  },
+  "assets": {
+    "toolbar": {
+      "search_placeholder": "Ara: ad, kod, seri no...",
+      "all_channels": "Tüm Kanallar",
+      "all_statuses": "Tüm Durumlar",
+      "all_types": "Tüm Türler",
+      "export": "DIŞA AKTAR",
+      "rows": "satır",
+      "found": "varlık bulundu"
+    },
+    "details": {
+      "device_info": "Cihaz Bilgileri",
+      "finance_info": "Mali Bilgiler",
+      "live_status": "Anlık Durum",
+      "notes": "Notlar",
+      "type": "Tür",
+      "model": "Model",
+      "serial_no": "Seri No",
+      "manufacturer": "Üretici",
+      "supplier": "Tedarikçi",
+      "ip_address": "IP Adresi",
+      "mac_address": "MAC Adresi",
+      "firmware": "Firmware",
+      "rack": "Rack Pozisyon",
+      "purchase": "Satın Alma",
+      "warranty": "Garanti Bitiş",
+      "cost": "Maliyet",
+      "value": "Güncel Değer",
+      "depreciation": "Amortisman"
+    },
+    "delete": {
+      "title": "Varlığı Sil",
+      "confirm": "Bu varlığı silmek istediğinize emin misiniz?",
+      "warning": "Varlık \"Kullanım Dışı\" olarak işaretlenecek.",
+      "failed": "Silme işlemi başarısız oldu.",
+      "yes": "EVET, SİL"
+    }
+  },
+  "licenses": {
+    "title": "Lisans Yönetimi",
+    "toolbar": {
+      "search_placeholder": "Uygulama adı veya anahtar..."
+    },
+    "filter": {
+      "expiring": "60g İçinde",
+      "expired": "Süresi Dolmuş"
+    },
+    "no_licenses": "Lisans bulunamadı",
+    "table": {
+      "app": "UYGULAMA",
+      "asset": "VARLIK",
+      "key": "LİSANS ANAHTARI",
+      "mac": "MAC ID",
+      "expiry": "BİTİŞ TARİHİ",
+      "features": "ÖZELLİKLER",
+      "status": "DURUM"
+    },
+    "expiry": {
+      "expired": "Süresi Doldu",
+      "days_left": "{{days}}g kaldı"
+    }
+  },
+  "header": {
+    "logged_in_as": "Oturum Açan",
+    "profile_settings": "Profil Ayarları",
+    "search_placeholder": "Varlık, seri no veya kanal ara...",
+    "no_results": "Sonuç bulunamadı"
+  },
+  "sidebar": {
+    "live_monitoring": "CANLI İZLEME",
+    "hierarchy": "Holding → Kanal → Grup → Varlık → Eklenti"
+  },
+  "layout": {
+    "titles": {
+      "dashboard": "Dashboard",
+      "assets": "Varlık Yönetimi",
+      "assetList": "Varlık Listesi",
+      "monitoring": "Canlı İzleme",
+      "alerts": "Uyarılar",
+      "maintenance": "Bakım Yönetimi",
+      "analytics": "Analitik & Raporlar",
+      "settings": "Ayarlar",
+      "licenses": "Lisans Yönetimi",
+      "default": "Broadcast Asset Management"
+    }
+  }
+}
