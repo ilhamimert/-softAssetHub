@@ -164,19 +164,29 @@ export function Dashboard() {
   const alerts: Alert[] = alertData?.data?.data ?? [];
   const alertStats = alertData?.data?.stats ?? {};
 
-  // Yayın günü slotları: 21:00 → 00:00 → ... → 18:00
-  const BROADCAST_SLOTS = ['21:00', '00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00'];
+  const toLocal = (period: string) => {
+    const d = new Date(period.replace(' ', 'T') + ':00Z');
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+  const localSlots = (() => {
+    const s = 3 * 60 * 60 * 1000;
+    const toMs = Math.floor(Date.now() / s) * s;
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(toMs - (4 - i) * s);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    });
+  })();
   const powerChart = (() => {
     const map = new Map<string, { sumPow: number; totalKwh: number; n: number }>();
     for (const r of (powerData?.data?.data ?? [])) {
-      const label = (r.period ?? '').slice(-5);
+      const label = toLocal(r.period ?? '');
       const e = map.get(label) ?? { sumPow: 0, totalKwh: 0, n: 0 };
       e.sumPow += r.avgPowerW ?? 0;
       e.totalKwh += r.totalKwh ?? 0;
       e.n += 1;
       map.set(label, e);
     }
-    return BROADCAST_SLOTS
+    return localSlots
       .filter(slot => map.has(slot))
       .map(slot => {
         const e = map.get(slot)!;

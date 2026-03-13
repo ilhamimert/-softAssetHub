@@ -23,8 +23,18 @@ function SectionTitle({ icon: Icon, title, sub }: { icon: any; title: string; su
   );
 }
 
-// Yayın günü slotları: 21:00 → 00:00 → ... → 18:00
-const BROADCAST_SLOTS = ['21:00', '00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00'];
+const toLocal = (period: string) => {
+  const d = new Date(period.replace(' ', 'T') + ':00Z');
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+const getLocalSlots = () => {
+  const s = 3 * 60 * 60 * 1000;
+  const toMs = Math.floor(Date.now() / s) * s;
+  return Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(toMs - (4 - i) * s);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+};
 
 export function Analytics() {
   const { t, i18n } = useTranslation();
@@ -65,20 +75,21 @@ export function Analytics() {
     queryFn: () => analyticsApi.getMaintenanceForecast({ days: 90 }),
   });
 
-  // 3'er saatlik bucket — yayın günü sırası: 21→00→03→...→18
+  // 3'er saatlik bucket — local saat sırası
   const power: any[] = (() => {
+    const localSlots = getLocalSlots();
     const map = new Map<string, { totalkWh: number; sumPow: number; n: number }>();
     for (const r of (powerData?.data?.data ?? [])) {
-      const label = (r.period ?? '').slice(-5); // "21:00", "00:00" vb.
+      const label = toLocal(r.period ?? '');
       const e = map.get(label) ?? { totalkWh: 0, sumPow: 0, n: 0 };
       e.totalkWh += r.totalKwh ?? 0;
       e.sumPow += r.avgPowerW ?? 0;
       e.n += 1;
       map.set(label, e);
     }
-    return BROADCAST_SLOTS
-      .filter(slot => map.has(slot))
-      .map(slot => {
+    return localSlots
+      .filter((slot: string) => map.has(slot))
+      .map((slot: string) => {
         const e = map.get(slot)!;
         return { label: slot, totalkWh: Math.round(e.totalkWh), avgPowerW: Math.round(e.sumPow / e.n) };
       });
