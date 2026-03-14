@@ -113,7 +113,7 @@ export function Analytics() {
     <div className="space-y-4 fade-in-up">
 
       {/* Budget Summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: t('analytics.finance.purchase_cost'), value: formatCurrency(totalCost), icon: DollarSign, color: 'cyan' },
           { label: t('analytics.finance.current_value'), value: formatCurrency(totalValue), icon: TrendingUp, color: 'green' },

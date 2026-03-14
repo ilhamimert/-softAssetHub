@@ -218,7 +218,7 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
   return (
     <Modal open={!!asset} onClose={onClose} title={`${t('common.edit')}: ${asset.assetName}`} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField label={t('assets.toolbar.search_placeholder').split(':')[1]?.split(',')[0]?.trim() || 'Varlık Adı'} required>
             <input className={inputCls} value={(form as any).assetName ?? ''} onChange={e => setField('assetName', e.target.value)} required />
           </FormField>

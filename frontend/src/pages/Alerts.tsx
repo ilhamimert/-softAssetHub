@@ -87,7 +87,7 @@ export function Alerts() {
   return (
     <div className="space-y-4 fade-in-up">
       {/* Stats strip */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: 'Kritik', count: stats.critical, color: 'red', icon: <AlertCircle size={16} className="text-red-400" /> },
           { label: 'Uyarı', count: stats.warning, color: 'amber', icon: <AlertTriangle size={16} className="text-amber-400" /> },
