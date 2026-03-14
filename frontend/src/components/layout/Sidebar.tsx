@@ -19,9 +19,11 @@ export const groupTypeConfig: Record<string, { color: string; bg: string; border
 
 interface SidebarProps {
   collapsed: boolean;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
 }
 
-export function Sidebar({ collapsed }: SidebarProps) {
+export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) {
   const { t } = useTranslation();
   const { user, logout } = useAuthStore();
 
@@ -38,11 +40,24 @@ export function Sidebar({ collapsed }: SidebarProps) {
   ];
 
   return (
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
     <aside
       className={cn(
         'flex flex-col h-full transition-all duration-300 ease-in-out',
         'bg-[#070B14] border-r border-[#1E2D45]',
-        collapsed ? 'w-14' : 'w-56'
+        // Mobile: fixed overlay, sağdan kaymaz soldan gelir
+        'fixed inset-y-0 left-0 z-50 w-56',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full',
+        // Desktop: relative, flex içinde yer kaplar
+        'md:relative md:inset-auto md:z-auto md:translate-x-0',
+        collapsed ? 'md:w-14' : 'md:w-56',
       )}
     >
       {/* Logo */}
@@ -105,6 +120,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
             key={to}
             to={to}
             end={exact}
+            onClick={onMobileClose}
             className={({ isActive }) => cn(
               'group flex items-center gap-3 px-2.5 py-2 rounded text-sm transition-all duration-150 relative',
               isActive
@@ -166,5 +182,6 @@ export function Sidebar({ collapsed }: SidebarProps) {
         )}
       </div>
     </aside>
+    </>
   );
 }

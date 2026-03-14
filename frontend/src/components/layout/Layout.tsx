@@ -7,6 +7,7 @@ import { Header } from './Header';
 export function Layout() {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
   const getTitle = () => {
@@ -26,15 +27,20 @@ export function Layout() {
 
   const title = getTitle();
 
+  const handleToggle = () => {
+    if (window.innerWidth < 768) {
+      setMobileOpen(m => !m);
+    } else {
+      setCollapsed(c => !c);
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#070B14]">
-      <Sidebar collapsed={collapsed} />
+      <Sidebar collapsed={collapsed} mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header
-          onToggleSidebar={() => setCollapsed(!collapsed)}
-          title={title}
-        />
-        <main className="flex-1 overflow-y-auto p-4 space-y-4">
+        <Header onToggleSidebar={handleToggle} title={title} />
+        <main className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4">
           <Outlet />
         </main>
       </div>
