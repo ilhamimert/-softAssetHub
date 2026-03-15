@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
 
 let wss = null;
+let heartbeatInterval = null;
 const clients = new Map(); // clientId -> { ws, channelId, assetIds, authenticated }
 
 function setupWebSocket(server) {
@@ -88,7 +89,7 @@ function setupWebSocket(server) {
   });
 
   // Heartbeat interval — ölü bağlantıları temizle
-  const heartbeat = setInterval(() => {
+  heartbeatInterval = setInterval(() => {
     wss.clients.forEach((ws) => {
       if (!ws.isAlive) return ws.terminate();
       ws.isAlive = false;
@@ -96,7 +97,10 @@ function setupWebSocket(server) {
     });
   }, 30000);
 
-  wss.on('close', () => clearInterval(heartbeat));
+  wss.on('close', () => {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+  });
 
   // Periyodik DB polling — OUTER APPLY (ROW_NUMBER yerine)
   startPeriodicBroadcast();
@@ -160,9 +164,14 @@ function startPeriodicBroadcast() {
 }
 
 function closeWebSocket() {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+  }
   if (wss) {
     wss.clients.forEach((ws) => ws.terminate());
     wss.close();
+    wss = null;
     clients.clear();
   }
 }

@@ -84,9 +84,9 @@ async function withRLS(user, fn) {
   const client = await getPool().connect();
   try {
     await client.query('BEGIN');
-    await client.query(`SET LOCAL app.user_role   = '${user.role}'`);
-    await client.query(`SET LOCAL app.user_id     = '${user.userId}'`);
-    await client.query(`SET LOCAL app.channel_id  = '${user.channelId || 0}'`);
+    await client.query('SELECT set_config($1, $2, true)', ['app.user_role',  String(user.role)]);
+    await client.query('SELECT set_config($1, $2, true)', ['app.user_id',    String(user.userId)]);
+    await client.query('SELECT set_config($1, $2, true)', ['app.channel_id', String(user.channelId || 0)]);
 
     const rlsQuery = async (queryString, params = []) => {
       const r = await client.query(queryString, params);

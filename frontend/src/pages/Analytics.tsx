@@ -30,7 +30,7 @@ export function Analytics() {
   const limit = 10;
 
   const today = new Date();
-  const { data: powerData } = useQuery({
+  const { data: powerData, isError: powerError } = useQuery({
     queryKey: ['power-chart-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
     queryFn: () => {
       const slot = 3 * 60 * 60 * 1000;
@@ -120,8 +120,12 @@ export function Analytics() {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-48 flex items-center justify-center text-[#3D5275] text-xs font-mono-val">
-            {i18n.language === 'tr' ? 'Yeterli monitoring verisi yok' : 'Not enough monitoring data'}
+          <div className="h-48 flex items-center justify-center text-xs font-mono-val">
+            <span className={powerError ? 'text-red-400' : 'text-[#3D5275]'}>
+              {powerError
+                ? (i18n.language === 'tr' ? 'Veri yüklenemedi' : 'Failed to load data')
+                : (i18n.language === 'tr' ? 'Yeterli monitoring verisi yok' : 'Not enough monitoring data')}
+            </span>
           </div>
         )}
       </div>

@@ -33,6 +33,7 @@ api.interceptors.response.use(
     if (!refreshToken) return Promise.reject(error);
 
     if (isRefreshing) {
+      if (failedQueue.length >= 20) return Promise.reject(error);
       return new Promise<string>((resolve, reject) => {
         failedQueue.push({ resolve, reject });
       }).then((token) => {

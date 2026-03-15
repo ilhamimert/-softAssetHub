@@ -191,24 +191,24 @@ const getHeatmap = async (req, res, next) => {
 async function checkAndCreateAlerts(assetId, data) {
   const alerts = [];
 
-  if (data.temperature > 90) {
+  if (data.temperature != null && data.temperature > 90) {
     alerts.push({ type: 'Critical', category: 'Temperature', msg: `Sıcaklık kritik seviyede: ${data.temperature}°C (Eşik: 90°C)`, severity: 5, threshold: 90, current: data.temperature });
-  } else if (data.temperature > 80) {
+  } else if (data.temperature != null && data.temperature > 80) {
     alerts.push({ type: 'Warning', category: 'Temperature', msg: `Sıcaklık yüksek: ${data.temperature}°C (Eşik: 80°C)`, severity: 3, threshold: 80, current: data.temperature });
   }
 
-  if (data.cpuUsage > 95) {
+  if (data.cpuUsage != null && data.cpuUsage > 95) {
     alerts.push({ type: 'Critical', category: 'CPU', msg: `CPU kullanımı kritik: %${data.cpuUsage}`, severity: 4, threshold: 95, current: data.cpuUsage });
-  } else if (data.cpuUsage > 85) {
+  } else if (data.cpuUsage != null && data.cpuUsage > 85) {
     alerts.push({ type: 'Warning', category: 'CPU', msg: `CPU kullanımı yüksek: %${data.cpuUsage}`, severity: 3, threshold: 85, current: data.cpuUsage });
   }
 
-  if (data.memoryUsage > 90 || data.ramUsage > 90) {
-    const mem = data.memoryUsage || data.ramUsage;
-    alerts.push({ type: 'Warning', category: 'Memory', msg: `Bellek kullanımı yüksek: %${mem}`, severity: 3, threshold: 90, current: mem });
+  const ram = data.ramUsage ?? data.memoryUsage;
+  if (ram != null && ram > 90) {
+    alerts.push({ type: 'Warning', category: 'Memory', msg: `Bellek kullanımı yüksek: %${ram}`, severity: 3, threshold: 90, current: ram });
   }
 
-  if (data.diskUsage > 90) {
+  if (data.diskUsage != null && data.diskUsage > 90) {
     alerts.push({ type: 'Critical', category: 'Disk', msg: `Disk dolmak üzere: %${data.diskUsage}`, severity: 4, threshold: 90, current: data.diskUsage });
   }
 

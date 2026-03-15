@@ -106,7 +106,7 @@ const PIE_COLORS = ['#22D3EE', '#F59E0B', '#10B981', '#EF4444', '#6B84A3'];
 // ─── Dashboard ───────────────────────────────────────────────
 export function Dashboard() {
   const { t, i18n } = useTranslation();
-  const { data: kpiData } = useQuery({
+  const { data: kpiData, isError: kpiError } = useQuery({
     queryKey: ['dashboard-kpi'],
     queryFn: () => analyticsApi.getDashboardKPI(),
     refetchInterval: REFETCH.SLOW,
@@ -192,6 +192,13 @@ export function Dashboard() {
 
   return (
     <div className="space-y-4">
+
+      {/* API hata banner */}
+      {kpiError && (
+        <div className="bg-red-500/10 border border-red-500/25 rounded px-3 py-2 text-xs text-red-400 font-mono-val">
+          {t('common.data_load_error') || 'KPI verileri yüklenemedi — sunucu bağlantısını kontrol edin.'}
+        </div>
+      )}
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">

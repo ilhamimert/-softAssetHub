@@ -73,6 +73,7 @@ function timeAgo(date: Date): string {
 }
 
 const WS_DELAYS = [2000, 4000, 8000, 16000, 30000];
+const WS_MAX_RECONNECTS = 10;
 
 // ─── Main Component ───────────────────────────────────────────────
 export function Monitoring() {
@@ -199,6 +200,10 @@ export function Monitoring() {
 
       ws.onclose = () => {
         setWsStatus('disconnected');
+        if (reconnectCount.current >= WS_MAX_RECONNECTS) {
+          console.warn('[WS] Maksimum yeniden bağlanma denemesi aşıldı.');
+          return;
+        }
         const delay = WS_DELAYS[Math.min(reconnectCount.current, WS_DELAYS.length - 1)];
         reconnectCount.current++;
         reconnectTimer.current = setTimeout(connectWs, delay);

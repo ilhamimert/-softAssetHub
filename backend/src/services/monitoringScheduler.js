@@ -63,16 +63,29 @@ async function insertHourlyData(targetTime) {
       return;
     }
 
+    // Tüm asset'ler için metrics oluştur
+    const assetIds = [], temps = [], cpus = [], rams = [], disks = [], gpus = [], powers = [];
+    for (const { assetId } of assets) {
+      const m = generateMetrics(hour);
+      assetIds.push(assetId);
+      temps.push(m.temperature);
+      cpus.push(m.cpuUsage);
+      rams.push(m.ramUsage);
+      disks.push(m.diskUsage);
+      gpus.push(m.gpuUsage);
+      powers.push(m.powerConsumption);
+    }
+
+    // Tek seferde batch INSERT (N+1 yerine 1 sorgu)
     await withTransaction(async (txQuery) => {
-      for (const { assetId } of assets) {
-        const m = generateMetrics(hour);
-        await txQuery(
-          `INSERT INTO asset_monitoring
-             (asset_id, temperature, cpu_usage, ram_usage, disk_usage, gpu_usage, power_consumption, is_online, monitoring_time)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8)`,
-          [assetId, m.temperature, m.cpuUsage, m.ramUsage, m.diskUsage, m.gpuUsage, m.powerConsumption, targetTime]
-        );
-      }
+      await txQuery(
+        `INSERT INTO asset_monitoring
+           (asset_id, temperature, cpu_usage, ram_usage, disk_usage, gpu_usage, power_consumption, is_online, monitoring_time)
+         SELECT unnest($1::int[]), unnest($2::int[]), unnest($3::int[]),
+                unnest($4::int[]), unnest($5::int[]), unnest($6::int[]),
+                unnest($7::int[]), TRUE, $8`,
+        [assetIds, temps, cpus, rams, disks, gpus, powers, targetTime]
+      );
     });
 
     console.log(`[Scheduler] ${targetTime.toISOString()} — ${assets.length} asset için monitoring eklendi.`);
@@ -109,15 +122,19 @@ function scheduleHourly() {
 
   console.log(`[Scheduler] İlk çalışma: ${nextHour.toLocaleTimeString('tr-TR')} (${Math.round(delay / 60000)} dk sonra)`);
 
+  const runWithTimeout = (fn) =>
+    Promise.race([fn(), new Promise((_, rej) => setTimeout(() => rej(new Error('Scheduler timeout')), 30000))])
+      .catch((err) => console.error('[Scheduler] Task hatası:', err.message));
+
   setTimeout(() => {
     const t = new Date();
     t.setMinutes(0, 0, 0);
-    insertHourlyData(t);
+    runWithTimeout(() => insertHourlyData(t));
 
     setInterval(() => {
       const t2 = new Date();
       t2.setMinutes(0, 0, 0);
-      insertHourlyData(t2);
+      runWithTimeout(() => insertHourlyData(t2));
     }, 60 * 60 * 1000);
   }, delay);
 }

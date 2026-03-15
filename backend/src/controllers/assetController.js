@@ -122,7 +122,8 @@ const getAll = async (req, res, next) => {
 
 const getById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
+    if (!id || id <= 0) return next(createError('Geçersiz ID.', 400));
     const result = await query(
       `SELECT a.*,
               c.channel_name, r.room_name, b.building_name, ag.group_name, ag.group_type, h.holding_name,
@@ -142,7 +143,7 @@ const getById = async (req, res, next) => {
          ORDER BY m2.monitoring_time DESC LIMIT 1
        ) lm ON true
        WHERE a.asset_id = $1 AND a.is_active = TRUE`,
-      [parseInt(id)]
+      [id]
     );
     if (!result.recordset[0]) return next(createError('Varlık bulunamadı.', 404));
     res.json({ success: true, data: result.recordset[0] });
@@ -281,7 +282,8 @@ const create = async (req, res, next) => {
 // null göndererek alanı temizlemek mümkün (COALESCE bug'ı yok)
 const update = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
+    if (!id || id <= 0) return next(createError('Geçersiz ID.', 400));
     const setClauses = [];
     const params = [];
     let idx = 1;
@@ -296,7 +298,7 @@ const update = async (req, res, next) => {
     if (setClauses.length === 0)
       return res.json({ success: true, message: 'Güncellenecek alan yok.' });
 
-    params.push(parseInt(id));
+    params.push(id);
     const result = await query(
       `UPDATE assets SET ${setClauses.join(', ')}
        WHERE asset_id = $${idx} AND is_active = TRUE
@@ -310,8 +312,9 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    await query(`UPDATE assets SET is_active = FALSE WHERE asset_id = $1`, [parseInt(id)]);
+    const id = parseInt(req.params.id);
+    if (!id || id <= 0) return next(createError('Geçersiz ID.', 400));
+    await query(`UPDATE assets SET is_active = FALSE WHERE asset_id = $1`, [id]);
     res.json({ success: true, message: 'Varlık silindi.' });
   } catch (err) { next(err); }
 };
