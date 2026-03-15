@@ -160,3 +160,62 @@ export function perfColor(score?: number): string {
   if (score >= 50) return 'text-amber-400';
   return 'text-red-400';
 }
+
+// ─── Power chart helpers ──────────────────────────────────────
+
+/** UTC period string (e.g. "2024-03-15 18:00") → local HH:MM */
+export function toLocal(period: string): string {
+  const d = new Date(period.replace(' ', 'T') + ':00Z');
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+/** Generate 5 local-time slot labels snapped to 3-hour boundaries */
+export function getLocalSlots(): string[] {
+  const s = 3 * 60 * 60 * 1000;
+  const toMs = Math.floor(Date.now() / s) * s;
+  return Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(toMs - (4 - i) * s);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+}
+
+/** Aggregate raw power API rows into chart-ready data */
+export function aggregatePowerData(
+  rows: Array<{ period?: string; avgPowerW?: number; totalKwh?: number }>,
+  slots: string[],
+): Array<{ label: string; avgPowerW: number; totalKwh: number }> {
+  const map = new Map<string, { sumPow: number; totalKwh: number; n: number }>();
+  for (const r of rows) {
+    const label = toLocal(r.period ?? '');
+    const e = map.get(label) ?? { sumPow: 0, totalKwh: 0, n: 0 };
+    e.sumPow += r.avgPowerW ?? 0;
+    e.totalKwh += r.totalKwh ?? 0;
+    e.n += 1;
+    map.set(label, e);
+  }
+  return slots
+    .filter(slot => map.has(slot))
+    .map(slot => {
+      const e = map.get(slot)!;
+      return { label: slot, avgPowerW: Math.round(e.sumPow / e.n), totalKwh: Math.round(e.totalKwh) };
+    });
+}
+
+/** Shared form input className */
+export const inputCls = 'w-full bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] placeholder-[#3D5275] px-3 py-2 outline-none focus:border-amber-500/50 transition-colors';
+
+/** Shared Recharts tooltip content style */
+export const CHART_TOOLTIP_STYLE = {
+  contentStyle: { background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' },
+  labelStyle: { color: '#6B84A3' },
+  itemStyle: { color: '#F59E0B' },
+} as const;
+
+/** Refetch intervals (ms) */
+export const REFETCH = {
+  FAST: 15_000,
+  NORMAL: 30_000,
+  SLOW: 60_000,
+  VERY_SLOW: 300_000,
+  POWER: 5 * 60 * 1000,
+} as const;

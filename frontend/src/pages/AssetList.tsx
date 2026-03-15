@@ -3,43 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   Search, Filter, Download, ChevronUp, ChevronDown, ChevronsUpDown,
-  Eye, Edit, Trash2, X, Server, Building2, MapPin, Zap, Thermometer,
-  Calendar, DollarSign, Shield, Cpu, Wifi, HardDrive, Monitor, Save,
+  Eye, Edit, Trash2, Server, Cpu, Wifi, HardDrive, Monitor, Save,
 } from 'lucide-react';
 import { assetApi, channelApi } from '@/api/client';
 import {
-  cn, statusBg, tempColor, usageColor, formatCurrency, formatDate,
-  assetTypeLabel, statusLabel,
+  cn, statusBg, tempColor, formatCurrency, formatDate,
+  assetTypeLabel, statusLabel, inputCls,
 } from '@/lib/utils';
+import { Modal } from '@/components/ui/Modal';
+import { FormField } from '@/components/ui/FormField';
 import type { Asset } from '@/types';
 
 const PAGE_SIZES = [10, 25, 50];
-
-// ─── Modal ────────────────────────────────────────────────────
-function Modal({ open, onClose, title, children, size = 'md' }: {
-  open: boolean; onClose: () => void; title: string;
-  children: React.ReactNode; size?: 'sm' | 'md' | 'lg';
-}) {
-  if (!open) return null;
-  const widths = { sm: 'max-w-sm', md: 'max-w-2xl', lg: 'max-w-4xl' };
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className={cn(
-        'relative bg-[#0D1421] border border-[#1E2D45] rounded-lg shadow-2xl w-full max-h-[90vh] overflow-y-auto fade-in-up',
-        widths[size]
-      )}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1E2D45] sticky top-0 bg-[#0D1421] z-10">
-          <h2 className="font-display font-bold text-base text-white tracking-wide">{title}</h2>
-          <button onClick={onClose} className="p-1 rounded text-[#6B84A3] hover:text-white hover:bg-[#1E2D45] transition-colors">
-            <X size={15} />
-          </button>
-        </div>
-        <div className="p-5">{children}</div>
-      </div>
-    </div>
-  );
-}
 
 // ─── Asset type icon ──────────────────────────────────────────
 function AssetTypeIcon({ type, size = 14 }: { type: string; size?: number }) {
@@ -58,18 +33,6 @@ function InfoRow({ label, value, mono }: { label: string; value?: string | numbe
   );
 }
 
-// ─── Form field ───────────────────────────────────────────────
-function FormField({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
-  return (
-    <div>
-      <label className="block text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-1.5">
-        {label}{required && <span className="text-red-400 ml-1">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-const inputCls = "w-full bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] placeholder-[#3D5275] px-3 py-2 outline-none focus:border-amber-500/50 transition-colors";
 
 // ─── View Modal ───────────────────────────────────────────────
 function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: () => void; onEdit: () => void }) {

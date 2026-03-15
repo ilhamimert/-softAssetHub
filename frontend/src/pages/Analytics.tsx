@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { Zap, TrendingUp, DollarSign, Wrench } from 'lucide-react';
 import { analyticsApi } from '@/api/client';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, getLocalSlots, aggregatePowerData, CHART_TOOLTIP_STYLE, REFETCH } from '@/lib/utils';
 
 function SectionTitle({ icon: Icon, title, sub }: { icon: any; title: string; sub: string }) {
   return (
@@ -23,18 +23,6 @@ function SectionTitle({ icon: Icon, title, sub }: { icon: any; title: string; su
   );
 }
 
-const toLocal = (period: string) => {
-  const d = new Date(period.replace(' ', 'T') + ':00Z');
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
-const getLocalSlots = () => {
-  const s = 3 * 60 * 60 * 1000;
-  const toMs = Math.floor(Date.now() / s) * s;
-  return Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(toMs - (4 - i) * s);
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  });
-};
 
 export function Analytics() {
   const { t, i18n } = useTranslation();
@@ -55,8 +43,8 @@ export function Analytics() {
         to: to.toISOString(),
       });
     },
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 5 * 60 * 1000,
+    refetchInterval: REFETCH.POWER,
+    staleTime: REFETCH.POWER,
     refetchOnWindowFocus: true,
   });
 
@@ -75,25 +63,10 @@ export function Analytics() {
     queryFn: () => analyticsApi.getMaintenanceForecast({ days: 90 }),
   });
 
-  // 3'er saatlik bucket — local saat sırası
-  const power: any[] = (() => {
-    const localSlots = getLocalSlots();
-    const map = new Map<string, { totalkWh: number; sumPow: number; n: number }>();
-    for (const r of (powerData?.data?.data ?? [])) {
-      const label = toLocal(r.period ?? '');
-      const e = map.get(label) ?? { totalkWh: 0, sumPow: 0, n: 0 };
-      e.totalkWh += r.totalKwh ?? 0;
-      e.sumPow += r.avgPowerW ?? 0;
-      e.n += 1;
-      map.set(label, e);
-    }
-    return localSlots
-      .filter((slot: string) => map.has(slot))
-      .map((slot: string) => {
-        const e = map.get(slot)!;
-        return { label: slot, totalkWh: Math.round(e.totalkWh), avgPowerW: Math.round(e.sumPow / e.n) };
-      });
-  })();
+  const power = useMemo(
+    () => aggregatePowerData(powerData?.data?.data ?? [], getLocalSlots()),
+    [powerData],
+  );
 
   const health: any[] = healthData?.data?.data ?? [];
   const budget: any[] = budgetData?.data?.data ?? [];
@@ -142,10 +115,7 @@ export function Analytics() {
                 tickLine={false} axisLine={false}
               />
               <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
-              <Tooltip
-                contentStyle={{ background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' }}
-                labelStyle={{ color: '#6B84A3' }}
-              />
+              <Tooltip {...CHART_TOOLTIP_STYLE} />
               <Line type="monotone" dataKey="avgPowerW" stroke="#F59E0B" strokeWidth={2} dot={{ r: 3, fill: '#F59E0B' }} name={t('analytics.charts.avg_power')} />
             </LineChart>
           </ResponsiveContainer>
@@ -182,7 +152,7 @@ export function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" vertical={false} />
                 <XAxis dataKey="channel" tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
-                <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} contentStyle={{ background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' }} />
+                <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} />
                 <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: '#6B84A3' }} />
                 <Bar dataKey="aktif" stackId="a" fill="#10B981" name={t('common.active')} />
                 <Bar dataKey="bakim" stackId="a" fill="#F59E0B" name={t('common.maintenance')} />
@@ -217,11 +187,7 @@ export function Analytics() {
                 <XAxis dataKey="channel" tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false}
                   tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip
-                  cursor={{ fill: 'rgba(30,45,69,0.45)' }}
-                  contentStyle={{ background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' }}
-                  formatter={(v: any) => [`$${Number(v).toLocaleString()}`]}
-                />
+                <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} formatter={(v: any) => [`$${Number(v).toLocaleString()}`]} />
                 <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: '#6B84A3' }} />
                 <Bar dataKey="maliyet" fill="#22D3EE" radius={[2, 2, 0, 0]} name={i18n.language === 'tr' ? 'Satın Alma' : 'Purchase'} />
                 <Bar dataKey="deger" fill="#10B981" radius={[2, 2, 0, 0]} name={t('analytics.charts.cost_vs_value').split('/')[1].trim()} />

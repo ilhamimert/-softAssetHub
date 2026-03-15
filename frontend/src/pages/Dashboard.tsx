@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -9,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { analyticsApi, alertApi, monitoringApi } from '@/api/client';
-import { cn, alertBg, timeAgo, statusBg } from '@/lib/utils';
+import { cn, alertBg, timeAgo, statusBg, getLocalSlots, aggregatePowerData, CHART_TOOLTIP_STYLE, REFETCH } from '@/lib/utils';
 import type { Alert, DashboardKPI } from '@/types';
 
 // ─── KPI Card ────────────────────────────────────────────────
@@ -108,13 +109,13 @@ export function Dashboard() {
   const { data: kpiData } = useQuery({
     queryKey: ['dashboard-kpi'],
     queryFn: () => analyticsApi.getDashboardKPI(),
-    refetchInterval: 60000,
+    refetchInterval: REFETCH.SLOW,
   });
 
   const { data: alertData } = useQuery({
     queryKey: ['alerts-dashboard'],
     queryFn: () => alertApi.getDashboard(),
-    refetchInterval: 30000,
+    refetchInterval: REFETCH.NORMAL,
   });
 
   const _today = new Date();
@@ -134,27 +135,27 @@ export function Dashboard() {
         to: to.toISOString(),
       });
     },
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 5 * 60 * 1000,
+    refetchInterval: REFETCH.POWER,
+    staleTime: REFETCH.POWER,
     refetchOnWindowFocus: true,
   });
 
   const { data: healthData } = useQuery({
     queryKey: ['asset-health'],
     queryFn: () => analyticsApi.getAssetHealth(),
-    refetchInterval: 300000,
+    refetchInterval: REFETCH.VERY_SLOW,
   });
 
   const { data: physicalDistData } = useQuery({
     queryKey: ['physical-node-distribution'],
     queryFn: () => analyticsApi.getPhysicalNodeDistribution(),
-    refetchInterval: 300000,
+    refetchInterval: REFETCH.VERY_SLOW,
   });
 
   const { data: heatmapData } = useQuery({
     queryKey: ['heatmap'],
     queryFn: () => monitoringApi.getHeatmap(),
-    refetchInterval: 15000,
+    refetchInterval: REFETCH.FAST,
   });
 
   const kpi: DashboardKPI = kpiData?.data?.data ?? {
@@ -164,35 +165,11 @@ export function Dashboard() {
   const alerts: Alert[] = alertData?.data?.data ?? [];
   const alertStats = alertData?.data?.stats ?? {};
 
-  const toLocal = (period: string) => {
-    const d = new Date(period.replace(' ', 'T') + ':00Z');
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  };
-  const localSlots = (() => {
-    const s = 3 * 60 * 60 * 1000;
-    const toMs = Math.floor(Date.now() / s) * s;
-    return Array.from({ length: 5 }, (_, i) => {
-      const d = new Date(toMs - (4 - i) * s);
-      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    });
-  })();
-  const powerChart = (() => {
-    const map = new Map<string, { sumPow: number; totalKwh: number; n: number }>();
-    for (const r of (powerData?.data?.data ?? [])) {
-      const label = toLocal(r.period ?? '');
-      const e = map.get(label) ?? { sumPow: 0, totalKwh: 0, n: 0 };
-      e.sumPow += r.avgPowerW ?? 0;
-      e.totalKwh += r.totalKwh ?? 0;
-      e.n += 1;
-      map.set(label, e);
-    }
-    return localSlots
-      .filter(slot => map.has(slot))
-      .map(slot => {
-        const e = map.get(slot)!;
-        return { date: slot, power: Math.round(e.sumPow / e.n), kwh: Math.round(e.totalKwh) };
-      });
-  })();
+  const powerChart = useMemo(() => {
+    const slots = getLocalSlots();
+    return aggregatePowerData(powerData?.data?.data ?? [], slots)
+      .map(r => ({ date: r.label, power: r.avgPowerW, kwh: r.totalKwh }));
+  }, [powerData]);
 
   // Pie chart — fiziksel ağaç node_type dağılımı (physical_nodes öncelikli, yoksa assets fallback)
   const physicalNodes: any[] = physicalDistData?.data?.data ?? [];
@@ -254,11 +231,7 @@ export function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" />
                 <XAxis dataKey="date" tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
-                <Tooltip
-                  contentStyle={{ background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' }}
-                  labelStyle={{ color: '#6B84A3' }}
-                  itemStyle={{ color: '#F59E0B' }}
-                />
+                <Tooltip {...CHART_TOOLTIP_STYLE} />
                 <Area type="monotone" dataKey="power" stroke="#F59E0B" strokeWidth={1.5} fill="url(#powerGrad)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -285,10 +258,7 @@ export function Dashboard() {
                       <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{ background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' }}
-                    itemStyle={{ color: '#E2EAF4' }}
-                  />
+                  <Tooltip {...CHART_TOOLTIP_STYLE} itemStyle={{ color: '#E2EAF4' }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-1 mt-1">
@@ -414,11 +384,7 @@ export function Dashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" vertical={false} />
               <XAxis dataKey="channel" tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
-              <Tooltip
-                cursor={{ fill: 'rgba(30,45,69,0.45)' }}
-                contentStyle={{ background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' }}
-                labelStyle={{ color: '#6B84A3' }}
-              />
+              <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} />
               <Bar dataKey="aktif" stackId="a" fill="#10B981" radius={[0, 0, 0, 0]} name="Aktif" />
               <Bar dataKey="bakim" stackId="a" fill="#F59E0B" name="Bakım" />
               <Bar dataKey="arizali" stackId="a" fill="#EF4444" radius={[2, 2, 0, 0]} name="Arızalı" />
