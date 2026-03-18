@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { Lock, User, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 
@@ -14,6 +15,7 @@ export function Login() {
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
 
   const from = location.state?.from?.pathname || "/";
 
@@ -22,6 +24,7 @@ export function Login() {
     setError(null);
     try {
       await login(username, password);
+      queryClient.clear();
       navigate(from, { replace: true });
     } catch (err: any) {
       setError(err?.response?.data?.message || t('login.error'));
