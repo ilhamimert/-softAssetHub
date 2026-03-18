@@ -25,7 +25,7 @@ export function Login() {
     try {
       await login(username, password);
       queryClient.clear();
-      navigate(from, { replace: true });
+      window.location.replace(from || '/');
     } catch (err: any) {
       setError(err?.response?.data?.message || t('login.error'));
     }
