@@ -44,10 +44,7 @@ const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || 'http://localhost:3000,http:
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) {
-      // Production'da origin zorunlu; dev/test'te curl/Postman için izin ver
-      if (process.env.NODE_ENV === 'production') {
-        return callback(new Error('CORS: Origin başlığı gerekli.'));
-      }
+      // Same-origin GET/HEAD istekleri Origin header içermez — her ortamda izin ver
       return callback(null, true);
     }
     if (ALLOWED_ORIGINS.includes(origin)) {

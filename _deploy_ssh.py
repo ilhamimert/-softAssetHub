@@ -16,6 +16,7 @@ def run(cmd, timeout=300):
     p(o[-800:] if o else '(ok)')
 
 run('cd ~/assethub && git pull', 60)
+run('cd ~/assethub/backend && npm install 2>&1 | tail -3', 120)
 run('cd ~/assethub/frontend && npm run build 2>&1 | tail -5', 300)
 run('pm2 restart assethub-backend', 20)
 
