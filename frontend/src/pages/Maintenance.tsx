@@ -439,12 +439,12 @@ export function Maintenance() {
                 onChange={e => setField('maintenanceType', e.target.value)}
               >
                 <option value="">— Seç —</option>
-                <option value="Periyodik">Periyodik Bakım</option>
-                <option value="Arıza">Arıza Giderme</option>
-                <option value="Yazılım">Yazılım Güncelleme</option>
-                <option value="Donanım">Donanım Değişimi</option>
-                <option value="Temizlik">Temizlik</option>
-                <option value="Kontrol">Kontrol / Denetim</option>
+                <option value="Preventive">Periyodik Bakım</option>
+                <option value="Corrective">Arıza Giderme</option>
+                <option value="Routine">Yazılım Güncelleme</option>
+                <option value="Predictive">Donanım Değişimi</option>
+                <option value="Emergency">Acil Müdahale</option>
+                <option value="Other">Diğer</option>
               </select>
             </FormField>
 

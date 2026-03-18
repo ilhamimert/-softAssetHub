@@ -101,7 +101,7 @@ const update = async (req, res, next) => {
       if (targetUser.role === 'Admin') {
         return next(createError('Yöneticiler yetkili Admin hesaplarını düzenleyemez.', 403, 'FORBIDDEN'));
       }
-      if (req.user.channelId && targetUser.channel_id !== req.user.channelId) {
+      if (req.user.channelId && targetUser.channelId !== req.user.channelId) {
         return next(createError('Sadece yetkili olduğunuz kanaldaki kullanıcıları düzenleyebilirsiniz.', 403, 'FORBIDDEN'));
       }
     }
