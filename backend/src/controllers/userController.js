@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { query } = require('../config/database');
 const { createError } = require('../middleware/errorHandler');
+const { validatePassword } = require('../validators/password');
 
 // GET /users
 const getAll = async (req, res, next) => {
@@ -66,9 +67,8 @@ const create = async (req, res, next) => {
     if (!username || !email || !password || !fullName || !role) {
       return next(createError('Username, email, şifre, ad ve rol gerekli.', 400));
     }
-    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-      return next(createError('Şifre en az 8 karakter, büyük harf, küçük harf ve rakam/özel karakter içermeli.', 400));
-    }
+    const pwdError = validatePassword(password);
+    if (pwdError) return next(createError(pwdError, 400));
 
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -182,9 +182,8 @@ const changePassword = async (req, res, next) => {
       return next(createError('Sadece kendi şifrenizi değiştirebilirsiniz.', 403, 'FORBIDDEN'));
     }
 
-    if (!newPassword || newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword)) {
-      return next(createError('Yeni şifre en az 8 karakter, büyük harf, küçük harf ve rakam/özel karakter içermeli.', 400));
-    }
+    const pwdError = validatePassword(newPassword);
+    if (pwdError) return next(createError(pwdError, 400));
 
     const userResult = await query(`SELECT password_hash FROM users WHERE user_id = $1`, [parseInt(id)]);
     const user = userResult.recordset[0];

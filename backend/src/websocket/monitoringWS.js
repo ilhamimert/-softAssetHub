@@ -4,6 +4,7 @@ const { query } = require('../config/database');
 
 let wss = null;
 let heartbeatInterval = null;
+let broadcastInterval = null;
 const clients = new Map(); // clientId -> { ws, channelId, assetIds, authenticated }
 
 function setupWebSocket(server) {
@@ -129,8 +130,30 @@ function broadcastToAll(data) {
   });
 }
 
+// Demo canlılık için küçük rastgele sapma ekler
+function jitter(val, delta, min = 0, max = 100) {
+  if (val == null) return val;
+  const rand = Math.floor(Math.random() * (delta * 2 + 1)) - delta;
+  return Math.max(min, Math.min(max, val + rand));
+}
+
+function applyJitter(row) {
+  return {
+    ...row,
+    cpuUsage:         jitter(row.cpuUsage,         5,  0, 100),
+    ramUsage:         jitter(row.ramUsage,          3,  0, 100),
+    diskUsage:        jitter(row.diskUsage,         2,  0, 100),
+    gpuUsage:         jitter(row.gpuUsage,          5,  0, 100),
+    temperature:      jitter(row.temperature,       2, 20,  90),
+    powerConsumption: jitter(row.powerConsumption, 15,  0, 800),
+  };
+}
+
 function startPeriodicBroadcast() {
-  setInterval(async () => {
+  let errorCount = 0;
+  const MAX_ERRORS = 10;
+
+  broadcastInterval = setInterval(async () => {
     if (!wss || wss.clients.size === 0) return;
 
     try {
@@ -150,20 +173,30 @@ function startPeriodicBroadcast() {
          WHERE a.is_active = TRUE`
       );
 
+      errorCount = 0;
       if (result.recordset.length > 0) {
         broadcastToAll({
           type: 'BATCH_UPDATE',
-          data: result.recordset,
+          data: result.recordset.map(applyJitter),
           timestamp: new Date().toISOString(),
         });
       }
     } catch (err) {
-      console.error('[WS] Periyodik yayın hatası:', err.message);
+      errorCount++;
+      console.error(`[WS] Periyodik yayın hatası (${errorCount}/${MAX_ERRORS}):`, err.message);
+      if (errorCount >= MAX_ERRORS) {
+        console.error('[WS] Ardışık hata eşiği aşıldı, process yeniden başlatılıyor.');
+        process.exit(1);
+      }
     }
   }, 5000);
 }
 
 function closeWebSocket() {
+  if (broadcastInterval) {
+    clearInterval(broadcastInterval);
+    broadcastInterval = null;
+  }
   if (heartbeatInterval) {
     clearInterval(heartbeatInterval);
     heartbeatInterval = null;

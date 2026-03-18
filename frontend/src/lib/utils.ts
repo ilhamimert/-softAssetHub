@@ -64,10 +64,19 @@ export function usageColor(pct: number): string {
   return 'text-green-400';
 }
 
-// Para formatlama
-export function formatCurrency(value?: number, currency = '$'): string {
+// Para formatlama (Türkçe locale, varsayılan ₺)
+export function formatCurrency(value?: number, currency = 'TRY'): string {
   if (value == null) return '-';
-  return `${currency}${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  try {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  } catch {
+    return `${value.toLocaleString('tr-TR')} ${currency}`;
+  }
 }
 
 // Uptime (saniye -> gün saat)

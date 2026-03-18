@@ -43,8 +43,14 @@ const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || 'http://localhost:3000,http:
 
 app.use(cors({
   origin: (origin, callback) => {
-    // İzin verilen originler veya tool/curl gibi origin başlığı olmayan istekler (dev)
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+    if (!origin) {
+      // Production'da origin zorunlu; dev/test'te curl/Postman için izin ver
+      if (process.env.NODE_ENV === 'production') {
+        return callback(new Error('CORS: Origin başlığı gerekli.'));
+      }
+      return callback(null, true);
+    }
+    if (ALLOWED_ORIGINS.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error(`CORS: ${origin} izin verilmiyor.`));
@@ -93,6 +99,15 @@ const loginLimiter = rateLimit({
   message: { success: false, error: 'TOO_MANY_REQUESTS', message: 'Çok fazla giriş denemesi. 15 dakika sonra tekrar deneyin.' },
 });
 
+// Refresh token: 20 istek / dakika (brute force koruması)
+const refreshLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'TOO_MANY_REQUESTS', message: 'Çok fazla token yenileme denemesi.' },
+});
+
 // Genel API: 150 istek / dakika
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -104,6 +119,7 @@ const apiLimiter = rateLimit({
 });
 
 app.use('/api/v1/auth/login', loginLimiter);
+app.use('/api/v1/auth/refresh', refreshLimiter);
 app.use('/api/v1', apiLimiter);
 
 // ── API rotaları ──────────────────────────────────────────────────

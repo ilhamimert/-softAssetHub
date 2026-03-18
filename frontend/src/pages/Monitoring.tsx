@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { monitoringApi, alertApi } from '@/api/client';
+import type { AssetMonitoring } from '@/types';
 import { cn, tempColor, usageColor } from '@/lib/utils';
 import {
   Wifi, WifiOff, Zap, Thermometer, Activity,
@@ -84,7 +85,8 @@ export function Monitoring() {
   const prevOnline = useRef<Map<number, boolean>>(new Map());
 
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
-  const [liveData, setLiveData] = useState<Map<number, any>>(new Map());
+  const [wsAttempt, setWsAttempt] = useState(0);
+  const [liveData, setLiveData] = useState<Map<number, AssetMonitoring>>(new Map());
   const [lastUpdated, setLastUpdated] = useState<Map<number, Date>>(new Map());
   const [cpuHistory, setCpuHistory] = useState<Map<number, number[]>>(new Map());
   const [flashOffline, setFlashOffline] = useState<Set<number>>(new Set());
@@ -149,6 +151,7 @@ export function Monitoring() {
       ws.onopen = () => {
         setWsStatus('connected');
         reconnectCount.current = 0;
+        setWsAttempt(0);
         // Önce JWT ile kimlik doğrula, ardından abone ol
         const token = localStorage.getItem('accessToken');
         ws.send(JSON.stringify({ type: 'AUTH', token }));
@@ -206,6 +209,7 @@ export function Monitoring() {
         }
         const delay = WS_DELAYS[Math.min(reconnectCount.current, WS_DELAYS.length - 1)];
         reconnectCount.current++;
+        setWsAttempt(reconnectCount.current);
         reconnectTimer.current = setTimeout(connectWs, delay);
       };
 
@@ -224,7 +228,7 @@ export function Monitoring() {
   }, [connectWs]);
 
   // ── Enrich assets with live data ──────────────────────────────
-  const enriched = assets.map((a) => {
+  const enriched = useMemo(() => assets.map((a) => {
     const live = liveData.get(a.assetId) ?? a;
     return {
       ...a,
@@ -234,7 +238,7 @@ export function Monitoring() {
       _lastSeen: lastUpdated.get(a.assetId) ?? (a.lastMonitoringTime ? new Date(a.lastMonitoringTime) : null),
       _cpuHist: cpuHistory.get(a.assetId) ?? [],
     };
-  });
+  }), [assets, liveData, alertsByAsset, lastUpdated, cpuHistory]);
 
   // ── Filter ────────────────────────────────────────────────────
   const filtered = enriched
@@ -456,7 +460,12 @@ export function Monitoring() {
             wsStatus === 'connected' ? 'bg-green-400 pulse-dot' :
               wsStatus === 'connecting' ? 'bg-amber-400 pulse-dot' : 'bg-red-400'
           )} />
-          {wsStatus === 'connected' ? t('common.live') : wsStatus === 'connecting' ? t('common.connecting') : t('common.no_connection')}
+          {wsStatus === 'connected'
+            ? t('common.live')
+            : wsStatus === 'connecting'
+              ? `${t('common.connecting')}${wsAttempt > 0 ? ` (${wsAttempt}/${WS_MAX_RECONNECTS})` : ''}`
+              : wsAttempt >= WS_MAX_RECONNECTS ? 'Bağlantı kesildi' : t('common.no_connection')
+          }
         </div>
 
         {/* Search */}

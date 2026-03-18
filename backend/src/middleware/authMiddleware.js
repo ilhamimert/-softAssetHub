@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { createError } = require('./errorHandler');
 
-const DEFAULT_USER = { userId: 1, username: 'admin', email: 'admin@system.local', fullName: 'Admin', role: 'Admin', channelId: null };
 
 const authenticate = (req, res, next) => {
   const authHeader = req.headers['authorization'];

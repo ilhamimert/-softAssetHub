@@ -4,7 +4,7 @@
  * Sunucu yeniden başlatıldığında bugün eksik kalan saatleri de doldurur.
  */
 
-const { query, withTransaction } = require('../config/database');
+const { query } = require('../config/database');
 
 function generateMetrics(hour) {
   const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -53,16 +53,6 @@ async function insertHourlyData(targetTime) {
 
     const hour = targetTime.getHours();
 
-    // O saatte zaten veri var mı?
-    const check = await query(
-      `SELECT COUNT(DISTINCT asset_id) AS cnt FROM asset_monitoring WHERE monitoring_time = $1`,
-      [targetTime]
-    );
-    if (parseInt(check.recordset[0].cnt) >= assets.length) {
-      console.log(`[Scheduler] ${targetTime.toISOString()} — veri zaten mevcut, atlandı.`);
-      return;
-    }
-
     // Tüm asset'ler için metrics oluştur
     const assetIds = [], temps = [], cpus = [], rams = [], disks = [], gpus = [], powers = [];
     for (const { assetId } of assets) {
@@ -76,19 +66,17 @@ async function insertHourlyData(targetTime) {
       powers.push(m.powerConsumption);
     }
 
-    // Tek seferde batch INSERT (N+1 yerine 1 sorgu)
-    await withTransaction(async (txQuery) => {
-      await txQuery(
-        `INSERT INTO asset_monitoring
-           (asset_id, temperature, cpu_usage, ram_usage, disk_usage, gpu_usage, power_consumption, is_online, monitoring_time)
-         SELECT unnest($1::int[]), unnest($2::int[]), unnest($3::int[]),
-                unnest($4::int[]), unnest($5::int[]), unnest($6::int[]),
-                unnest($7::int[]), TRUE, $8`,
-        [assetIds, temps, cpus, rams, disks, gpus, powers, targetTime]
-      );
-    });
+    // Batch INSERT — duplicate saatler varsa atla (uq_monitoring_asset_time)
+    const result = await query(
+      `INSERT INTO asset_monitoring
+         (asset_id, temperature, cpu_usage, ram_usage, disk_usage, gpu_usage, power_consumption, is_online, monitoring_time)
+       SELECT unnest($1::int[]), unnest($2::int[]), unnest($3::int[]),
+              unnest($4::int[]), unnest($5::int[]), unnest($6::int[]),
+              unnest($7::int[]), TRUE, $8
+       ON CONFLICT (asset_id, monitoring_time) DO NOTHING`,
+      [assetIds, temps, cpus, rams, disks, gpus, powers, targetTime]
+    );
 
-    console.log(`[Scheduler] ${targetTime.toISOString()} — ${assets.length} asset için monitoring eklendi.`);
   } catch (err) {
     console.error('[Scheduler] Hata:', err.message);
   }
@@ -122,21 +110,59 @@ function scheduleHourly() {
 
   console.log(`[Scheduler] İlk çalışma: ${nextHour.toLocaleTimeString('tr-TR')} (${Math.round(delay / 60000)} dk sonra)`);
 
-  const runWithTimeout = (fn) =>
-    Promise.race([fn(), new Promise((_, rej) => setTimeout(() => rej(new Error('Scheduler timeout')), 30000))])
-      .catch((err) => console.error('[Scheduler] Task hatası:', err.message));
+  let isRunning = false;
+
+  const runWithLock = async (fn) => {
+    if (isRunning) {
+      console.warn('[Scheduler] Önceki çalışma henüz bitmedi, atlandı.');
+      return;
+    }
+    isRunning = true;
+    try {
+      await Promise.race([
+        fn(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('Scheduler timeout')), 30000)),
+      ]);
+    } catch (err) {
+      console.error('[Scheduler] Task hatası:', err.message);
+    } finally {
+      isRunning = false;
+    }
+  };
 
   setTimeout(() => {
     const t = new Date();
     t.setMinutes(0, 0, 0);
-    runWithTimeout(() => insertHourlyData(t));
+    runWithLock(() => insertHourlyData(t));
 
     setInterval(() => {
       const t2 = new Date();
       t2.setMinutes(0, 0, 0);
-      runWithTimeout(() => insertHourlyData(t2));
+      runWithLock(() => insertHourlyData(t2));
     }, 60 * 60 * 1000);
   }, delay);
+}
+
+// ── Lisans Süresi Dolunca Asset Status Güncelleme ─────────────────────────────
+async function updateExpiredLicenseAssets() {
+  try {
+    const result = await query(`
+      UPDATE assets a
+      SET status = 'Inactive', updated_date = NOW()
+      FROM licenses l
+      WHERE l.asset_id = a.asset_id
+        AND l.is_active = TRUE
+        AND l.expiry_date < CURRENT_DATE
+        AND a.status = 'Active'
+        AND a.is_active = TRUE
+      RETURNING a.asset_id
+    `);
+    if (result.recordset.length > 0) {
+      console.log(`[Scheduler] ${result.recordset.length} asset lisans süresi dolduğu için Inactive yapıldı.`);
+    }
+  } catch (err) {
+    console.error('[Scheduler] Lisans/asset status güncelleme hatası:', err.message);
+  }
 }
 
 // ── Lisans Bitiş Uyarısı ──────────────────────────────────────────────────────
@@ -179,14 +205,17 @@ async function checkLicenseExpiry() {
 
 function scheduleLicenseCheck() {
   checkLicenseExpiry();
-  setInterval(checkLicenseExpiry, 24 * 60 * 60 * 1000);
+  updateExpiredLicenseAssets();
+  setInterval(() => {
+    checkLicenseExpiry();
+    updateExpiredLicenseAssets();
+  }, 24 * 60 * 60 * 1000);
 }
 
 // ── KPI Materialized View Refresh ────────────────────────────────────────────
 async function refreshKPIView() {
   try {
     await query('REFRESH MATERIALIZED VIEW mv_dashboard_kpi');
-    console.log('[Scheduler] mv_dashboard_kpi yenilendi.');
   } catch (err) {
     // View henüz yoksa veya CONCURRENTLY için unique index eksikse sessizce geç
     console.error('[Scheduler] KPI view yenileme hatası:', err.message);

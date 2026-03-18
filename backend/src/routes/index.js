@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/authMiddleware');
-const { requireAdmin, requireRole } = require('../middleware/roleMiddleware');
+const { requireAdmin, requireRole, requireChannelAccess } = require('../middleware/roleMiddleware');
 
 const authCtrl = require('../controllers/authController');
 const holdingCtrl = require('../controllers/holdingController');
@@ -17,6 +17,7 @@ const alertCtrl = require('../controllers/alertController');
 const analyticsCtrl = require('../controllers/analyticsController');
 const userCtrl = require('../controllers/userController');
 const licenseCtrl = require('../controllers/licenseController');
+const qrCtrl      = require('../controllers/qrController');
 
 const hierarchyRoutes = require('./hierarchyRoutes');
 
@@ -46,13 +47,13 @@ router.delete('/channels/:id', authenticate, requireAdmin, channelCtrl.remove);
 // ── Asset Groups ──────────────────────────────────────────────────────────────
 router.get('/assetgroups', authenticate, groupCtrl.getAll);
 router.get('/assetgroups/:id', authenticate, groupCtrl.getById);
-router.get('/channels/:channelId/groups', authenticate, groupCtrl.getByChannel);
+router.get('/channels/:channelId/groups', authenticate, requireChannelAccess('channelId'), groupCtrl.getByChannel);
 router.post('/assetgroups', authenticate, requireRole('Manager'), groupCtrl.create);
 router.put('/assetgroups/:id', authenticate, requireRole('Manager'), groupCtrl.update);
 router.delete('/assetgroups/:id', authenticate, requireAdmin, groupCtrl.remove);
 
 // ── Buildings ─────────────────────────────────────────────────────────────────
-router.get('/channels/:channelId/buildings', authenticate, buildingCtrl.getByChannel);
+router.get('/channels/:channelId/buildings', authenticate, requireChannelAccess('channelId'), buildingCtrl.getByChannel);
 router.get('/buildings/:id', authenticate, buildingCtrl.getById);
 router.post('/buildings', authenticate, requireAdmin, buildingCtrl.create);
 router.put('/buildings/:id', authenticate, requireAdmin, buildingCtrl.update);
@@ -67,9 +68,12 @@ router.delete('/rooms/:id', authenticate, requireAdmin, roomCtrl.remove);
 
 // ── Assets ────────────────────────────────────────────────────────────────────
 router.get('/assets', authenticate, assetCtrl.getAll);
+router.get('/assets/export', authenticate, assetCtrl.exportCsv);
 router.get('/assets/warranty-expiring', authenticate, assetCtrl.getWarrantyExpiring);
 router.post('/assets/bulk-status', authenticate, requireRole('Technician'), assetCtrl.bulkUpdateStatus);
+router.post('/assets/bulk-import', authenticate, requireRole('Technician'), assetCtrl.bulkImport);
 router.get('/assets/:id/tree', authenticate, assetCtrl.getTree);
+router.get('/assets/:id/qrcode', authenticate, qrCtrl.getAssetQR);
 router.get('/assets/:id', authenticate, assetCtrl.getById);
 router.post('/assets', authenticate, requireRole('Technician'), assetCtrl.create);
 router.put('/assets/:id', authenticate, requireRole('Technician'), assetCtrl.update);
@@ -78,9 +82,9 @@ router.delete('/assets/:id', authenticate, requireAdmin, assetCtrl.remove);
 // ── Components ────────────────────────────────────────────────────────────────
 router.get('/assets/:assetId/components', authenticate, componentCtrl.getByAsset);
 router.get('/components/:id', authenticate, componentCtrl.getById);
-router.post('/components', authenticate, componentCtrl.create);
-router.put('/components/:id', authenticate, componentCtrl.update);
-router.delete('/components/:id', authenticate, componentCtrl.remove);
+router.post('/components', authenticate, requireRole('Technician'), componentCtrl.create);
+router.put('/components/:id', authenticate, requireRole('Technician'), componentCtrl.update);
+router.delete('/components/:id', authenticate, requireRole('Manager'), componentCtrl.remove);
 
 // ── Asset Maintenance ─────────────────────────────────────────────────────────
 router.get('/assets/:assetId/maintenance', authenticate, maintCtrl.getByAsset);
@@ -88,8 +92,8 @@ router.get('/assets/:assetId/maintenance', authenticate, maintCtrl.getByAsset);
 // ── Monitoring ────────────────────────────────────────────────────────────────
 router.get('/monitoring/:assetId/current', authenticate, monitorCtrl.getCurrent);
 router.get('/monitoring/:assetId/history', authenticate, monitorCtrl.getHistory);
-router.post('/monitoring/:assetId', authenticate, monitorCtrl.pushData);
-router.get('/monitoring/stats/channel/:channelId', authenticate, monitorCtrl.getChannelStats);
+router.post('/monitoring/:assetId', authenticate, requireRole('Technician'), monitorCtrl.pushData);
+router.get('/monitoring/stats/channel/:channelId', authenticate, requireChannelAccess('channelId'), monitorCtrl.getChannelStats);
 router.get('/monitoring/heatmap', authenticate, monitorCtrl.getHeatmap);
 
 // ── Maintenance ───────────────────────────────────────────────────────────────

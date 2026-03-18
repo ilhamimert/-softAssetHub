@@ -153,7 +153,7 @@ const getMaintenanceForecast = async (req, res, next) => {
     }
 
     const result = await query(
-      `SELECT DISTINCT
+      `SELECT
          a.asset_id, a.asset_name, a.asset_code, a.asset_type, a.warranty_end_date,
          c.channel_name, b.building_name,
          ag.group_name, ag.group_type,
@@ -165,14 +165,17 @@ const getMaintenanceForecast = async (req, res, next) => {
        JOIN channels    c  ON a.channel_id    = c.channel_id
        LEFT JOIN rooms      r  ON a.room_id       = r.room_id
        LEFT JOIN buildings  b  ON r.building_id   = b.building_id
-       LEFT JOIN LATERAL (
-         SELECT next_maintenance_date, maintenance_interval, maintenance_type
-         FROM maintenance_records mr2
-         WHERE mr2.asset_id = a.asset_id
-           AND mr2.status IN ('Scheduled','Pending')
-           AND mr2.next_maintenance_date IS NOT NULL
-         ORDER BY mr2.next_maintenance_date ASC LIMIT 1
-       ) mr ON true
+       LEFT JOIN (
+         SELECT asset_id, next_maintenance_date, maintenance_interval, maintenance_type
+         FROM (
+           SELECT asset_id, next_maintenance_date, maintenance_interval, maintenance_type,
+                  ROW_NUMBER() OVER (PARTITION BY asset_id ORDER BY next_maintenance_date ASC) AS rn
+           FROM maintenance_records
+           WHERE status IN ('Scheduled','Pending')
+             AND next_maintenance_date IS NOT NULL
+         ) ranked
+         WHERE rn = 1
+       ) mr ON a.asset_id = mr.asset_id
        WHERE (
          (mr.next_maintenance_date IS NOT NULL AND mr.next_maintenance_date <= (CURRENT_DATE + ($1 || ' days')::INTERVAL))
          OR (a.warranty_end_date IS NOT NULL AND a.warranty_end_date BETWEEN (CURRENT_DATE - INTERVAL '30 days') AND (CURRENT_DATE + ($1 || ' days')::INTERVAL))

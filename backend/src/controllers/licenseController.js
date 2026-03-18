@@ -4,8 +4,9 @@ const { createError } = require('../middleware/errorHandler');
 // GET /licenses?search=&status=&assetId=
 const getAll = async (req, res, next) => {
   try {
-    const { search, status, assetId } = req.query;
-    const conditions = [];
+    const { status, assetId } = req.query;
+    const search = req.query.search ? String(req.query.search).slice(0, 100) : '';
+    const conditions = ['l.is_active = TRUE'];
     const params = [];
     let idx = 1;
 
@@ -14,8 +15,7 @@ const getAll = async (req, res, next) => {
       params.push(`%${search}%`, `%${search}%`);
       idx += 2;
     }
-    if (status === 'active')   { conditions.push('l.is_active = TRUE'); }
-    if (status === 'inactive') { conditions.push('l.is_active = FALSE'); }
+    if (status === 'inactive') { conditions[0] = 'l.is_active = FALSE'; }
     if (status === 'expired')  { conditions.push('l.expiry_date < CURRENT_DATE'); }
     if (status === 'expiring') {
       conditions.push(`l.expiry_date >= CURRENT_DATE AND l.expiry_date <= (NOW() + INTERVAL '60 days')`);
@@ -26,7 +26,7 @@ const getAll = async (req, res, next) => {
       idx++;
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const result = await query(
       `SELECT l.*, a.asset_name, a.mac_address AS asset_mac_address,
@@ -50,7 +50,7 @@ const getByAsset = async (req, res, next) => {
     if (!assetId) return next(createError('Geçersiz assetId.', 400));
 
     const result = await query(
-      `SELECT * FROM licenses WHERE asset_id = $1 ORDER BY created_date DESC`,
+      `SELECT * FROM licenses WHERE asset_id = $1 AND is_active = TRUE ORDER BY created_date DESC`,
       [assetId]
     );
     res.json({ success: true, data: result.recordset, total: result.recordset.length });
@@ -67,7 +67,7 @@ const getById = async (req, res, next) => {
       `SELECT l.*, a.mac_address AS asset_mac_address
        FROM licenses l
        JOIN assets a ON a.asset_id = l.asset_id
-       WHERE l.license_id = $1`,
+       WHERE l.license_id = $1 AND l.is_active = TRUE`,
       [id]
     );
     if (!result.recordset[0]) return next(createError('Lisans bulunamadı.', 404, 'NOT_FOUND'));
@@ -191,13 +191,11 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    const check = await query(
-      `SELECT license_id FROM licenses WHERE license_id = $1`,
+    const result = await query(
+      `UPDATE licenses SET is_active = FALSE WHERE license_id = $1 AND is_active = TRUE RETURNING license_id`,
       [id]
     );
-    if (!check.recordset[0]) return next(createError('Lisans bulunamadı.', 404, 'NOT_FOUND'));
-
-    await query(`DELETE FROM licenses WHERE license_id = $1`, [id]);
+    if (!result.recordset[0]) return next(createError('Lisans bulunamadı.', 404, 'NOT_FOUND'));
     res.json({ success: true, message: 'Lisans silindi.' });
   } catch (err) {
     next(err);

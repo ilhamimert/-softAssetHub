@@ -1,35 +1,40 @@
 const express = require('express');
 const router = express.Router();
 const hierarchyController = require('../controllers/hierarchyController');
+const { authenticate } = require('../middleware/authMiddleware');
+const { requireAdmin, requireRole } = require('../middleware/roleMiddleware');
 
-// Tree Operations
+// Tüm hierarchy endpoint'leri kimlik doğrulaması gerektirir
+router.use(authenticate);
+
+// Tree Operations (okuma — tüm roller)
 router.get('/tree', hierarchyController.getTree);
 
-// Move Operations
-router.post('/move', hierarchyController.moveNode);
+// Move Operations (Manager+)
+router.post('/move', requireRole('Manager'), hierarchyController.moveNode);
 
-// SQL Asset Linking Operation
-router.post('/bilgisayar/:id/link', hierarchyController.linkNode);
+// SQL Asset Linking Operation (Technician+)
+router.post('/bilgisayar/:id/link', requireRole('Technician'), hierarchyController.linkNode);
 
-// Detailed Mock Packet
-router.get('/packet/:id', hierarchyController.getPacket);
+// Audit Log Fetching (Manager+)
+router.get('/audit-log', requireRole('Manager'), hierarchyController.getAuditLog);
 
-// Audit Log Fetching
-router.get('/audit-log', hierarchyController.getAuditLog);
+// PostgreSQL Demo Data — TEHLIKELI: tüm ağacı siler (Admin only)
+router.post('/demo', requireAdmin, hierarchyController.loadDemoData);
 
-// PostgreSQL Veri Yükleme Demostrasyonu
-router.post('/demo', hierarchyController.loadDemoData);
+// Auto-Link (Admin only — toplu değişiklik yapar)
+router.post('/auto-link', requireAdmin, hierarchyController.autoLinkNodes);
 
-// Auto-Link: physical_nodes bilgisayarları ile assets'leri isim benzerliğine göre eşleştir
-router.post('/auto-link', hierarchyController.autoLinkNodes);
+// Update Payload (Metadata) (Technician+)
+router.patch('/:type/:id/payload', requireRole('Technician'), hierarchyController.updatePayload);
 
-// Rename Node
-router.patch('/:type/:id', hierarchyController.renameNode);
+// Rename Node (Technician+)
+router.patch('/:type/:id', requireRole('Technician'), hierarchyController.renameNode);
 
-// Delete Nodes
-router.delete('/:type/:id', hierarchyController.deleteNode);
+// Delete Nodes (Admin only)
+router.delete('/:type/:id', requireAdmin, hierarchyController.deleteNode);
 
-// Node Operations (Create) - IMPORTANT: Must be at the bottom among posts to prevent overriding
-router.post('/:nodeType', hierarchyController.createNode);
+// Node Operations (Create) — IMPORTANT: Must be at the bottom among posts to prevent overriding
+router.post('/:nodeType', requireRole('Technician'), hierarchyController.createNode);
 
 module.exports = router;

@@ -221,10 +221,18 @@ function ChangePasswordModal({ userId, onClose }: { userId: number; onClose: () 
     onError: (e: any) => setError(e?.response?.data?.message ?? 'Şifre değiştirilemedi.'),
   });
 
+  const pwRules = {
+    length:  newPw.length >= 8,
+    upper:   /[A-Z]/.test(newPw),
+    lower:   /[a-z]/.test(newPw),
+    special: /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPw),
+  };
+  const pwValid = Object.values(pwRules).every(Boolean);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (newPw.length < 8) { setError('Yeni şifre en az 8 karakter olmalı.'); return; }
+    if (!pwValid) { setError('Şifre tüm kuralları karşılamalıdır.'); return; }
     if (newPw !== confirmPw) { setError('Şifreler eşleşmiyor.'); return; }
     pwMut.mutate({ currentPassword: currentPw, newPassword: newPw });
   };
@@ -256,25 +264,20 @@ function ChangePasswordModal({ userId, onClose }: { userId: number; onClose: () 
             <PasswordInput value={confirmPw} onChange={setConfirmPw} placeholder="Şifreyi tekrar girin" />
           </FormField>
 
-          {/* Strength indicator */}
+          {/* Password rules indicator */}
           {newPw && (
-            <div className="space-y-1">
-              <div className="flex gap-1">
-                {[8, 10, 12, 15].map((t, i) => (
-                  <div
-                    key={t}
-                    className={cn(
-                      'flex-1 h-1 rounded-full transition-all',
-                      newPw.length >= t
-                        ? i === 0 ? 'bg-red-400' : i === 1 ? 'bg-amber-400' : i === 2 ? 'bg-yellow-400' : 'bg-green-400'
-                        : 'bg-[#1E2D45]'
-                    )}
-                  />
-                ))}
-              </div>
-              <p className="text-[10px] text-[#3D5275] font-mono-val">
-                {newPw.length < 8 ? 'Çok kısa' : newPw.length < 10 ? 'Zayıf' : newPw.length < 12 ? 'Orta' : newPw.length < 15 ? 'Güçlü' : 'Çok Güçlü'}
-              </p>
+            <div className="grid grid-cols-2 gap-1">
+              {([
+                [pwRules.length,  'En az 8 karakter'],
+                [pwRules.upper,   'Büyük harf (A-Z)'],
+                [pwRules.lower,   'Küçük harf (a-z)'],
+                [pwRules.special, 'Rakam veya özel karakter'],
+              ] as [boolean, string][]).map(([ok, label]) => (
+                <div key={label} className={cn('flex items-center gap-1.5 text-[10px] font-mono-val transition-colors', ok ? 'text-green-400' : 'text-[#3D5275]')}>
+                  <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', ok ? 'bg-green-400' : 'bg-[#1E2D45]')} />
+                  {label}
+                </div>
+              ))}
             </div>
           )}
 

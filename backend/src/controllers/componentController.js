@@ -1,6 +1,19 @@
 const { query } = require('../config/database');
 const createError = require('http-errors');
 
+const UPDATABLE_FIELDS = {
+  componentName:    'component_name',
+  componentType:    'component_type',
+  model:            'model',
+  serialNumber:     'serial_number',
+  manufacturer:     'manufacturer',
+  specifications:   'specifications',
+  purchaseDate:     'purchase_date',
+  warrantyEndDate:  'warranty_end_date',
+  status:           'status',
+  notes:            'notes',
+};
+
 // channel_name artık assets → channels üzerinden join edilir
 // (asset_components.channel_id Migration 004'te kaldırıldı)
 
@@ -98,10 +111,6 @@ const create = async (req, res, next) => {
 const update = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const {
-      componentName, componentType, model, serialNumber,
-      manufacturer, specifications, purchaseDate, warrantyEndDate, status, notes,
-    } = req.body;
 
     const exists = await query(
       `SELECT component_id FROM asset_components WHERE component_id = $1 AND is_active = TRUE`,
@@ -109,25 +118,24 @@ const update = async (req, res, next) => {
     );
     if (!exists.recordset.length) return next(createError(404, 'Eklenti bulunamadı'));
 
-    await query(
-      `UPDATE asset_components SET
-         component_name    = COALESCE($1, component_name),
-         component_type    = COALESCE($2, component_type),
-         model             = COALESCE($3, model),
-         serial_number     = COALESCE($4, serial_number),
-         manufacturer      = COALESCE($5, manufacturer),
-         specifications    = COALESCE($6, specifications),
-         purchase_date     = COALESCE($7, purchase_date),
-         warranty_end_date = COALESCE($8, warranty_end_date),
-         status            = COALESCE($9, status),
-         notes             = COALESCE($10, notes)
-       WHERE component_id = $11`,
-      [
-        componentName || null, componentType || null, model || null, serialNumber || null,
-        manufacturer || null, specifications || null, purchaseDate || null,
-        warrantyEndDate || null, status || null, notes || null, parseInt(id),
-      ]
-    );
+    const setClauses = [];
+    const params = [];
+    let idx = 1;
+
+    for (const [camel, snake] of Object.entries(UPDATABLE_FIELDS)) {
+      if (Object.prototype.hasOwnProperty.call(req.body, camel)) {
+        setClauses.push(`${snake} = $${idx++}`);
+        params.push(req.body[camel] ?? null);
+      }
+    }
+
+    if (setClauses.length > 0) {
+      params.push(parseInt(id));
+      await query(
+        `UPDATE asset_components SET ${setClauses.join(', ')} WHERE component_id = $${idx}`,
+        params
+      );
+    }
     const updated = await query(
       `SELECT c.*, a.asset_name, ag.group_name, ch.channel_name
        FROM asset_components c

@@ -9,6 +9,7 @@
     "maintenance": "Maintenance",
     "analytics": "Analytics",
     "settings": "Settings",
+    "logs": "Activity Log",
     "logout": "Secure Logout",
     "system_admin": "SYSTEM ADMIN",
     "search": "Search...",
@@ -33,7 +34,8 @@
     "inactive": "Inactive",
     "faulty": "Faulty",
     "retired": "Retired",
-    "maintenance_short": "Maint."
+    "maintenance_short": "Maint.",
+    "data_load_error": "Data could not be loaded — check server connection."
   },
   "login": {
     "title": "İSOFT ASSET",
@@ -160,6 +162,22 @@
       "warning": "Asset will be marked as \"Retired\".",
       "failed": "Deletion failed.",
       "yes": "YES, DELETE"
+    }
+  },
+  "logs": {
+    "subtitle": "System-wide operation records",
+    "search_placeholder": "Action, user, record name...",
+    "all_types": "All types",
+    "count": "{{count}} records (page {{page}})",
+    "refresh": "Refresh",
+    "no_records": "No records found",
+    "table": {
+      "date": "Date",
+      "user": "User",
+      "action": "Action",
+      "type": "Type",
+      "record": "Record",
+      "detail": "Detail"
     }
   },
   "licenses": {

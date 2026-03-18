@@ -74,7 +74,8 @@ const getAll = async (req, res, next) => {
 // GET /alerts/dashboard
 const getDashboard = async (req, res, next) => {
   try {
-    const { channelId } = req.query;
+    const { channelId, limit = 20 } = req.query;
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
     const params = [];
     let whereClause = 'WHERE al.is_resolved = FALSE';
 
@@ -91,7 +92,7 @@ const getDashboard = async (req, res, next) => {
        LEFT JOIN channels c ON a.channel_id = c.channel_id
        ${whereClause}
        ORDER BY al.alert_severity DESC, al.triggered_time DESC
-       LIMIT 20`,
+       LIMIT ${safeLimit}`,
       params
     );
 

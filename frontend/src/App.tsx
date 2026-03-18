@@ -1,19 +1,30 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '@/components/layout/Layout';
-import { Dashboard }  from '@/pages/Dashboard';
-import { Assets }     from '@/pages/Assets';
-import { AssetList }  from '@/pages/AssetList';
-import { Monitoring } from '@/pages/Monitoring';
-import { Alerts }     from '@/pages/Alerts';
-import { Maintenance } from '@/pages/Maintenance';
-import { Analytics }  from '@/pages/Analytics';
-import { Settings }    from '@/pages/Settings';
-import { AssetDetail } from '@/pages/AssetDetail';
-import { Licenses }    from '@/pages/Licenses';
-
 import { useAuthStore } from '@/store/authStore';
-import { Login } from '@/pages/Login';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+
+// ── Lazy page chunks ────────────────────────────────────────────
+const Login       = lazy(() => import('@/pages/Login').then(m => ({ default: m.Login })));
+const Dashboard   = lazy(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Assets      = lazy(() => import('@/pages/Assets').then(m => ({ default: m.Assets })));
+const AssetList   = lazy(() => import('@/pages/AssetList').then(m => ({ default: m.AssetList })));
+const AssetDetail = lazy(() => import('@/pages/AssetDetail').then(m => ({ default: m.AssetDetail })));
+const Monitoring  = lazy(() => import('@/pages/Monitoring').then(m => ({ default: m.Monitoring })));
+const Alerts      = lazy(() => import('@/pages/Alerts').then(m => ({ default: m.Alerts })));
+const Maintenance = lazy(() => import('@/pages/Maintenance').then(m => ({ default: m.Maintenance })));
+const Analytics   = lazy(() => import('@/pages/Analytics').then(m => ({ default: m.Analytics })));
+const Settings    = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })));
+const Licenses    = lazy(() => import('@/pages/Licenses').then(m => ({ default: m.Licenses })));
+const Logs        = lazy(() => import('@/pages/Logs').then(m => ({ default: m.Logs })));
+
+// ── Fallback ────────────────────────────────────────────────────
+const PageLoader = () => (
+  <div className="flex h-screen items-center justify-center bg-[#070B14]">
+    <span className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,25 +52,28 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route 
-            path="/login" 
-            element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} 
-          />
-          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-            <Route index              element={<Dashboard />}  />
-            <Route path="assets"      element={<Assets />}     />
-            <Route path="assets/:id"  element={<AssetDetail />} />
-            <Route path="asset-list"  element={<AssetList />}  />
-            <Route path="licenses"    element={<Licenses />}   />
-            <Route path="monitoring"  element={<Monitoring />} />
-            <Route path="alerts"      element={<Alerts />}     />
-            <Route path="maintenance" element={<Maintenance />} />
-            <Route path="analytics"   element={<Analytics />}  />
-            <Route path="settings"    element={<Settings />}   />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route
+              path="/login"
+              element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+            />
+            <Route path="/" element={<ProtectedRoute><ErrorBoundary><Layout /></ErrorBoundary></ProtectedRoute>}>
+              <Route index              element={<Dashboard />}   />
+              <Route path="assets"      element={<Assets />}      />
+              <Route path="assets/:id"  element={<AssetDetail />} />
+              <Route path="asset-list"  element={<AssetList />}   />
+              <Route path="licenses"    element={<Licenses />}    />
+              <Route path="monitoring"  element={<Monitoring />}  />
+              <Route path="alerts"      element={<Alerts />}      />
+              <Route path="maintenance" element={<Maintenance />} />
+              <Route path="analytics"   element={<Analytics />}   />
+              <Route path="settings"    element={<Settings />}    />
+              <Route path="logs"        element={<Logs />}        />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </QueryClientProvider>
   );

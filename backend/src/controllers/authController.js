@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { query, withTransaction } = require('../config/database');
 const { createError } = require('../middleware/errorHandler');
+const { validatePassword } = require('../validators/password');
 
 // Refresh token'ı SHA-256 ile hash'ler — DB'de plaintext saklanmaz
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
@@ -186,9 +187,8 @@ const changePassword = async (req, res, next) => {
       if (!isValid) return next(createError('Mevcut şifre hatalı.', 400, 'INVALID_PASSWORD'));
     }
 
-    if (!newPassword || newPassword.length < 8 || !/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword)) {
-      return next(createError('Yeni şifre en az 8 karakter ve bir rakam veya özel karakter içermeli.', 400));
-    }
+    const pwdError = validatePassword(newPassword);
+    if (pwdError) return next(createError(pwdError, 400));
 
     const hash = await bcrypt.hash(newPassword, 10);
     await query(

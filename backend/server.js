@@ -4,6 +4,10 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   console.error('❌ JWT_SECRET tanımlı değil veya 32 karakterden kısa! .env dosyasını kontrol edin.');
   process.exit(1);
 }
+if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET.length < 32) {
+  console.error('❌ JWT_REFRESH_SECRET tanımlı değil veya 32 karakterden kısa! .env dosyasını kontrol edin.');
+  process.exit(1);
+}
 
 const http = require('http');
 const app = require('./src/app');

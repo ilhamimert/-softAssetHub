@@ -4,14 +4,24 @@ import {
   ChevronRight, ChevronDown, Server, Package,
   Building2, Radio, Boxes, Trash2, Plus, DoorOpen,
   Activity, RefreshCw, Check, X, AlertCircle,
-  GripVertical, Search, Link2, Unlink, QrCode, History,
+  GripVertical, Search, Link2, Unlink, History,
 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
 import { assetApi } from '@/api/client';
 import { cn } from '@/lib/utils';
 
 // ─── API ──────────────────────────────────────────────────────
 const PHYS_API = '/api/v1/hierarchy';
+
+const authFetch = (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('accessToken');
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+};
 
 // ─── Types ────────────────────────────────────────────────────
 interface PhysNode {
@@ -20,6 +30,7 @@ interface PhysNode {
   path: string;
   parentId?: string;
   linkedAssetId?: number | null;
+  payload?: Record<string, unknown>;
   children: PhysNode[];
 }
 
@@ -59,6 +70,35 @@ const LEVEL_CFG: Record<PhysLevel, LevelCfg> = {
   oda: { Icon: DoorOpen, color: 'text-green-400', label: 'Oda', bg: 'bg-green-500/10', border: 'border-green-500/25' },
   bilgisayar: { Icon: Server, color: 'text-cyan-400', label: 'Bilgisayar', bg: 'bg-cyan-500/10', border: 'border-cyan-500/25' },
   eklenti: { Icon: Package, color: 'text-gray-400', label: 'Eklenti', bg: 'bg-gray-500/10', border: 'border-gray-500/25' },
+};
+
+// ─── Payload fields ───────────────────────────────────────────
+type PayloadField = { key: string; label: string; type: 'text' | 'number' | 'boolean' };
+const PAYLOAD_FIELDS: Partial<Record<PhysLevel, PayloadField[]>> = {
+  holding: [
+    { key: 'vergiNo', label: 'Vergi No', type: 'text' },
+    { key: 'merkez',  label: 'Merkez',   type: 'text' },
+    { key: 'sektor',  label: 'Sektör',   type: 'text' },
+  ],
+  kanal: [
+    { key: 'frekans',   label: 'Frekans',      type: 'text' },
+    { key: 'yayinTipi', label: 'Yayın Tipi',   type: 'text' },
+    { key: 'lisansNo',  label: 'Lisans No',    type: 'text' },
+    { key: 'kurulus',   label: 'Kuruluş Yılı', type: 'number' },
+  ],
+  bina: [
+    { key: 'adres',   label: 'Adres',      type: 'text' },
+    { key: 'kat',     label: 'Kat Sayısı', type: 'number' },
+    { key: 'tip',     label: 'Bina Tipi',  type: 'text' },
+    { key: 'telefon', label: 'Telefon',    type: 'text' },
+  ],
+  oda: [
+    { key: 'odaNo',         label: 'Oda No',         type: 'text' },
+    { key: 'kat',           label: 'Kat',            type: 'number' },
+    { key: 'tip',           label: 'Oda Tipi',       type: 'text' },
+    { key: 'kapasite',      label: 'Kapasite',       type: 'number' },
+    { key: 'iklimlendirme', label: 'İklimlendirme',  type: 'boolean' },
+  ],
 };
 
 // ─── Highlight ────────────────────────────────────────────────
@@ -324,8 +364,9 @@ export function Assets() {
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [linkSearch, setLinkSearch] = useState('');
   const [showAudit, setShowAudit] = useState(false);
-  const [showQr, setShowQr] = useState(false);
   const [toasts, setToasts] = useState<Array<{ id: number; msg: string; ok: boolean }>>([]);
+  const [payloadForm, setPayloadForm] = useState<Record<string, string | number | boolean>>({});
+  const [payloadSaving, setPayloadSaving] = useState(false);
 
   const treeInputRef = useRef<HTMLInputElement>(null);
 
@@ -340,18 +381,12 @@ export function Assets() {
   const { data: physTree, isLoading, isError, refetch } = useQuery<PhysNode[]>({
     queryKey: ['phys-tree'],
     queryFn: () =>
-      fetch(`${PHYS_API}/tree`).then(r => {
+      authFetch(`${PHYS_API}/tree`).then(r => {
         if (!r.ok) throw new Error('API hatası');
         return r.json();
       }),
     refetchInterval: 10000,
     retry: 1,
-  });
-
-  const { data: packetData } = useQuery({
-    queryKey: ['phys-packet', sel?.node.id],
-    queryFn: () => fetch(`${PHYS_API}/packet/${sel!.node.id}`).then(r => r.json()),
-    enabled: sel?.level === 'bilgisayar',
   });
 
   const { data: sqlAssetsData } = useQuery({
@@ -362,7 +397,7 @@ export function Assets() {
 
   const { data: auditData } = useQuery({
     queryKey: ['phys-audit'],
-    queryFn: () => fetch(`${PHYS_API}/audit-log`).then(r => r.json()),
+    queryFn: () => authFetch(`${PHYS_API}/audit-log`).then(r => r.json()),
     enabled: showAudit,
     refetchInterval: showAudit ? 5000 : false,
   });
@@ -402,6 +437,15 @@ export function Assets() {
 
   const liveNode = sel ? (findNode(holdings, sel.node.id) ?? sel.node) : null;
 
+  // Sync payload form when selected node changes
+  useEffect(() => {
+    if (liveNode?.payload && typeof liveNode.payload === 'object') {
+      setPayloadForm(liveNode.payload as Record<string, string | number | boolean>);
+    } else {
+      setPayloadForm({});
+    }
+  }, [liveNode?.id]);
+
   // Linked SQL asset
   const linkedAsset = useMemo(
     () => liveNode?.linkedAssetId != null
@@ -432,7 +476,6 @@ export function Assets() {
     setAddChildName('');
     setTreeAddTo(null);
     setLinkSearch('');
-    setShowQr(false);
   };
 
   const multiToggle = (id: string, level: PhysLevel) => {
@@ -449,7 +492,7 @@ export function Assets() {
   const doDelete = async (id: string, level: PhysLevel, name: string) => {
     if (!confirm(`"${name}" ve tüm alt öğeler silinecek. Onaylıyor musunuz?`)) return;
     try {
-      const r = await fetch(`${PHYS_API}/${level}/${id}`, { method: 'DELETE' });
+      const r = await authFetch(`${PHYS_API}/${level}/${id}`, { method: 'DELETE' });
       if (!r.ok) throw new Error();
       if (sel?.node.id === id) setSel(null);
       qc.invalidateQueries({ queryKey: ['phys-tree'] });
@@ -465,7 +508,7 @@ export function Assets() {
     if (!confirm(`${multiSel.size} öğe silinecek. Onaylıyor musunuz?`)) return;
     for (const id of multiSel) {
       const node = findNode(holdings, id);
-      if (node) await fetch(`${PHYS_API}/${multiLvl}/${id}`, { method: 'DELETE' });
+      if (node) await authFetch(`${PHYS_API}/${multiLvl}/${id}`, { method: 'DELETE' });
     }
     setMultiSel(new Set());
     setMultiLvl(null);
@@ -477,7 +520,7 @@ export function Assets() {
     const endpoint = CHILD_OF[parentLevel];
     if (!endpoint || !name.trim()) return;
     try {
-      const r = await fetch(`${PHYS_API}/${endpoint}`, {
+      const r = await authFetch(`${PHYS_API}/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ parentId, name: name.trim() }),
@@ -495,7 +538,7 @@ export function Assets() {
   const doAddRoot = async (name: string) => {
     if (!name.trim()) return;
     try {
-      const r = await fetch(`${PHYS_API}/holding`, {
+      const r = await authFetch(`${PHYS_API}/holding`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim() }),
@@ -512,14 +555,14 @@ export function Assets() {
   };
 
   const loadDemo = async () => {
-    await fetch(`${PHYS_API}/demo`, { method: 'POST' });
+    await authFetch(`${PHYS_API}/demo`, { method: 'POST' });
     qc.invalidateQueries({ queryKey: ['phys-tree'] });
     qc.invalidateQueries({ queryKey: ['phys-audit'] });
   };
 
   const doAutoLink = async () => {
     try {
-      const r = await fetch(`${PHYS_API}/auto-link`, { method: 'POST' });
+      const r = await authFetch(`${PHYS_API}/auto-link`, { method: 'POST' });
       if (!r.ok) {
         const text = await r.text().catch(() => '');
         console.error('[auto-link]', r.status, text);
@@ -538,7 +581,7 @@ export function Assets() {
 
   const doMove = async (nodeId: string, level: PhysLevel, newParentId: string) => {
     try {
-      const r = await fetch(`${PHYS_API}/move`, {
+      const r = await authFetch(`${PHYS_API}/move`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nodeType: level, nodeId, newParentId }),
@@ -554,7 +597,7 @@ export function Assets() {
 
   const doLink = async (pcId: string, assetId: number | null) => {
     try {
-      const r = await fetch(`${PHYS_API}/bilgisayar/${pcId}/link`, {
+      const r = await authFetch(`${PHYS_API}/bilgisayar/${pcId}/link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assetId }),
@@ -571,7 +614,7 @@ export function Assets() {
 
   const doRename = async (id: string, level: PhysLevel, newName: string) => {
     try {
-      const r = await fetch(`${PHYS_API}/${level}/${id}`, {
+      const r = await authFetch(`${PHYS_API}/${level}/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName }),
@@ -582,6 +625,25 @@ export function Assets() {
       toast('Ad güncellendi');
     } catch {
       toast('Yeniden adlandırma başarısız', false);
+    }
+  };
+
+  const savePayload = async () => {
+    if (!liveNode || !sel) return;
+    setPayloadSaving(true);
+    try {
+      const r = await authFetch(`${PHYS_API}/${sel.level}/${liveNode.id}/payload`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload: payloadForm }),
+      });
+      if (!r.ok) throw new Error();
+      qc.invalidateQueries({ queryKey: ['phys-tree'] });
+      toast('Metadata kaydedildi');
+    } catch {
+      toast('Kayıt başarısız', false);
+    } finally {
+      setPayloadSaving(false);
     }
   };
 
@@ -904,6 +966,54 @@ export function Assets() {
                 </button>
               </div>
 
+              {/* ── Metadata (holding / kanal / bina / oda) ── */}
+              {PAYLOAD_FIELDS[sel.level] && (
+                <div>
+                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
+                    Metadata
+                  </p>
+                  <div className="space-y-2">
+                    {PAYLOAD_FIELDS[sel.level]!.map(field => (
+                      <div key={field.key}>
+                        <label className="text-[10px] text-[#6B84A3] uppercase tracking-wider font-mono-val block mb-1">
+                          {field.label}
+                        </label>
+                        {field.type === 'boolean' ? (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={!!payloadForm[field.key]}
+                              onChange={e => setPayloadForm(f => ({ ...f, [field.key]: e.target.checked }))}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-[#E2EAF4] font-mono-val">
+                              {payloadForm[field.key] ? 'Evet' : 'Hayır'}
+                            </span>
+                          </label>
+                        ) : (
+                          <input
+                            type={field.type}
+                            value={(payloadForm[field.key] ?? '') as string | number}
+                            onChange={e => setPayloadForm(f => ({
+                              ...f,
+                              [field.key]: field.type === 'number' ? Number(e.target.value) : e.target.value,
+                            }))}
+                            className="w-full px-3 py-2 text-sm bg-[#0D1525] border border-[#1E2D45] focus:border-[#3D5275] rounded-lg text-[#E2EAF4] font-mono-val focus:outline-none transition-colors placeholder:text-[#3D5275]"
+                          />
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={savePayload}
+                      disabled={payloadSaving}
+                      className="w-full mt-2 py-2 text-xs font-mono-val rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 hover:bg-indigo-500/20 transition-all disabled:opacity-50"
+                    >
+                      {payloadSaving ? 'Kaydediliyor...' : 'Kaydet'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* ── SQL Asset Bağlantısı (Bilgisayar only) ── */}
               {sel.level === 'bilgisayar' && (
                 <div>
@@ -964,41 +1074,6 @@ export function Assets() {
                 </div>
               )}
 
-              {/* ── QR Kod (Bilgisayar only) ─────────────────── */}
-              {sel.level === 'bilgisayar' && (
-                <div>
-                  <button
-                    onClick={() => setShowQr(v => !v)}
-                    className="flex items-center gap-2 text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3 hover:text-[#A0B4CC] transition-colors"
-                  >
-                    <QrCode size={11} />
-                    QR Kod
-                    <ChevronRight size={10} className={cn('transition-transform', showQr && 'rotate-90')} />
-                  </button>
-                  {showQr && (
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-white rounded-xl flex-shrink-0">
-                        <QRCodeSVG
-                          value={`${PHYS_API}/packet/${liveNode.id}`}
-                          size={128}
-                          bgColor="#ffffff"
-                          fgColor="#0D1421"
-                          level="M"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-[#E2EAF4] font-medium mb-1">{liveNode.name}</p>
-                        <p className="text-[10px] text-[#3D5275] font-mono-val break-all leading-relaxed">
-                          {PHYS_API}/packet/{liveNode.id}
-                        </p>
-                        <p className="text-[10px] text-[#2A3F5F] font-mono-val mt-2">
-                          QR kodu okutarak cihaz paketine erişin
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* ── Alt öğe ekle ────────────────────────────── */}
               {childLevel && (
@@ -1091,52 +1166,6 @@ export function Assets() {
                 </div>
               )}
 
-              {/* ── Bilgisayar: CRC Packet ──────────────────── */}
-              {sel.level === 'bilgisayar' && (
-                <div>
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
-                    Veri Paketi — CRC16-CCITT
-                  </p>
-                  {packetData ? (
-                    <div className="space-y-3">
-                      {/* Metrics */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {[
-                          { label: 'Header', value: packetData.header ?? '-' },
-                          { label: 'CRC16-CCITT', value: packetData.crc16 ?? '-' },
-                          { label: 'Boyut', value: packetData.totalBytes ? `${packetData.totalBytes} B` : '-' },
-                          { label: 'Eklenti', value: liveNode.children?.length ?? 0 },
-                        ].map(({ label, value }) => (
-                          <div key={label} className="p-3 rounded-lg bg-[#0D1525] border border-[#1A2540]">
-                            <p className="text-[9px] text-[#3D5275] uppercase tracking-wider font-mono-val mb-1">{label}</p>
-                            <p className="font-mono-val text-sm text-amber-400 font-bold">{value}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Path */}
-                      <div>
-                        <p className="text-[9px] text-[#3D5275] uppercase tracking-wider font-mono-val mb-1.5">Hiyerarşik Path</p>
-                        <div className="bg-[#070B14] border border-[#1A2540] rounded-lg p-3 font-mono-val text-[10px] text-green-400 break-all leading-relaxed">
-                          {packetData.path}
-                        </div>
-                      </div>
-
-                      {/* Hex dump */}
-                      <div>
-                        <p className="text-[9px] text-[#3D5275] uppercase tracking-wider font-mono-val mb-1.5">Hex Dump</p>
-                        <div className="bg-[#070B14] border border-[#1A2540] rounded-lg p-3 font-mono-val text-[10px] text-[#64748b] break-all leading-relaxed max-h-36 overflow-y-auto">
-                          {packetData.hexDump?.match(/.{1,2}/g)?.join(' ') ?? '-'}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-[#3D5275] text-xs font-mono-val">
-                      <Activity size={12} className="animate-pulse" /> Paket hesaplanıyor...
-                    </div>
-                  )}
-                </div>
-              )}
 
             </div>
           )}

@@ -4,8 +4,8 @@
   "description": "Broadcast Asset Management System - Node.js Backend API",
   "main": "server.js",
   "scripts": {
-    "start": "node --max-old-space-size=4096 server.js",
-    "dev": "node --max-old-space-size=4096 node_modules/.bin/nodemon server.js",
+    "start": "node --max-old-space-size=2048 server.js",
+    "dev": "node --max-old-space-size=2048 node_modules/.bin/nodemon server.js",
     "db:setup": "node scripts/dbSetup.js"
   },
   "dependencies": {
@@ -20,6 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "pg": "^8.20.0",
+    "qrcode": "^1.5.4",
     "ws": "^8.18.0"
   },
   "devDependencies": {

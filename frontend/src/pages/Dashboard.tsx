@@ -122,7 +122,7 @@ export function Dashboard() {
   // Yayın günü: dün 21:00 → bugün 20:59
   const todayLabel = _today.toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  const { data: powerData } = useQuery({
+  const { data: powerData, dataUpdatedAt: powerUpdatedAt } = useQuery({
     queryKey: ['power-consumption-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
     queryFn: () => {
       const slot = 3 * 60 * 60 * 1000;
@@ -137,7 +137,7 @@ export function Dashboard() {
     },
     refetchInterval: REFETCH.POWER,
     staleTime: REFETCH.POWER,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   const { data: healthData } = useQuery({
@@ -224,7 +224,15 @@ export function Dashboard() {
               <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.power_consumption')}</p>
               <p className="text-sm font-display font-semibold text-white mt-0.5">{todayLabel} — {i18n.language === 'tr' ? 'Son 12 Saat — 3 Saatlik Dilimler' : 'Last 12 Hours — 3H Slots'}</p>
             </div>
-            <Zap size={14} className="text-amber-400" />
+            <div className="flex flex-col items-end gap-1">
+              <Zap size={14} className="text-amber-400" />
+              {powerUpdatedAt > 0 && (
+                <span className="text-[9px] text-[#3D5275] font-mono-val">
+                  {i18n.language === 'tr' ? 'Güncellendi' : 'Updated'}{' '}
+                  {new Date(powerUpdatedAt).toLocaleTimeString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </div>
           </div>
           {powerChart.length > 0 ? (
             <ResponsiveContainer width="100%" height={160}>

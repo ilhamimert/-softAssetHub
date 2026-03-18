@@ -47,15 +47,29 @@ const UPDATABLE_FIELDS = {
 const getAll = async (req, res, next) => {
   try {
     const {
-      search, status, assetType, channelId, roomId,
+      status, assetType, channelId, roomId,
       manufacturer, model,
       page = 1, limit = 25,
     } = req.query;
+    const search = req.query.search ? String(req.query.search).slice(0, 100) : '';
     const sortCol   = ALLOWED_SORT[req.query.sortBy] || 'a.asset_name';
     const sortOrder = ALLOWED_ORDER.includes((req.query.sortOrder || '').toUpperCase())
       ? req.query.sortOrder.toUpperCase() : 'ASC';
     const safeLimit = Math.min(Math.max(parseInt(limit) || 25, 1), 200);
-    const offset = (parseInt(page) - 1) * safeLimit;
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    const offset = (safePage - 1) * safeLimit;
+
+    // Admin olmayan kullanıcılar yalnızca kendi kanallarını görebilir
+    // channelId null olan non-Admin kullanıcıların tüm varlıkları görmesi engellenir
+    const isAdmin = req.user.role === 'Admin';
+    const effectiveChannelId = isAdmin
+      ? (channelId ? parseInt(channelId) : null)
+      : req.user.channelId;
+
+    // Non-Admin ve channelId yoksa: erişim sıfır satır döner (güvenli default)
+    if (!isAdmin && !effectiveChannelId) {
+      return res.json({ success: true, data: [], pagination: { total: 0, page: parseInt(page), limit: safeLimit, totalPages: 0 } });
+    }
 
     const params = [];
     let idx = 1;
@@ -66,10 +80,10 @@ const getAll = async (req, res, next) => {
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
       idx += 3;
     }
-    if (status)       { where += ` AND a.status = $${idx++}`;         params.push(status); }
-    if (assetType)    { where += ` AND a.asset_type = $${idx++}`;     params.push(assetType); }
-    if (channelId)    { where += ` AND a.channel_id = $${idx++}`;     params.push(parseInt(channelId)); }
-    if (roomId)       { where += ` AND a.room_id = $${idx++}`;        params.push(parseInt(roomId)); }
+    if (status)              { where += ` AND a.status = $${idx++}`;         params.push(status); }
+    if (assetType)           { where += ` AND a.asset_type = $${idx++}`;     params.push(assetType); }
+    if (effectiveChannelId)  { where += ` AND a.channel_id = $${idx++}`;     params.push(effectiveChannelId); }
+    if (roomId)              { where += ` AND a.room_id = $${idx++}`;        params.push(parseInt(roomId)); }
     if (manufacturer) { where += ` AND a.manufacturer ILIKE $${idx++}`; params.push(`%${manufacturer}%`); }
     if (model)        { where += ` AND a.model ILIKE $${idx++}`;      params.push(`%${model}%`); }
 
@@ -146,6 +160,12 @@ const getById = async (req, res, next) => {
       [id]
     );
     if (!result.recordset[0]) return next(createError('Varlık bulunamadı.', 404));
+    // Non-Admin: sadece kendi kanalındaki varlığa erişebilir
+    if (req.user.role !== 'Admin') {
+      if (!req.user.channelId || result.recordset[0].channelId !== req.user.channelId) {
+        return next(createError('Bu varlığa erişim yetkiniz yok.', 403, 'CHANNEL_ACCESS_DENIED'));
+      }
+    }
     res.json({ success: true, data: result.recordset[0] });
   } catch (err) { next(err); }
 };
@@ -166,6 +186,14 @@ const getTree = async (req, res, next) => {
       [parseInt(id)]
     );
     if (!result.recordset[0]) return next(createError('Varlık bulunamadı.', 404));
+
+    // Non-Admin kullanıcılar yalnızca kendi kanallarındaki asset'leri görebilir
+    // channelId null olan non-Admin kullanıcıları da engelle
+    if (req.user.role !== 'Admin') {
+      if (!req.user.channelId || result.recordset[0].channelId !== req.user.channelId) {
+        return next(createError('Bu varlığa erişim yetkiniz yok.', 403, 'CHANNEL_ACCESS_DENIED'));
+      }
+    }
 
     const comps = await query(
       `SELECT * FROM asset_components WHERE asset_id = $1 AND is_active = TRUE`,
@@ -229,11 +257,19 @@ const bulkUpdateStatus = async (req, res, next) => {
     if (!VALID_STATUSES.includes(status))
       return next(createError(`Geçersiz durum. Geçerli değerler: ${VALID_STATUSES.join(', ')}`, 400));
 
+    const numIds = ids.map(Number);
+    const params = [status, numIds];
+    let channelFilter = '';
+    if (req.user?.role !== 'Admin' && req.user?.channelId) {
+      channelFilter = ' AND channel_id = $3';
+      params.push(req.user.channelId);
+    }
+
     const result = await query(
       `UPDATE assets SET status = $1
-       WHERE asset_id = ANY($2) AND is_active = TRUE
+       WHERE asset_id = ANY($2) AND is_active = TRUE${channelFilter}
        RETURNING asset_id, asset_name, status`,
-      [status, ids.map(Number)]
+      params
     );
     res.json({ success: true, updated: result.recordset.length, data: result.recordset });
   } catch (err) { next(err); }
@@ -314,8 +350,126 @@ const remove = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
     if (!id || id <= 0) return next(createError('Geçersiz ID.', 400));
-    await query(`UPDATE assets SET is_active = FALSE WHERE asset_id = $1`, [id]);
+    const result = await query(
+      `UPDATE assets SET is_active = FALSE WHERE asset_id = $1 AND is_active = TRUE RETURNING asset_id`,
+      [id]
+    );
+    if (!result.recordset[0]) return next(createError('Varlık bulunamadı.', 404));
     res.json({ success: true, message: 'Varlık silindi.' });
+  } catch (err) { next(err); }
+};
+
+// GET /assets/export?format=csv&channelId=&status=&assetType=
+const exportCsv = async (req, res, next) => {
+  try {
+    const { channelId, status, assetType } = req.query;
+    const isAdmin = req.user.role === 'Admin';
+    const effectiveChannelId = isAdmin
+      ? (channelId ? parseInt(channelId) : null)
+      : req.user.channelId;
+
+    if (!isAdmin && !effectiveChannelId) {
+      return res.status(403).json({ success: false, message: 'Kanal erişimi yok.' });
+    }
+
+    const params = [];
+    let idx = 1;
+    let where = 'WHERE a.is_active = TRUE';
+    if (status)             { where += ` AND a.status = $${idx++}`;      params.push(status); }
+    if (assetType)          { where += ` AND a.asset_type = $${idx++}`;  params.push(assetType); }
+    if (effectiveChannelId) { where += ` AND a.channel_id = $${idx++}`;  params.push(effectiveChannelId); }
+
+    const result = await query(
+      `SELECT a.asset_name, a.asset_code, a.asset_type, a.model, a.manufacturer,
+              a.serial_number, a.status, a.ip_address, a.mac_address,
+              a.purchase_date, a.warranty_end_date, a.purchase_cost, a.current_value,
+              a.depreciation_rate, a.rack_position, a.firmware_version, a.notes,
+              c.channel_name, r.room_name, b.building_name, ag.group_name
+       FROM assets a
+       LEFT JOIN channels     c  ON a.channel_id    = c.channel_id
+       LEFT JOIN rooms        r  ON a.room_id        = r.room_id
+       LEFT JOIN buildings    b  ON r.building_id    = b.building_id
+       LEFT JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
+       ${where}
+       ORDER BY a.asset_name`,
+      params
+    );
+
+    const COLS = [
+      'assetName','assetCode','assetType','model','manufacturer','serialNumber','status',
+      'ipAddress','macAddress','purchaseDate','warrantyEndDate','purchaseCost','currentValue',
+      'depreciationRate','rackPosition','firmwareVersion','notes','channelName','roomName','buildingName','groupName',
+    ];
+    const header = COLS.join(',');
+    const escape = (v) => {
+      if (v == null) return '';
+      const s = String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = result.recordset.map(r => COLS.map(c => escape(r[c])).join(','));
+    const csv = [header, ...rows].join('\r\n');
+
+    const filename = `assets_${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send('\uFEFF' + csv); // BOM — Excel Türkçe karakter için
+  } catch (err) { next(err); }
+};
+
+// POST /assets/bulk-import  body: { assets: [ {...}, ... ] }
+// Frontend CSV'yi parse edip JSON array olarak gönderir.
+const bulkImport = async (req, res, next) => {
+  try {
+    const { assets } = req.body;
+    if (!Array.isArray(assets) || assets.length === 0)
+      return next(createError('assets dizisi boş olamaz.', 400));
+    if (assets.length > 500)
+      return next(createError('Tek seferde en fazla 500 asset import edilebilir.', 400));
+
+    const results = { inserted: 0, errors: [] };
+
+    for (let i = 0; i < assets.length; i++) {
+      const a = assets[i];
+      if (!a.assetName?.trim() || !a.channelId) {
+        results.errors.push({ row: i + 1, message: 'assetName ve channelId zorunludur.' });
+        continue;
+      }
+      try {
+        await query(
+          `INSERT INTO assets (
+             channel_id, asset_group_id, asset_name, asset_type, asset_code, status,
+             model, serial_number, manufacturer, supplier,
+             purchase_date, warranty_end_date, warranty_months,
+             purchase_cost, current_value, depreciation_rate,
+             rack_position, ip_address, mac_address, firmware_version, notes
+           ) VALUES (
+             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
+           )`,
+          [
+            parseInt(a.channelId), a.assetGroupId ? parseInt(a.assetGroupId) : null,
+            a.assetName.trim(), a.assetType || 'Other', a.assetCode || null, a.status || 'Active',
+            a.model || null, a.serialNumber || null, a.manufacturer || null, a.supplier || null,
+            a.purchaseDate || null, a.warrantyEndDate || null, a.warrantyMonths ? parseInt(a.warrantyMonths) : null,
+            a.purchaseCost ? parseFloat(a.purchaseCost) : null,
+            a.currentValue ? parseFloat(a.currentValue) : null,
+            a.depreciationRate ? parseFloat(a.depreciationRate) : null,
+            a.rackPosition || null, a.ipAddress || null, a.macAddress || null,
+            a.firmwareVersion || null, a.notes || null,
+          ]
+        );
+        results.inserted++;
+      } catch (err) {
+        results.errors.push({ row: i + 1, message: err.message });
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `${results.inserted} asset eklendi, ${results.errors.length} hata.`,
+      inserted: results.inserted,
+      errors: results.errors,
+    });
   } catch (err) { next(err); }
 };
 
@@ -323,4 +477,5 @@ module.exports = {
   getAll, getById, getTree,
   getWarrantyExpiring, bulkUpdateStatus,
   create, update, remove,
+  exportCsv, bulkImport,
 };

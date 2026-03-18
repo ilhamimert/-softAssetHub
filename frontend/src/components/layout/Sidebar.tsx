@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Server, List, Bell, BarChart3,
-  Wrench, Settings, LogOut, ChevronRight, Wifi, Layers, Building2, KeyRound,
+  Wrench, Settings, LogOut, ChevronRight, Wifi, Layers, Building2, KeyRound, ScrollText,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +36,7 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
     { to: '/alerts',     icon: Bell,            label: t('common.alerts')       },
     { to: '/maintenance',icon: Wrench,          label: t('common.maintenance')           },
     { to: '/analytics',  icon: BarChart3,       label: t('common.analytics')       },
+    ...(user?.role === 'Admin' ? [{ to: '/logs', icon: ScrollText, label: t('common.logs') }] : []),
     { to: '/settings',   icon: Settings,        label: t('common.settings')        },
   ];
 

@@ -30,7 +30,7 @@ export function Analytics() {
   const limit = 10;
 
   const today = new Date();
-  const { data: powerData, isError: powerError } = useQuery({
+  const { data: powerData, isError: powerError, isPending: powerPending } = useQuery({
     queryKey: ['power-chart-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
     queryFn: () => {
       const slot = 3 * 60 * 60 * 1000;
@@ -45,7 +45,7 @@ export function Analytics() {
     },
     refetchInterval: REFETCH.POWER,
     staleTime: REFETCH.POWER,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   const { data: healthData } = useQuery({
@@ -124,7 +124,9 @@ export function Analytics() {
             <span className={powerError ? 'text-red-400' : 'text-[#3D5275]'}>
               {powerError
                 ? (i18n.language === 'tr' ? 'Veri yüklenemedi' : 'Failed to load data')
-                : (i18n.language === 'tr' ? 'Yeterli monitoring verisi yok' : 'Not enough monitoring data')}
+                : powerPending
+                  ? (i18n.language === 'tr' ? 'Yükleniyor...' : 'Loading...')
+                  : (i18n.language === 'tr' ? 'Yeterli monitoring verisi yok' : 'Not enough monitoring data')}
             </span>
           </div>
         )}

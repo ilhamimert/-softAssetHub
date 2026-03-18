@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -326,15 +327,27 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
 // ─── AssetList Page ───────────────────────────────────────────
 export function AssetList() {
   const { t, i18n } = useTranslation();
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(25);
-  const [search, setSearch] = useState('');
-  const [searchQ, setSearchQ] = useState('');
-  const [status, setStatus] = useState('');
-  const [assetType, setAssetType] = useState('');
-  const [channelId, setChannelId] = useState('');
-  const [sortBy, setSortBy] = useState('AssetName');
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('ASC');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page      = Number(searchParams.get('page')      ?? '1');
+  const limit     = Number(searchParams.get('limit')     ?? '25');
+  const searchQ   = searchParams.get('q')                ?? '';
+  const status    = searchParams.get('status')           ?? '';
+  const assetType = searchParams.get('type')             ?? '';
+  const channelId = searchParams.get('channel')          ?? '';
+  const sortBy    = searchParams.get('sortBy')           ?? 'AssetName';
+  const sortOrder = (searchParams.get('sortOrder')       ?? 'ASC') as 'ASC' | 'DESC';
+
+  const [search, setSearch] = useState(searchQ);
+
+  const sp = (updates: Record<string, string | number>) =>
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      for (const [k, v] of Object.entries(updates)) {
+        const s = String(v);
+        if (s) next.set(k, s); else next.delete(k);
+      }
+      return next;
+    }, { replace: true });
 
   // Modals
   const [viewAsset, setViewAsset] = useState<Asset | null>(null);
@@ -356,11 +369,12 @@ export function AssetList() {
   const pagination = data?.data?.pagination ?? { page: 1, limit, total: 0, totalPages: 1 };
   const channels = channelsData?.data?.data ?? [];
 
-  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); setSearchQ(search); setPage(1); };
+  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); sp({ q: search, page: '' }); };
   const toggleSort = (col: string) => {
-    if (sortBy === col) setSortOrder((o: string) => o === 'ASC' ? 'DESC' : 'ASC');
-    else { setSortBy(col); setSortOrder('ASC'); }
-    setPage(1);
+    sp(sortBy === col
+      ? { sortOrder: sortOrder === 'ASC' ? 'DESC' : 'ASC', page: '' }
+      : { sortBy: col, sortOrder: 'ASC', page: '' }
+    );
   };
 
   const SortIcon = ({ col }: { col: string }) => {
@@ -419,11 +433,11 @@ export function AssetList() {
 
         {[
           {
-            value: channelId, onChange: (v: string) => { setChannelId(v); setPage(1); },
+            value: channelId, onChange: (v: string) => sp({ channel: v, page: '' }),
             options: [{ value: '', label: t('assets.toolbar.all_channels') }, ...channels.map((c: any) => ({ value: String(c.channelId), label: c.channelName }))],
           },
           {
-            value: status, onChange: (v: string) => { setStatus(v); setPage(1); },
+            value: status, onChange: (v: string) => sp({ status: v, page: '' }),
             options: [
               { value: '', label: t('assets.toolbar.all_statuses') }, { value: 'Active', label: t('common.active') },
               { value: 'Maintenance', label: t('common.maintenance_short') }, { value: 'Inactive', label: t('common.inactive') },
@@ -431,7 +445,7 @@ export function AssetList() {
             ],
           },
           {
-            value: assetType, onChange: (v: string) => { setAssetType(v); setPage(1); },
+            value: assetType, onChange: (v: string) => sp({ type: v, page: '' }),
             options: [
               { value: '', label: t('assets.toolbar.all_types') }, { value: 'GPU', label: 'GPU' }, { value: 'DisplayCard', label: t('monitoring.charts.heatmap').includes('Sıcaklık') ? 'Görüntü Kartı' : 'Display Card' },
               { value: 'Server', label: t('monitoring.charts.heatmap').includes('Sıcaklık') ? 'Sunucu' : 'Server' }, { value: 'Disk', label: 'Disk' }, { value: 'Network', label: t('monitoring.charts.heatmap').includes('Sıcaklık') ? 'Ağ' : 'Network' },
@@ -452,7 +466,7 @@ export function AssetList() {
 
         <select
           value={limit}
-          onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
+          onChange={e => sp({ limit: e.target.value, page: '' })}
           className="bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#6B84A3] px-2 py-2 outline-none"
         >
           {PAGE_SIZES.map(s => <option key={s} value={s}>{s} {t('assets.toolbar.rows')}</option>)}
@@ -577,8 +591,16 @@ export function AssetList() {
 
               {!isLoading && assets.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="py-12 text-center text-[#3D5275] text-sm font-mono-val">
-                    {i18n.language === 'tr' ? 'Varlık bulunamadı' : 'No assets found'}
+                  <td colSpan={12} className="py-16 text-center">
+                    <Server size={32} className="text-[#1E2D45] mx-auto mb-3" />
+                    <p className="text-sm text-[#3D5275] font-mono-val">
+                      {i18n.language === 'tr' ? 'Varlık bulunamadı' : 'No assets found'}
+                    </p>
+                    {(searchQ || status || assetType || channelId) && (
+                      <p className="text-xs text-[#3D5275] font-mono-val mt-1 opacity-60">
+                        {i18n.language === 'tr' ? 'Filtrelerinizi temizlemeyi deneyin' : 'Try clearing your filters'}
+                      </p>
+                    )}
                   </td>
                 </tr>
               )}
@@ -586,15 +608,15 @@ export function AssetList() {
           </table>
         </div>
 
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
+        {/* Pagination — always visible */}
+        {(
           <div className="flex items-center justify-between px-4 py-3 border-t border-[#1E2D45] bg-[#070B14]">
             <span className="text-[10px] text-[#3D5275] font-mono-val">
               {t('common.page')} {pagination.page} / {pagination.totalPages} · {pagination.total.toLocaleString()} {i18n.language === 'tr' ? 'kayıt' : 'records'}
             </span>
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+                onClick={() => sp({ page: Math.max(1, page - 1) })}
                 disabled={page === 1}
                 className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
@@ -605,7 +627,7 @@ export function AssetList() {
                 return (
                   <button
                     key={p}
-                    onClick={() => setPage(p)}
+                    onClick={() => sp({ page: p })}
                     className={cn(
                       'w-7 h-7 rounded text-[10px] font-mono-val border transition-colors',
                       p === page
@@ -618,7 +640,7 @@ export function AssetList() {
                 );
               })}
               <button
-                onClick={() => setPage((p: number) => Math.min(pagination.totalPages, p + 1))}
+                onClick={() => sp({ page: Math.min(pagination.totalPages, page + 1) })}
                 disabled={page === pagination.totalPages}
                 className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
@@ -630,13 +652,15 @@ export function AssetList() {
       </div>
 
       {/* Modals */}
-      <ViewModal
-        asset={viewAsset}
-        onClose={() => setViewAsset(null)}
-        onEdit={() => { setEditAsset(viewAsset); setViewAsset(null); }}
-      />
-      <EditModal asset={editAsset} onClose={() => setEditAsset(null)} />
-      <DeleteModal asset={deleteAsset} onClose={() => setDeleteAsset(null)} />
+      {viewAsset && (
+        <ViewModal
+          asset={viewAsset}
+          onClose={() => setViewAsset(null)}
+          onEdit={() => { setEditAsset(viewAsset); setViewAsset(null); }}
+        />
+      )}
+      {editAsset && <EditModal asset={editAsset} onClose={() => setEditAsset(null)} />}
+      {deleteAsset && <DeleteModal asset={deleteAsset} onClose={() => setDeleteAsset(null)} />}
     </div>
   );
 }

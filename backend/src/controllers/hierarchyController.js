@@ -1,5 +1,4 @@
-const { query } = require('../config/database');
-const crypto = require('crypto');
+const { query, withTransaction } = require('../config/database');
 
 const VALID_NODE_TYPES = ['holding', 'kanal', 'bina', 'oda', 'bilgisayar', 'eklenti'];
 
@@ -44,11 +43,14 @@ exports.getTree = async (req, res, next) => {
 
 exports.createNode = async (req, res, next) => {
     const { nodeType } = req.params; // holding, kanal, bina vs
-    const Name = req.body.Name || req.body.name;
+    const Name = (req.body.Name || req.body.name || '').trim().slice(0, 255);
     const ParentId = req.body.ParentId || req.body.parentId;
 
     if (!VALID_NODE_TYPES.includes(nodeType)) {
         return res.status(400).json({ message: 'Geçersiz node tipi.' });
+    }
+    if (!Name) {
+        return res.status(400).json({ message: 'Ad gerekli.' });
     }
 
     try {
@@ -96,6 +98,22 @@ exports.moveNode = async (req, res, next) => {
     const NewParentId = req.body.NewParentId || req.body.newParentId;
 
     try {
+        // Döngüsel referans: NewParentId, NodeId'nin alt ağacında olamaz
+        if (NewParentId) {
+            const { recordset: cycle } = await query(
+                `WITH RECURSIVE subtree AS (
+                    SELECT node_id FROM physical_nodes WHERE node_id = $1
+                    UNION ALL
+                    SELECT pn.node_id FROM physical_nodes pn
+                    INNER JOIN subtree s ON pn.parent_id = s.node_id
+                )
+                SELECT 1 FROM subtree WHERE node_id = $2`,
+                [NodeId, NewParentId]
+            );
+            if (cycle.length > 0)
+                return res.status(400).json({ message: 'Döngüsel referans: node kendi alt ağacına taşınamaz.' });
+        }
+
         const { recordset } = await query('UPDATE physical_nodes SET parent_id = $1 WHERE node_id = $2 RETURNING *', [NewParentId, NodeId]);
         if (recordset.length === 0) {
             return res.status(404).json({ message: 'Node bulunamadi' });
@@ -112,11 +130,18 @@ exports.linkNode = async (req, res, next) => {
     const AssetId = req.body.AssetId ?? req.body.assetId ?? null;
 
     try {
-        const { recordset } = await query('UPDATE physical_nodes SET linked_asset_id = $1 WHERE node_id = $2 RETURNING *', [AssetId || null, id]);
-        if (recordset.length === 0) return res.status(404).json({ message: 'Bilgisayar bulunamadi' });
+        const result = await withTransaction(async (txQuery) => {
+            const { recordset } = await txQuery('UPDATE physical_nodes SET linked_asset_id = $1 WHERE node_id = $2 RETURNING *', [AssetId || null, id]);
+            if (recordset.length === 0) return null;
+            await txQuery(
+                'INSERT INTO physical_audits (action_type, node_type, node_name) VALUES ($1, $2, $3)',
+                [AssetId ? 'link' : 'unlink', 'bilgisayar', recordset[0].name]
+            );
+            return recordset[0];
+        });
 
-        await addAudit(AssetId ? 'link' : 'unlink', 'bilgisayar', recordset[0].name);
-        res.json({ id: recordset[0].nodeId, linkedAssetId: recordset[0].linkedAssetId });
+        if (!result) return res.status(404).json({ message: 'Bilgisayar bulunamadi' });
+        res.json({ id: result.nodeId, linkedAssetId: result.linkedAssetId });
     } catch (err) {
         next(err);
     }
@@ -124,7 +149,7 @@ exports.linkNode = async (req, res, next) => {
 
 exports.renameNode = async (req, res, next) => {
     const { type, id } = req.params;
-    const name = (req.body.name || req.body.Name || '').trim();
+    const name = (req.body.name || req.body.Name || '').trim().slice(0, 255);
     if (!name) return res.status(400).json({ message: 'Ad gerekli' });
     try {
         const { recordset } = await query(
@@ -139,23 +164,6 @@ exports.renameNode = async (req, res, next) => {
     }
 };
 
-exports.getPacket = async (req, res, next) => {
-    const { id } = req.params;
-    try {
-        const { recordset } = await query('SELECT * FROM physical_nodes WHERE node_id = $1', [id]);
-        if (recordset.length === 0) return res.status(404).json({ message: 'Bulunamadi' });
-
-        res.json({
-            totalBytes: 120,
-            header: "0x20 0x01 0x21",
-            path: id,
-            crc16: "0xAA55",
-            hexDump: "2001210024" + crypto.randomBytes(10).toString('hex').toUpperCase()
-        });
-    } catch (err) {
-        next(err);
-    }
-};
 
 exports.getAuditLog = async (req, res, next) => {
     try {
@@ -210,6 +218,8 @@ exports.autoLinkNodes = async (req, res, next) => {
 };
 
 exports.loadDemoData = async (req, res, next) => {
+    if (process.env.NODE_ENV === 'production')
+        return res.status(403).json({ message: 'Demo data production ortamında yüklenemez.' });
     try {
         await query('DELETE FROM physical_nodes'); // CASCADE deletes all
 
@@ -444,4 +454,18 @@ exports.loadDemoData = async (req, res, next) => {
     } catch (err) {
         next(err);
     }
+};
+
+exports.updatePayload = async (req, res, next) => {
+    const { type, id } = req.params;
+    const payload = req.body.payload ?? {};
+    try {
+        const { recordset } = await query(
+            'UPDATE physical_nodes SET payload = $1 WHERE node_id = $2 RETURNING *',
+            [JSON.stringify(payload), id]
+        );
+        if (recordset.length === 0) return res.status(404).json({ message: 'Node bulunamadı' });
+        await addAudit('update_payload', type, recordset[0].name);
+        res.json({ id: recordset[0].nodeId, payload: recordset[0].payload });
+    } catch (err) { next(err); }
 };

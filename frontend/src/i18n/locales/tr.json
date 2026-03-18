@@ -9,6 +9,7 @@
     "maintenance": "Bakım",
     "analytics": "Analitik",
     "settings": "Ayarlar",
+    "logs": "Aktivite Günlüğü",
     "logout": "Güvenli Çıkış",
     "system_admin": "SİSTEM ADMİNİ",
     "search": "Ara...",
@@ -33,7 +34,8 @@
     "inactive": "İnaktif",
     "faulty": "Arızalı",
     "retired": "Kullanım Dışı",
-    "maintenance_short": "Bakımda"
+    "maintenance_short": "Bakımda",
+    "data_load_error": "Veriler yüklenemedi — sunucu bağlantısını kontrol edin."
   },
   "login": {
     "title": "İSOFT ASSET",
@@ -160,6 +162,22 @@
       "warning": "Varlık \"Kullanım Dışı\" olarak işaretlenecek.",
       "failed": "Silme işlemi başarısız oldu.",
       "yes": "EVET, SİL"
+    }
+  },
+  "logs": {
+    "subtitle": "Sistem geneli işlem kayıtları",
+    "search_placeholder": "İşlem, kullanıcı, kayıt adı...",
+    "all_types": "Tüm tipler",
+    "count": "{{count}} kayıt (sayfa {{page}})",
+    "refresh": "Yenile",
+    "no_records": "Kayıt bulunamadı",
+    "table": {
+      "date": "Tarih",
+      "user": "Kullanıcı",
+      "action": "İşlem",
+      "type": "Tip",
+      "record": "Kayıt",
+      "detail": "Detay"
     }
   },
   "licenses": {

@@ -1,8 +1,6 @@
 const errorHandler = (err, req, res, next) => {
   console.error(`[ERROR] ${new Date().toISOString()} - ${err.message}`);
-  if (process.env.NODE_ENV === 'development') {
-    console.error(err.stack);
-  }
+  if (err.stack) console.error(err.stack);
 
   // PostgreSQL hataları (err.code string)
   if (err.code === '23505') {
