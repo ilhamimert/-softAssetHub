@@ -101,7 +101,7 @@ function HeatCell({ value, label, unit = '' }: { value?: number; label: string; 
 }
 
 // ─── Pie label ───────────────────────────────────────────────
-const PIE_COLORS = ['#22D3EE', '#F59E0B', '#10B981', '#EF4444', '#6B84A3'];
+const PIE_COLORS = ['#22D3EE', '#F59E0B', '#10B981', '#EF4444', '#A855F7', '#FB923C', '#34D399', '#60A5FA', '#F472B6', '#FACC15'];
 
 // ─── Dashboard ───────────────────────────────────────────────
 export function Dashboard() {
