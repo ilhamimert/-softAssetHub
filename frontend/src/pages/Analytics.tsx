@@ -88,16 +88,16 @@ export function Analytics() {
       {/* Budget Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { label: t('analytics.finance.purchase_cost'), value: formatCurrency(totalCost), icon: DollarSign, color: 'cyan' },
-          { label: t('analytics.finance.current_value'), value: formatCurrency(totalValue), icon: TrendingUp, color: 'green' },
-          { label: t('analytics.finance.maintenance_cost'), value: formatCurrency(totalMaint), icon: Wrench, color: 'amber' },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className={`card p-4 border border-${color}-500/20`}>
+          { label: t('analytics.finance.purchase_cost'), value: formatCurrency(totalCost), icon: DollarSign, border: 'border-cyan-500/20',  text: 'text-cyan-400' },
+          { label: t('analytics.finance.current_value'), value: formatCurrency(totalValue), icon: TrendingUp, border: 'border-green-500/20', text: 'text-green-400' },
+          { label: t('analytics.finance.maintenance_cost'), value: formatCurrency(totalMaint), icon: Wrench, border: 'border-amber-500/20', text: 'text-amber-400' },
+        ].map(({ label, value, icon: Icon, border, text }) => (
+          <div key={label} className={`card p-4 border ${border}`}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{label}</p>
-              <Icon size={13} className={`text-${color}-400`} />
+              <Icon size={13} className={text} />
             </div>
-            <p className={`font-display font-bold text-2xl text-${color}-400`}>{value}</p>
+            <p className={`font-display font-bold text-2xl ${text}`}>{value}</p>
           </div>
         ))}
       </div>

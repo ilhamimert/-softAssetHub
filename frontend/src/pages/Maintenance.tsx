@@ -199,15 +199,15 @@ export function Maintenance() {
       {/* Stats strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Acil (≤7 gün)', count: urgent, color: 'red', icon: <AlertTriangle size={16} className="text-red-400" /> },
-          { label: 'Yakın (≤30 gün)', count: soon, color: 'amber', icon: <Clock size={16} className="text-amber-400" /> },
-          { label: 'Toplam Planlı', count: total, color: 'cyan', icon: <Calendar size={16} className="text-cyan-400" /> },
-          { label: 'Tamamlanan', count: completed, color: 'green', icon: <CheckCircle size={16} className="text-green-400" /> },
-        ].map(({ label, count, color, icon }) => (
-          <div key={label} className={cn('card p-4 flex items-center gap-3', `border border-${color}-500/20 bg-${color}-500/5`)}>
+          { label: 'Acil (≤7 gün)',  count: urgent,    card: 'border border-red-500/20 bg-red-500/5',     text: 'text-red-400',   icon: <AlertTriangle size={16} className="text-red-400" /> },
+          { label: 'Yakın (≤30 gün)', count: soon,      card: 'border border-amber-500/20 bg-amber-500/5', text: 'text-amber-400', icon: <Clock size={16} className="text-amber-400" /> },
+          { label: 'Toplam Planlı',   count: total,     card: 'border border-cyan-500/20 bg-cyan-500/5',   text: 'text-cyan-400',  icon: <Calendar size={16} className="text-cyan-400" /> },
+          { label: 'Tamamlanan',      count: completed, card: 'border border-green-500/20 bg-green-500/5', text: 'text-green-400', icon: <CheckCircle size={16} className="text-green-400" /> },
+        ].map(({ label, count, card, text, icon }) => (
+          <div key={label} className={cn('card p-4 flex items-center gap-3', card)}>
             {icon}
             <div>
-              <p className={`font-display font-bold text-2xl text-${color}-400 leading-none`}>{count}</p>
+              <p className={`font-display font-bold text-2xl leading-none ${text}`}>{count}</p>
               <p className="text-[10px] text-[#6B84A3] font-mono-val uppercase tracking-wider mt-0.5">{label}</p>
             </div>
           </div>

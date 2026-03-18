@@ -89,17 +89,14 @@ export function Alerts() {
       {/* Stats strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { label: 'Kritik', count: stats.critical, color: 'red', icon: <AlertCircle size={16} className="text-red-400" /> },
-          { label: 'Uyarı', count: stats.warning, color: 'amber', icon: <AlertTriangle size={16} className="text-amber-400" /> },
-          { label: 'Bilgi', count: stats.info, color: 'cyan', icon: <Info size={16} className="text-cyan-400" /> },
-        ].map(({ label, count, color, icon }) => (
-          <div key={label} className={cn(
-            'card p-3 flex items-center gap-3',
-            `border border-${color}-500/20 bg-${color}-500/5`
-          )}>
+          { label: 'Kritik', count: stats.critical, card: 'border border-red-500/20 bg-red-500/5',   text: 'text-red-400',   icon: <AlertCircle size={16} className="text-red-400" /> },
+          { label: 'Uyarı', count: stats.warning,  card: 'border border-amber-500/20 bg-amber-500/5', text: 'text-amber-400', icon: <AlertTriangle size={16} className="text-amber-400" /> },
+          { label: 'Bilgi', count: stats.info,      card: 'border border-cyan-500/20 bg-cyan-500/5',  text: 'text-cyan-400',  icon: <Info size={16} className="text-cyan-400" /> },
+        ].map(({ label, count, card, text, icon }) => (
+          <div key={label} className={cn('card p-3 flex items-center gap-3', card)}>
             {icon}
             <div>
-              <p className={`font-display font-bold text-2xl text-${color}-400 leading-none`}>{count}</p>
+              <p className={`font-display font-bold text-2xl leading-none ${text}`}>{count}</p>
               <p className="text-[10px] text-[#6B84A3] font-mono-val uppercase tracking-wider mt-0.5">{label}</p>
             </div>
           </div>
