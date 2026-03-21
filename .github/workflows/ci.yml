@@ -1,0 +1,134 @@
+name: CI — Security & Build Check
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  # ─────────────────────────────────────────
+  # 1. SECRET SCAN
+  # ─────────────────────────────────────────
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for hardcoded secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: HEAD~1
+          head: HEAD
+          extra_args: --only-verified
+
+  # ─────────────────────────────────────────
+  # 2. BACKEND SECURITY
+  # ─────────────────────────────────────────
+  backend-security:
+    name: Backend — Security Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (high severity)
+        run: npm audit --audit-level=high
+
+      - name: Check for hardcoded passwords/keys in source
+        run: |
+          echo "Checking for hardcoded secrets..."
+          if grep -r --include="*.js" -E "(password\s*=\s*['\"][^'\"]{4,}['\"]|JWT_SECRET\s*=\s*['\"]|DB_PASSWORD\s*=\s*['\"])" src/ 2>/dev/null; then
+            echo "❌ Hardcoded secret found!"
+            exit 1
+          fi
+          echo "✅ No hardcoded secrets in src/"
+
+      - name: Check SQL injection safety (parameterized queries)
+        run: |
+          echo "Checking for raw string interpolation in queries..."
+          if grep -r --include="*.js" -E "query\(\`[^)]*\$\{" src/ 2>/dev/null; then
+            echo "❌ Potential SQL injection: template literal in query()"
+            exit 1
+          fi
+          echo "✅ No raw string interpolation in queries"
+
+  # ─────────────────────────────────────────
+  # 3. FRONTEND BUILD
+  # ─────────────────────────────────────────
+  frontend-build:
+    name: Frontend — Build Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (high severity)
+        run: npm audit --audit-level=high
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Bundle size check (max 5MB)
+        run: |
+          SIZE=$(du -sb dist/ | awk '{print $1}')
+          MAX=5242880
+          echo "Bundle size: $(du -sh dist/ | awk '{print $1}')"
+          if [ "$SIZE" -gt "$MAX" ]; then
+            echo "❌ Bundle too large (> 5MB)"
+            exit 1
+          fi
+          echo "✅ Bundle size OK"
+
+  # ─────────────────────────────────────────
+  # 4. SONUÇ ÖZET
+  # ─────────────────────────────────────────
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [secret-scan, backend-security, frontend-build]
+    if: always()
+    steps:
+      - name: Check all jobs
+        run: |
+          if [ "${{ needs.secret-scan.result }}" != "success" ] || \
+             [ "${{ needs.backend-security.result }}" != "success" ] || \
+             [ "${{ needs.frontend-build.result }}" != "success" ]; then
+            echo "❌ CI FAILED — merge blocked"
+            exit 1
+          fi
+          echo "✅ ALL CHECKS PASSED — ready to merge"
