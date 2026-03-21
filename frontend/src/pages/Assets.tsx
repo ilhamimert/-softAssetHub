@@ -468,7 +468,7 @@ export function Assets() {
     setExpanded(s => { const n = new Set(s); n.add(id); return n; });
 
   const toggle = (id: string) =>
-    setExpanded(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setExpanded(s => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
 
   const select = (node: PhysNode, level: PhysLevel) => {
     setSel({ node, level });
@@ -667,7 +667,7 @@ export function Assets() {
     if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropTargetId(null);
   };
 
-  const handleDrop = (e: React.DragEvent, node: PhysNode, level: PhysLevel) => {
+  const handleDrop = (e: React.DragEvent, node: PhysNode, _level: PhysLevel) => {
     e.preventDefault();
     if (!dragState || dropTargetId !== node.id) { setDragState(null); setDropTargetId(null); return; }
     doMove(dragState.nodeId, dragState.level, node.id);

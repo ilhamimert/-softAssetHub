@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { analyticsApi, alertApi, monitoringApi } from '@/api/client';
-import { cn, alertBg, timeAgo, statusBg, getLocalSlots, aggregatePowerData, CHART_TOOLTIP_STYLE, REFETCH } from '@/lib/utils';
+import { cn, alertBg, timeAgo, getLocalSlots, aggregatePowerData, CHART_TOOLTIP_STYLE, REFETCH } from '@/lib/utils';
 import type { Alert, DashboardKPI } from '@/types';
 
 // ─── KPI Card ────────────────────────────────────────────────
@@ -122,8 +122,9 @@ export function Dashboard() {
   // Yayın günü: dün 21:00 → bugün 20:59
   const todayLabel = _today.toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
+  const powerSlotKey = useMemo(() => Math.floor(Date.now() / (3 * 60 * 60 * 1000)), []);
   const { data: powerData, dataUpdatedAt: powerUpdatedAt } = useQuery({
-    queryKey: ['power-consumption-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
+    queryKey: ['power-consumption-12h', powerSlotKey],
     queryFn: () => {
       const slot = 3 * 60 * 60 * 1000;
       const toMs = Math.floor(Date.now() / slot) * slot;
@@ -172,18 +173,18 @@ export function Dashboard() {
   }, [powerData]);
 
   // Pie chart — fiziksel ağaç node_type dağılımı (physical_nodes öncelikli, yoksa assets fallback)
-  const physicalNodes: any[] = physicalDistData?.data?.data ?? [];
-  const health: any[] = healthData?.data?.data ?? [];
+  const physicalNodes = (physicalDistData?.data?.data ?? []) as { nodeType: string; count: number }[];
+  const health = (healthData?.data?.data ?? []) as { assetType: string; totalAssets: number }[];
   const pieData = physicalNodes.length > 0
-    ? physicalNodes.map((n: any) => ({ name: n.nodeType, value: n.count }))
+    ? physicalNodes.map(n => ({ name: n.nodeType, value: n.count }))
     : (() => {
         const typeMap: Record<string, number> = {};
-        health.forEach((h: any) => { typeMap[h.assetType] = (typeMap[h.assetType] ?? 0) + (h.totalAssets ?? 0); });
+        health.forEach(h => { typeMap[h.assetType] = (typeMap[h.assetType] ?? 0) + (h.totalAssets ?? 0); });
         return Object.entries(typeMap).map(([name, value]) => ({ name, value }));
       })();
 
   // Heatmap sample (top 12 by temperature)
-  const heatAssets: any[] = (heatmapData?.data?.data ?? [])
+  const heatAssets = ((heatmapData?.data?.data ?? []) as { id: string; name: string; temperature?: number }[])
     .slice(0, 12);
 
   const uptime = kpi.totalAssets > 0

@@ -377,6 +377,7 @@ export function AssetList() {
     );
   };
 
+  // eslint-disable-next-line react-hooks/static-components
   const SortIcon = ({ col }: { col: string }) => {
     if (sortBy !== col) return <ChevronsUpDown size={11} className="text-[#3D5275]" />;
     return sortOrder === 'ASC'
@@ -384,6 +385,7 @@ export function AssetList() {
       : <ChevronDown size={11} className="text-amber-400" />;
   };
 
+  // eslint-disable-next-line react-hooks/static-components
   const Th = ({ label, col, className = '' }: { label: string; col?: string; className?: string }) => (
     <th
       className={cn('py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val whitespace-nowrap', col && 'cursor-pointer hover:text-[#E2EAF4] select-none', className)}
