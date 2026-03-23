@@ -1,4 +1,3 @@
-
 -- ============================================================
 -- BROADCAST ASSET MANAGEMENT SYSTEM - Seed Data
 -- Hierarchy: Holding -> Channel -> AssetGroup -> Asset -> Component

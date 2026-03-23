@@ -970,7 +970,7 @@ export function Assets() {
               {PAYLOAD_FIELDS[sel.level] && (
                 <div>
                   <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
-                    Metadata
+                    {sel.level === 'holding' ? 'Holding Bilgileri' : sel.level === 'kanal' ? 'Kanal Bilgileri' : sel.level === 'bina' ? 'Bina Bilgileri' : 'Oda Bilgileri'}
                   </p>
                   <div className="space-y-2">
                     {PAYLOAD_FIELDS[sel.level]!.map(field => (
