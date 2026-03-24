@@ -27,3 +27,6 @@ Thumbs.db
 
 # Claude memory (local only)
 .claude/
+
+# pgAdmin ERD files
+*.pgerd

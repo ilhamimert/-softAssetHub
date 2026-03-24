@@ -6,6 +6,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const routes = require('./routes/index');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const { activityLogger } = require('./middleware/activityMiddleware');
 
 const app = express();
 
@@ -118,6 +119,9 @@ const apiLimiter = rateLimit({
 app.use('/api/v1/auth/login', loginLimiter);
 app.use('/api/v1/auth/refresh', refreshLimiter);
 app.use('/api/v1', apiLimiter);
+
+// ── Aktivite loglama (mutating istekler) ──────────────────────────
+app.use('/api/v1', activityLogger);
 
 // ── API rotaları ──────────────────────────────────────────────────
 app.use('/api/v1', routes);

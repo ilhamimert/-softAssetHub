@@ -126,7 +126,7 @@ export function Logs() {
                 <tr key={log.logId} className="border-b border-[#1E2D45]/50 hover:bg-[#0D1421]/60 transition-colors">
                   <td className="py-2 px-3">
                     <span className="text-[10px] text-[#6B84A3] font-mono-val whitespace-nowrap">
-                      {formatDateTime(log.createdAt)}
+                      {formatDateTime(log.timestamp)}
                     </span>
                   </td>
                   <td className="py-2 px-3">
@@ -141,11 +141,14 @@ export function Logs() {
                     <span className="text-[10px] text-[#6B84A3] font-mono-val">{log.entityType ?? '—'}</span>
                   </td>
                   <td className="py-2 px-3">
-                    <span className="text-xs text-[#E2EAF4]">{log.entityName ?? (log.entityId ? `#${log.entityId}` : '—')}</span>
+                    <span className="text-xs text-[#E2EAF4] font-mono-val">
+                      {log.entityId ? `#${log.entityId}` : '—'}
+                    </span>
                   </td>
                   <td className="py-2 px-3 max-w-[260px]">
-                    <span className="text-[10px] text-[#6B84A3] font-mono-val truncate block" title={log.details ?? ''}>
-                      {log.details ?? '—'}
+                    <span className="text-[10px] text-[#6B84A3] font-mono-val truncate block"
+                      title={log.newValue ?? log.oldValue ?? ''}>
+                      {log.newValue ?? log.oldValue ?? '—'}
                     </span>
                   </td>
                 </tr>

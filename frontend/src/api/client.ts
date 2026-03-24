@@ -186,6 +186,33 @@ export const licenseApi = {
   delete:     (id: number)      => api.delete(`/licenses/${id}`),
 };
 
+// Buildings
+export const buildingApi = {
+  getByChannel: (channelId: number) => api.get(`/channels/${channelId}/buildings`),
+  getById: (id: number) => api.get(`/buildings/${id}`),
+  create: (data: object) => api.post('/buildings', data),
+  update: (id: number, data: object) => api.put(`/buildings/${id}`, data),
+  delete: (id: number) => api.delete(`/buildings/${id}`),
+};
+
+// Rooms
+export const roomApi = {
+  getByBuilding: (buildingId: number) => api.get(`/buildings/${buildingId}/rooms`),
+  getById: (id: number) => api.get(`/rooms/${id}`),
+  create: (data: object) => api.post('/rooms', data),
+  update: (id: number, data: object) => api.put(`/rooms/${id}`, data),
+  delete: (id: number) => api.delete(`/rooms/${id}`),
+};
+
+// Reports
+export const reportApi = {
+  getAll: (params?: object) => api.get('/reports', { params }),
+  getById: (id: number) => api.get(`/reports/${id}`),
+  create: (data: object) => api.post('/reports', data),
+  update: (id: number, data: object) => api.put(`/reports/${id}`, data),
+  delete: (id: number) => api.delete(`/reports/${id}`),
+};
+
 // Logs
 export const logApi = {
   getActivity: (params?: object) => api.get('/logs/activity', { params }),

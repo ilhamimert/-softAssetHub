@@ -159,10 +159,13 @@ const getActivityLog = async (req, res, next) => {
     params.push(safeLimit, offset);
 
     const result = await query(
-      `SELECT al.*, u.full_name, u.username FROM activity_log al
+      `SELECT al.log_id, al.user_id, al.action, al.entity_type, al.entity_id,
+              al.old_value, al.new_value, al.ip_address, al.user_agent, al.timestamp,
+              u.full_name, u.username
+       FROM activity_log al
        LEFT JOIN users u ON al.user_id = u.user_id
        ${whereClause}
-       ORDER BY al.created_at DESC
+       ORDER BY al.timestamp DESC
        LIMIT $${idx} OFFSET $${idx + 1}`,
       params
     );

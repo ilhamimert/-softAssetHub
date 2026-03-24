@@ -18,6 +18,7 @@ const analyticsCtrl = require('../controllers/analyticsController');
 const userCtrl = require('../controllers/userController');
 const licenseCtrl = require('../controllers/licenseController');
 const qrCtrl      = require('../controllers/qrController');
+const reportCtrl  = require('../controllers/reportController');
 
 const hierarchyRoutes = require('./hierarchyRoutes');
 
@@ -135,6 +136,12 @@ router.get('/licenses/:id', authenticate, licenseCtrl.getById);
 router.post('/licenses', authenticate, requireRole('Technician'), licenseCtrl.create);
 router.put('/licenses/:id', authenticate, requireRole('Technician'), licenseCtrl.update);
 router.delete('/licenses/:id', authenticate, requireAdmin, licenseCtrl.remove);
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+router.get('/reports', authenticate, reportCtrl.getAll);
+router.get('/reports/:id', authenticate, reportCtrl.getById);
+router.post('/reports', authenticate, requireRole('Manager'), reportCtrl.create);
+router.delete('/reports/:id', authenticate, requireAdmin, reportCtrl.remove);
 
 // ── Logs ──────────────────────────────────────────────────────────────────────
 router.get('/logs/activity', authenticate, requireAdmin, userCtrl.getActivityLog);
