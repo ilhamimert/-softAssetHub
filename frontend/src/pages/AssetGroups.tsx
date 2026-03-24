@@ -295,7 +295,7 @@ export function AssetGroups() {
 
       {/* Form modal */}
       <Modal
-        isOpen={showForm}
+        open={showForm}
         onClose={() => { setShowForm(false); setEditGroup(null); }}
         title={editGroup ? 'Grup Düzenle' : 'Yeni Varlık Grubu'}
       >

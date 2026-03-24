@@ -136,7 +136,7 @@ function ReportCard({
 function ReportViewModal({ report, onClose }: { report: Report | null; onClose: () => void }) {
   if (!report) return null;
   return (
-    <Modal isOpen={!!report} onClose={onClose} title={report.reportName}>
+    <Modal open={!!report} onClose={onClose} title={report.reportName}>
       <div className="space-y-3">
         <div className="bg-[#070B14] border border-[#1E2D45] rounded p-3 max-h-64 overflow-y-auto">
           <pre className="text-[11px] text-[#E2EAF4] font-mono-val whitespace-pre-wrap break-words">
@@ -308,7 +308,7 @@ export function Reports() {
 
       {/* Create form modal */}
       <Modal
-        isOpen={showForm}
+        open={showForm}
         onClose={() => setShowForm(false)}
         title="Yeni Rapor Oluştur"
       >

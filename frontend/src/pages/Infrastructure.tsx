@@ -181,7 +181,7 @@ function RoomRow({
 
 // ─── Building row ─────────────────────────────────────────────
 function BuildingRow({
-  building, onEdit, onDelete, _onAddRoom,
+  building, onEdit, onDelete, onAddRoom: _onAddRoom,
 }: {
   building: Building;
   onEdit: (b: Building) => void;
@@ -307,7 +307,7 @@ function BuildingRow({
 
       {/* Room form modal */}
       <Modal
-        isOpen={showRoomForm}
+        open={showRoomForm}
         onClose={() => { setShowRoomForm(false); setEditRoom(null); }}
         title={editRoom ? 'Oda Düzenle' : 'Yeni Oda'}
       >
@@ -504,7 +504,7 @@ export function Infrastructure() {
 
       {/* Building form modal */}
       <Modal
-        isOpen={showBldgForm}
+        open={showBldgForm}
         onClose={() => { setShowBldgForm(false); setEditBldg(null); }}
         title={editBldg ? 'Bina Düzenle' : 'Yeni Bina'}
       >
