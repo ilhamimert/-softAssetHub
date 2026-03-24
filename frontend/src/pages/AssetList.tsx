@@ -17,6 +17,31 @@ import type { Asset } from '@/types';
 
 const PAGE_SIZES = [10, 25, 50];
 
+// ─── Sort icon ────────────────────────────────────────────────
+function SortIcon({ col, sortBy, sortOrder }: { col: string; sortBy: string; sortOrder: string }) {
+  if (sortBy !== col) return <ChevronsUpDown size={11} className="text-[#3D5275]" />;
+  return sortOrder === 'ASC'
+    ? <ChevronUp size={11} className="text-amber-400" />
+    : <ChevronDown size={11} className="text-amber-400" />;
+}
+
+// ─── Sortable table header ─────────────────────────────────────
+function Th({ label, col, className = '', sortBy, sortOrder, onSort }: {
+  label: string; col?: string; className?: string;
+  sortBy: string; sortOrder: string; onSort: (col: string) => void;
+}) {
+  return (
+    <th
+      className={cn('py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val whitespace-nowrap', col && 'cursor-pointer hover:text-[#E2EAF4] select-none', className)}
+      onClick={col ? () => onSort(col) : undefined}
+    >
+      <span className="flex items-center gap-1">
+        {label}{col && <SortIcon col={col} sortBy={sortBy} sortOrder={sortOrder} />}
+      </span>
+    </th>
+  );
+}
+
 // ─── Asset type icon ──────────────────────────────────────────
 function AssetTypeIcon({ type, size = 14 }: { type: string; size?: number }) {
   const icons: Record<string, any> = { GPU: Cpu, DisplayCard: Monitor, Server, Disk: HardDrive, Network: Wifi };
@@ -377,24 +402,6 @@ export function AssetList() {
     );
   };
 
-  // eslint-disable-next-line react-hooks/static-components
-  const SortIcon = ({ col }: { col: string }) => {
-    if (sortBy !== col) return <ChevronsUpDown size={11} className="text-[#3D5275]" />;
-    return sortOrder === 'ASC'
-      ? <ChevronUp size={11} className="text-amber-400" />
-      : <ChevronDown size={11} className="text-amber-400" />;
-  };
-
-  // eslint-disable-next-line react-hooks/static-components
-  const Th = ({ label, col, className = '' }: { label: string; col?: string; className?: string }) => (
-    <th
-      className={cn('py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val whitespace-nowrap', col && 'cursor-pointer hover:text-[#E2EAF4] select-none', className)}
-      onClick={col ? () => toggleSort(col) : undefined}
-    >
-      <span className="flex items-center gap-1">{label}{col && <SortIcon col={col} />}</span>
-    </th>
-  );
-
   // CSV export
   const handleExport = () => {
     const headers = ['Varlık Adı', 'Kod', 'Tür', 'Model', 'Kanal', 'Grup', 'Durum', 'Sıcaklık', 'Güç', 'Satın Alma', 'Maliyet'];
@@ -496,18 +503,18 @@ export function AssetList() {
           <table className="w-full min-w-[900px]">
             <thead className="border-b border-[#1E2D45] bg-[#131C2E]">
               <tr>
-                <Th label="#" className="w-10" />
-                <Th label={t('common.dashboard').includes('Dashboard') ? 'Asset Name' : 'Varlık Adı'} col="AssetName" />
-                <Th label={t('common.dashboard').includes('Dashboard') ? 'Code' : 'Kod'} col="AssetCode" />
-                <Th label={t('assets.details.type')} col="AssetType" />
-                <Th label={t('assets.details.model')} />
-                <Th label={i18n.language === 'tr' ? 'Kanal/Konum' : 'Channel/Location'} />
-                <Th label={t('common.status')} col="Status" />
-                <Th label={t('monitoring.table.temp')} />
-                <Th label={t('monitoring.table.power')} />
-                <Th label={t('assets.details.purchase')} col="PurchaseDate" />
-                <Th label={t('assets.details.cost')} col="PurchaseCost" />
-                <Th label="" className="w-24" />
+                <Th label="#" className="w-10" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('common.dashboard').includes('Dashboard') ? 'Asset Name' : 'Varlık Adı'} col="AssetName" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('common.dashboard').includes('Dashboard') ? 'Code' : 'Kod'} col="AssetCode" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('assets.details.type')} col="AssetType" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('assets.details.model')} sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={i18n.language === 'tr' ? 'Kanal/Konum' : 'Channel/Location'} sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('common.status')} col="Status" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('monitoring.table.temp')} sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('monitoring.table.power')} sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('assets.details.purchase')} col="PurchaseDate" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label={t('assets.details.cost')} col="PurchaseCost" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
+                <Th label="" className="w-24" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
               </tr>
             </thead>
             <tbody>
