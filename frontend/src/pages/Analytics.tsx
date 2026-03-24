@@ -30,8 +30,9 @@ export function Analytics() {
   const limit = 10;
 
   const today = new Date();
+  const [powerSlotKey] = useState(() => Math.floor(Date.now() / (3 * 60 * 60 * 1000)));
   const { data: powerData, isError: powerError, isPending: powerPending } = useQuery({
-    queryKey: ['power-chart-12h', Math.floor(Date.now() / (3 * 60 * 60 * 1000))],
+    queryKey: ['power-chart-12h', powerSlotKey],
     queryFn: () => {
       const slot = 3 * 60 * 60 * 1000;
       const toMs = Math.floor(Date.now() / slot) * slot;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
@@ -13,7 +13,6 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   
   const { login, isLoading } = useAuthStore();
-  const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
 

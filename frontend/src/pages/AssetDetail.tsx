@@ -6,13 +6,13 @@ import {
 } from 'recharts';
 import {
   ArrowLeft, Server, Activity, Wrench, AlertCircle, AlertTriangle, Info,
-  Wifi, WifiOff, Thermometer, Zap, Cpu, DollarSign, User, Clock,
+  Wifi, WifiOff, Thermometer, Zap, DollarSign, User, Clock,
   CheckCircle, MapPin, Tag, KeyRound, Plus, X, Edit2, Trash2, Copy,
 } from 'lucide-react';
 import { assetApi, monitoringApi, maintenanceApi, alertApi, licenseApi } from '@/api/client';
 import {
   cn, formatDate, formatCurrency, formatDateTime, timeAgo,
-  statusBg, statusLabel, tempColor, usageColor, maintenanceStatusLabel,
+  statusBg, statusLabel, tempColor, maintenanceStatusLabel,
 } from '@/lib/utils';
 
 // ── Sabitler ───────────────────────────────────────────────────────────────────

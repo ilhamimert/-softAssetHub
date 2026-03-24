@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { channelApi, buildingApi, roomApi } from '@/api/client';
+import { channelApi, buildingApi, roomApi, assetApi } from '@/api/client';
 import {
   Building2, ChevronDown, ChevronRight, Plus, Edit, Trash2,
-  DoorOpen, MapPin, Layers, LayoutGrid,
+  DoorOpen, MapPin, Layers, LayoutGrid, Monitor,
 } from 'lucide-react';
-import { cn, inputCls, formatDate } from '@/lib/utils';
+import { cn, inputCls } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
 
@@ -63,9 +63,125 @@ function RoomTypeBadge({ type }: { type: string }) {
   );
 }
 
+// ─── Status badge ─────────────────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    Active:      'text-green-400 bg-green-500/10 border-green-500/20',
+    Maintenance: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+    Faulty:      'text-red-400 bg-red-500/10 border-red-500/20',
+    Inactive:    'text-slate-400 bg-slate-500/10 border-slate-500/20',
+    Reserved:    'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  };
+  const labels: Record<string, string> = {
+    Active: 'Aktif', Maintenance: 'Bakım', Faulty: 'Arızalı', Inactive: 'Pasif', Reserved: 'Rezerve',
+  };
+  return (
+    <span className={cn('text-[9px] px-1.5 py-0.5 rounded border font-mono-val', map[status] ?? map.Inactive)}>
+      {labels[status] ?? status}
+    </span>
+  );
+}
+
+// ─── Group type badge ──────────────────────────────────────────
+function GroupTypeBadge({ type }: { type?: string }) {
+  if (!type) return null;
+  const map: Record<string, string> = {
+    Playout:      'text-violet-400 bg-violet-500/10 border-violet-500/20',
+    Encoding:     'text-blue-400 bg-blue-500/10 border-blue-500/20',
+    Transmission: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+    Archive:      'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    Storage:      'text-green-400 bg-green-500/10 border-green-500/20',
+    General:      'text-slate-400 bg-slate-500/10 border-slate-500/20',
+  };
+  return (
+    <span className={cn('text-[9px] px-1.5 py-0.5 rounded border font-mono-val', map[type] ?? map.General)}>
+      {type}
+    </span>
+  );
+}
+
+// ─── Room row with asset expansion ────────────────────────────
+function RoomRow({
+  room, onEdit, onDelete,
+}: {
+  room: Room;
+  onEdit: (r: Room) => void;
+  onDelete: (r: Room) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const { data: assetsData, isLoading: assetsLoading } = useQuery({
+    queryKey: ['room-assets', room.roomId],
+    queryFn: () => assetApi.getAll({ roomId: room.roomId, limit: 100 }),
+    enabled: open,
+    staleTime: 60_000,
+  });
+  const assets: any[] = assetsData?.data?.data ?? [];
+
+  return (
+    <>
+      <div
+        className="flex items-center gap-3 px-8 py-2.5 border-b border-[#1E2D45]/50 last:border-b-0 hover:bg-[#0D1829]/50 group"
+      >
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="text-[#3D5275] hover:text-[#6B84A3] flex-shrink-0"
+        >
+          {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+        </button>
+        <DoorOpen size={12} className="text-[#6B84A3] flex-shrink-0" />
+        <span className="text-xs text-[#E2EAF4] flex-1 truncate">{room.roomName}</span>
+        <span className="text-[10px] text-[#6B84A3] font-mono-val">Kat {room.floor}</span>
+        <RoomTypeBadge type={room.roomType} />
+        <span className="text-[10px] text-[#6B84A3] font-mono-val ml-2">{room.assetCount ?? assets.length} varlık</span>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => onEdit(room)}
+            className="p-1 text-[#6B84A3] hover:text-amber-400 hover:bg-amber-400/10 rounded"
+          ><Edit size={11} /></button>
+          <button
+            onClick={() => onDelete(room)}
+            className="p-1 text-[#6B84A3] hover:text-red-400 hover:bg-red-400/10 rounded"
+          ><Trash2 size={11} /></button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="bg-[#060D18] border-b border-[#1E2D45]/50">
+          {assetsLoading ? (
+            <div className="px-14 py-2 space-y-1">
+              {[1,2,3].map(i => <div key={i} className="h-6 bg-[#1E2D45]/30 rounded animate-pulse" />)}
+            </div>
+          ) : assets.length === 0 ? (
+            <p className="px-14 py-2 text-[10px] text-[#3D5275] italic">Bu odada varlık yok</p>
+          ) : (
+            assets.map((asset: any) => (
+              <div
+                key={asset.assetId}
+                className="flex items-center gap-2 px-14 py-2 border-b border-[#1E2D45]/30 last:border-b-0 hover:bg-[#0D1829]/40"
+              >
+                <Monitor size={11} className="text-[#3D5275] flex-shrink-0" />
+                <span className="text-[11px] text-[#C4D4E8] flex-1 truncate">{asset.assetName}</span>
+                <span className="text-[9px] text-[#3D5275] font-mono-val hidden sm:block">{asset.assetType}</span>
+                {asset.groupType && <GroupTypeBadge type={asset.groupType} />}
+                {asset.groupName && (
+                  <span className="text-[9px] text-[#3D5275] font-mono-val truncate max-w-[80px] hidden md:block">
+                    {asset.groupName}
+                  </span>
+                )}
+                <StatusBadge status={asset.status} />
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 // ─── Building row ─────────────────────────────────────────────
 function BuildingRow({
-  building, onEdit, onDelete, onAddRoom,
+  building, onEdit, onDelete, _onAddRoom,
 }: {
   building: Building;
   onEdit: (b: Building) => void;
@@ -178,26 +294,12 @@ function BuildingRow({
             <p className="px-8 py-3 text-[11px] text-[#6B84A3] italic">Henüz oda yok</p>
           ) : (
             rooms.map(room => (
-              <div
+              <RoomRow
                 key={room.roomId}
-                className="flex items-center gap-3 px-8 py-2.5 border-b border-[#1E2D45]/50 last:border-b-0 hover:bg-[#0D1829]/50 group"
-              >
-                <DoorOpen size={12} className="text-[#6B84A3] flex-shrink-0" />
-                <span className="text-xs text-[#E2EAF4] flex-1 truncate">{room.roomName}</span>
-                <span className="text-[10px] text-[#6B84A3] font-mono-val">Kat {room.floor}</span>
-                <RoomTypeBadge type={room.roomType} />
-                <span className="text-[10px] text-[#6B84A3] font-mono-val ml-2">{room.assetCount ?? 0} varlık</span>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => openEditRoom(room)}
-                    className="p-1 text-[#6B84A3] hover:text-amber-400 hover:bg-amber-400/10 rounded"
-                  ><Edit size={11} /></button>
-                  <button
-                    onClick={() => { if (confirm(`"${room.roomName}" silinsin mi?`)) deleteRoom.mutate(room.roomId); }}
-                    className="p-1 text-[#6B84A3] hover:text-red-400 hover:bg-red-400/10 rounded"
-                  ><Trash2 size={11} /></button>
-                </div>
-              </div>
+                room={room}
+                onEdit={openEditRoom}
+                onDelete={r => { if (confirm(`"${r.roomName}" silinsin mi?`)) deleteRoom.mutate(r.roomId); }}
+              />
             ))
           )}
         </div>

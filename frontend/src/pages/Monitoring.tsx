@@ -33,7 +33,7 @@ function Sparkline({ data, color = '#22D3EE', width = 52, height = 16 }: {
 }
 
 // ─── Gauge Bar ────────────────────────────────────────────────────
-function GaugeBar({ value, label, unit = '%', max = 100, variant = 'cpu' }: {
+function GaugeBar({ value, label, unit = '%', max = 100, variant: _variant = 'cpu' }: {
   value?: number; label: string; unit?: string; max?: number;
   variant?: 'cpu' | 'gpu' | 'ram' | 'disk';
 }) {

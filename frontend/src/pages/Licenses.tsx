@@ -4,11 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { KeyRound, Search, AlertTriangle, CheckCircle2, Clock, XCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { licenseApi } from '@/api/client';
-import { useAuthStore } from '@/store/authStore';
 
 type StatusFilter = 'all' | 'active' | 'inactive' | 'expiring' | 'expired';
 
-const FEATURE_FLAGS = ['GPI', 'VTR CONTROL', 'A/B', 'LORES', 'DEV VIZ', 'SHOT BOX', 'LGOP', 'HD', 'UHD'];
 
 function expiryColor(daysLeft: number | null, isActive: boolean): string {
   if (!isActive) return 'text-[#3D5275]';
@@ -44,7 +42,6 @@ function CopyButton({ text }: { text: string }) {
 export function Licenses() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [debouncedSearch, setDebouncedSearch] = useState('');
