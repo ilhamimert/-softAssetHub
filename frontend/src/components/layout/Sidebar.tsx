@@ -6,16 +6,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-
-// Hiyerarşi seviyelerine göre renk/ikon
-export const groupTypeConfig: Record<string, { color: string; bg: string; border: string }> = {
-  Playout:      { color: 'text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/20'   },
-  Encoding:     { color: 'text-green-400',  bg: 'bg-green-500/10',  border: 'border-green-500/20'  },
-  Transmission: { color: 'text-amber-400',  bg: 'bg-amber-500/10',  border: 'border-amber-500/20'  },
-  Archive:      { color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
-  Storage:      { color: 'text-cyan-400',   bg: 'bg-cyan-500/10',   border: 'border-cyan-500/20'   },
-  General:      { color: 'text-gray-400',   bg: 'bg-gray-500/10',   border: 'border-gray-500/20'   },
-};
+import { groupTypeConfig } from '@/lib/constants';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -36,7 +27,6 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
     { to: '/alerts',     icon: Bell,            label: t('common.alerts')       },
     { to: '/maintenance',    icon: Wrench,       label: t('common.maintenance')     },
     { to: '/analytics',     icon: BarChart3,    label: t('common.analytics')       },
-    { to: '/infrastructure', icon: Building2,   label: t('common.infrastructure')  },
     { to: '/asset-groups',  icon: Layers,       label: t('common.assetGroups')     },
     { to: '/reports',       icon: FileText,     label: t('common.reports')         },
     ...(user?.role === 'Admin' ? [{ to: '/logs', icon: ScrollText, label: t('common.logs') }] : []),

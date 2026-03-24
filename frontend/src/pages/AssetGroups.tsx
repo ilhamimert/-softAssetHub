@@ -8,7 +8,7 @@ import {
 import { cn, inputCls } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
-import { groupTypeConfig } from '@/components/layout/Sidebar';
+import { groupTypeConfig } from '@/lib/constants';
 
 // ─── Types ────────────────────────────────────────────────────
 interface AssetGroup {

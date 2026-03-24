@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -122,7 +122,7 @@ export function Dashboard() {
   // Yayın günü: dün 21:00 → bugün 20:59
   const todayLabel = _today.toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  const powerSlotKey = useMemo(() => Math.floor(Date.now() / (3 * 60 * 60 * 1000)), []);
+  const [powerSlotKey] = useState(() => Math.floor(Date.now() / (3 * 60 * 60 * 1000)));
   const { data: powerData, dataUpdatedAt: powerUpdatedAt } = useQuery({
     queryKey: ['power-consumption-12h', powerSlotKey],
     queryFn: () => {
