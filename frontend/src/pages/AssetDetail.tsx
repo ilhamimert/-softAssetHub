@@ -412,7 +412,7 @@ export function AssetDetail() {
                       tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                     <YAxis domain={[0, 100]} tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                     <Tooltip {...CHART_STYLE.contentStyle && { contentStyle: CHART_STYLE.contentStyle }}
-                      formatter={(v: number | string) => [`${Number(v).toFixed(1)}%`, 'CPU']}
+                      formatter={(v: number | string | undefined) => [`${Number(v ?? 0).toFixed(1)}%`, 'CPU']}
                       labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
                     <Line type="monotone" dataKey="cpuUsage" stroke="#22D3EE" strokeWidth={1.5} dot={false} />
                   </LineChart>
@@ -430,7 +430,7 @@ export function AssetDetail() {
                         tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                       <YAxis tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                       <Tooltip contentStyle={CHART_STYLE.contentStyle}
-                        formatter={(v: number | string) => [`${Number(v).toFixed(1)}°C`, 'Sıcaklık']}
+                        formatter={(v: number | string | undefined) => [`${Number(v ?? 0).toFixed(1)}°C`, 'Sıcaklık']}
                         labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
                       <Line type="monotone" dataKey="temperature" stroke="#F59E0B" strokeWidth={1.5} dot={false} />
                     </LineChart>
