@@ -446,7 +446,7 @@ export function AssetDetail() {
                         tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                       <YAxis tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                       <Tooltip contentStyle={CHART_STYLE.contentStyle}
-                        formatter={(v: number | string) => [`${Number(v).toFixed(0)}W`, 'Güç']}
+                        formatter={(v: number | string | undefined) => [`${Number(v ?? 0).toFixed(0)}W`, 'Güç']}
                         labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
                       <Line type="monotone" dataKey="powerConsumption" stroke="#10B981" strokeWidth={1.5} dot={false} />
                     </LineChart>
@@ -475,7 +475,7 @@ export function AssetDetail() {
                       'flex-shrink-0 text-[10px] font-mono-val px-2 py-1 rounded border',
                       r.status === 'Completed' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
                         r.status === 'Scheduled' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                          r.status === 'InProgress' ? 'bg-cyan-500/10  text-cyan-400  border-cyan-500/20' :
+                          r.status === 'Pending' ? 'bg-cyan-500/10  text-cyan-400  border-cyan-500/20' :
                             'bg-[#1E2D45] text-[#6B84A3] border-[#1E2D45]'
                     )}>
                       {maintenanceStatusLabel(r.status)}
