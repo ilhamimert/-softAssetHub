@@ -521,14 +521,14 @@ export function AssetDetail() {
       {tab === 'alerts' && (
         <div className="space-y-2">
           {assetAlerts.length > 0 ? assetAlerts.map(al => {
-            const Icon = al.alertSeverity === 'Critical' ? AlertCircle
-              : al.alertSeverity === 'Warning' ? AlertTriangle
+            const Icon = al.alertType === 'Critical' ? AlertCircle
+              : al.alertType === 'Warning' ? AlertTriangle
                 : Info;
-            const iconCls = al.alertSeverity === 'Critical' ? 'text-red-400'
-              : al.alertSeverity === 'Warning' ? 'text-amber-400'
+            const iconCls = al.alertType === 'Critical' ? 'text-red-400'
+              : al.alertType === 'Warning' ? 'text-amber-400'
                 : 'text-cyan-400';
-            const cardCls = al.alertSeverity === 'Critical' ? 'border-red-500/20 bg-red-500/5'
-              : al.alertSeverity === 'Warning' ? 'border-amber-500/20 bg-amber-500/5'
+            const cardCls = al.alertType === 'Critical' ? 'border-red-500/20 bg-red-500/5'
+              : al.alertType === 'Warning' ? 'border-amber-500/20 bg-amber-500/5'
                 : 'border-[#1E2D45]';
             return (
               <div key={al.alertId} className={cn('card p-3 border flex items-start gap-3', cardCls, al.isResolved && 'opacity-50')}>

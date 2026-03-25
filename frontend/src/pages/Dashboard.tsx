@@ -179,7 +179,7 @@ export function Dashboard() {
     ? physicalNodes.map(n => ({ name: n.nodeType, value: n.count }))
     : (() => {
         const typeMap: Record<string, number> = {};
-        health.forEach(h => { typeMap[h.assetType] = (typeMap[h.assetType] ?? 0) + (h.totalAssets ?? 0); });
+        health.forEach(h => { if (h.assetType) typeMap[h.assetType] = (typeMap[h.assetType] ?? 0) + (h.totalAssets ?? 0); });
         return Object.entries(typeMap).map(([name, value]) => ({ name, value }));
       })();
 
