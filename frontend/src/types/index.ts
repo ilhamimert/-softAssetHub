@@ -232,6 +232,114 @@ export interface User {
 }
 
 // ============================================================
+// ANALYTICS TYPES
+// ============================================================
+
+export interface HealthRecord {
+  channelName: string;
+  groupType?: string;
+  assetType?: string;
+  totalAssets?: number;
+  activeCount: number;
+  maintenanceCount: number;
+  faultyCount: number;
+}
+
+export interface BudgetRecord {
+  channelName: string;
+  totalPurchaseCost: number;
+  totalCurrentValue: number;
+  totalMaintenanceCost: number;
+}
+
+export interface ForecastRecord {
+  assetId: number;
+  assetName: string;
+  maintenanceType?: string;
+  channelName: string;
+  buildingName?: string;
+  nextMaintenanceDate?: string;
+  daysUntilMaintenance?: number;
+  warrantyEndDate?: string;
+  daysUntilWarrantyExpiry?: number;
+}
+
+export interface ActivityLog {
+  logId: number;
+  userId?: number;
+  username?: string;
+  fullName?: string;
+  action: string;
+  entityType?: string;
+  entityId?: number;
+  entityName?: string;
+  details?: string;
+  ipAddress?: string;
+  newValue?: string;
+  oldValue?: string;
+  timestamp: string;
+}
+
+export interface AssetFormData {
+  assetName: string;
+  assetType: string;
+  assetCode?: string;
+  model?: string;
+  serialNumber?: string;
+  manufacturer?: string;
+  supplier?: string;
+  ipAddress?: string;
+  macAddress?: string;
+  firmwareVersion?: string;
+  rackPosition?: string;
+  status: string;
+  purchaseCost?: number | string;
+  currentValue?: number | string;
+  depreciationRate?: number | string;
+  purchaseDate?: string;
+  warrantyEndDate?: string;
+  notes?: string;
+}
+
+export interface HeatmapAsset {
+  assetId: number;
+  assetName: string;
+  channelName?: string;
+  roomName?: string;
+  temperature?: number;
+  cpuUsage?: number;
+  gpuUsage?: number;
+  powerConsumption?: number;
+  isOnline: boolean;
+  lastMonitoringTime?: string;
+}
+
+export interface MonitoringAsset extends Partial<AssetMonitoring> {
+  assetId: number;
+  assetName: string;
+  assetCode?: string;
+  groupName?: string;
+  groupType?: string;
+  channelName?: string;
+  _alerts: number;
+  _cpuHist: number[];
+  _lastUpdated?: Date;
+  _lastSeen?: Date | null;
+}
+
+export interface UserFormBody {
+  email: string;
+  fullName: string;
+  role: string;
+  channelId: number | null;
+  phone?: string;
+  department?: string;
+  isActive: number;
+  username?: string;
+  password?: string;
+}
+
+// ============================================================
 // API RESPONSE TYPES
 // ============================================================
 
@@ -286,6 +394,10 @@ export interface License {
   licenseKey?: string;
   licenseType?: string;
   vendor?: string;
+  description?: string;
+  featureFlags?: string;
+  externalLicenseUrl?: string;
+  macId?: string;
   purchaseDate?: string;
   expiryDate?: string;
   daysLeft?: number;

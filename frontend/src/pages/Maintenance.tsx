@@ -8,6 +8,7 @@ import {
 import { cn, formatDate, formatCurrency, maintenanceStatusLabel, inputCls } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
+import type { MaintenanceRecord, Asset, Channel } from '@/types';
 
 // ─── Status badge ─────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -56,7 +57,7 @@ export function Maintenance() {
 
   // Modal state
   const [showForm, setShowForm] = useState(false);
-  const [editRecord, setEditRecord] = useState<any | null>(null);
+  const [editRecord, setEditRecord] = useState<MaintenanceRecord | null>(null);
   const [form, setForm] = useState<MaintenanceForm>(EMPTY_FORM);
   const [formError, setFormError] = useState('');
 
@@ -88,9 +89,9 @@ export function Maintenance() {
     queryFn: () => channelApi.getAll(),
   });
 
-  const records: any[] = data?.data?.data ?? [];
-  const allAssets: any[] = assetsData?.data?.data ?? [];
-  const channels: any[] = channelsData?.data?.data ?? [];
+  const records: MaintenanceRecord[] = data?.data?.data ?? [];
+  const allAssets: Asset[] = assetsData?.data?.data ?? [];
+  const channels: Channel[] = channelsData?.data?.data ?? [];
 
   // Filtered records
   const filteredRecords = records.filter(r => {
@@ -105,19 +106,19 @@ export function Maintenance() {
   const urgent = activeRecords.filter(r => r.daysUntilMaintenance != null && r.daysUntilMaintenance <= 7).length;
   const soon = activeRecords.filter(r => r.daysUntilMaintenance != null && r.daysUntilMaintenance <= 30).length;
   const total = activeRecords.length;
-  const completed = (allMaintData?.data?.data ?? []).filter((r: any) => r.status === 'Completed').length;
+  const completed = (allMaintData?.data?.data ?? []).filter((r: MaintenanceRecord) => r.status === 'Completed').length;
 
   // Mutations
   const createMut = useMutation({
     mutationFn: (body: object) => maintenanceApi.create(body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['maintenance'] }); closeModal(); },
-    onError: (e: any) => setFormError(e?.response?.data?.message ?? 'Bir hata oluştu.'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setFormError(e?.response?.data?.message ?? 'Bir hata oluştu.'),
   });
 
   const updateMut = useMutation({
     mutationFn: ({ id, body }: { id: number; body: object }) => maintenanceApi.update(id, body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['maintenance'] }); closeModal(); },
-    onError: (e: any) => setFormError(e?.response?.data?.message ?? 'Bir hata oluştu.'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setFormError(e?.response?.data?.message ?? 'Bir hata oluştu.'),
   });
 
   const deleteMut = useMutation({
@@ -133,7 +134,7 @@ export function Maintenance() {
     setShowForm(true);
   };
 
-  const openEdit = (r: any) => {
+  const openEdit = (r: MaintenanceRecord) => {
     setEditRecord(r);
     setForm({
       assetId: String(r.assetId ?? ''),
@@ -226,7 +227,7 @@ export function Maintenance() {
           className={inputCls + ' w-40'}
         >
           <option value="">Tüm Kanallar</option>
-          {channels.map((c: any) => <option key={c.channelId} value={String(c.channelId)}>{c.channelName}</option>)}
+          {channels.map(c => <option key={c.channelId} value={String(c.channelId)}>{c.channelName}</option>)}
         </select>
 
         <select
@@ -399,7 +400,7 @@ export function Maintenance() {
                   required
                 >
                   <option value="">— Varlık Seç —</option>
-                  {allAssets.map((a: any) => (
+                  {allAssets.map(a => (
                     <option key={a.assetId} value={String(a.assetId)}>
                       {a.assetName} {a.assetCode ? `(${a.assetCode})` : ''} — {a.channelName}
                     </option>

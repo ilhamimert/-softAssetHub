@@ -39,9 +39,6 @@ const UPDATABLE_FIELDS = {
   ipAddress:       'ip_address',
   macAddress:      'mac_address',
   firmwareVersion: 'firmware_version',
-  driverVersion:   'driver_version',
-  imageUrl:        'image_url',
-  notes:           'notes',
 };
 
 const getAll = async (req, res, next) => {
@@ -283,8 +280,7 @@ const create = async (req, res, next) => {
       model, serialNumber, manufacturer, supplier,
       purchaseDate, warrantyEndDate, warrantyMonths,
       purchaseCost, currentValue, depreciationRate,
-      rackPosition, ipAddress, macAddress, firmwareVersion, driverVersion,
-      imageUrl, notes,
+      rackPosition, ipAddress, macAddress, firmwareVersion,
     } = req.body;
 
     const result = await query(
@@ -294,10 +290,9 @@ const create = async (req, res, next) => {
          model, serial_number, manufacturer, supplier,
          purchase_date, warranty_end_date, warranty_months,
          purchase_cost, current_value, depreciation_rate,
-         rack_position, ip_address, mac_address, firmware_version, driver_version,
-         image_url, notes
+         rack_position, ip_address, mac_address, firmware_version
        ) VALUES (
-         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24
+         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
        ) RETURNING *`,
       [
         roomId || null, channelId, assetGroupId || null,
@@ -305,9 +300,7 @@ const create = async (req, res, next) => {
         model || null, serialNumber || null, manufacturer || null, supplier || null,
         purchaseDate || null, warrantyEndDate || null, warrantyMonths || null,
         purchaseCost || null, currentValue || null, depreciationRate || null,
-        rackPosition || null, ipAddress || null, macAddress || null,
-        firmwareVersion || null, driverVersion || null,
-        imageUrl || null, notes || null,
+        rackPosition || null, ipAddress || null, macAddress || null, firmwareVersion || null,
       ]
     );
     res.status(201).json({ success: true, data: result.recordset[0] });
@@ -383,7 +376,7 @@ const exportCsv = async (req, res, next) => {
       `SELECT a.asset_name, a.asset_code, a.asset_type, a.model, a.manufacturer,
               a.serial_number, a.status, a.ip_address, a.mac_address,
               a.purchase_date, a.warranty_end_date, a.purchase_cost, a.current_value,
-              a.depreciation_rate, a.rack_position, a.firmware_version, a.notes,
+              a.depreciation_rate, a.rack_position, a.firmware_version,
               c.channel_name, r.room_name, b.building_name, ag.group_name
        FROM assets a
        LEFT JOIN channels     c  ON a.channel_id    = c.channel_id
@@ -398,7 +391,7 @@ const exportCsv = async (req, res, next) => {
     const COLS = [
       'assetName','assetCode','assetType','model','manufacturer','serialNumber','status',
       'ipAddress','macAddress','purchaseDate','warrantyEndDate','purchaseCost','currentValue',
-      'depreciationRate','rackPosition','firmwareVersion','notes','channelName','roomName','buildingName','groupName',
+      'depreciationRate','rackPosition','firmwareVersion','channelName','roomName','buildingName','groupName',
     ];
     const header = COLS.join(',');
     const escape = (v) => {
@@ -442,9 +435,9 @@ const bulkImport = async (req, res, next) => {
              model, serial_number, manufacturer, supplier,
              purchase_date, warranty_end_date, warranty_months,
              purchase_cost, current_value, depreciation_rate,
-             rack_position, ip_address, mac_address, firmware_version, notes
+             rack_position, ip_address, mac_address, firmware_version
            ) VALUES (
-             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
+             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20
            )`,
           [
             parseInt(a.channelId), a.assetGroupId ? parseInt(a.assetGroupId) : null,
@@ -455,7 +448,7 @@ const bulkImport = async (req, res, next) => {
             a.currentValue ? parseFloat(a.currentValue) : null,
             a.depreciationRate ? parseFloat(a.depreciationRate) : null,
             a.rackPosition || null, a.ipAddress || null, a.macAddress || null,
-            a.firmwareVersion || null, a.notes || null,
+            a.firmwareVersion || null,
           ]
         );
         results.inserted++;

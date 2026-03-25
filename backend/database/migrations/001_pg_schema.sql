@@ -358,5 +358,3 @@ CREATE INDEX IF NOT EXISTS idx_licenses_expiry_date       ON licenses(expiry_dat
 INSERT INTO schema_migrations (version, description)
 VALUES ('001', 'İlk PostgreSQL şeması — SQL Server''dan taşındı')
 ON CONFLICT (version) DO NOTHING;
-
-\echo 'Schema oluşturuldu! Hierarchy: Holding -> Kanal -> Bina -> Oda -> Asset -> Component'

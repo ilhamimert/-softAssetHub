@@ -14,6 +14,7 @@ import {
   cn, formatDate, formatCurrency, formatDateTime, timeAgo,
   statusBg, statusLabel, tempColor, maintenanceStatusLabel,
 } from '@/lib/utils';
+import type { MaintenanceRecord, Alert, License } from '@/types';
 
 // ── Sabitler ───────────────────────────────────────────────────────────────────
 const FEATURE_FLAGS = ['GPI', 'VTR CONTROL', 'A/B', 'LORES', 'DEV VIZ', 'SHOT BOX', 'LGOP', 'HD', 'UHD'] as const;
@@ -164,7 +165,7 @@ export function AssetDetail() {
     setLicenseModal(true);
   }
 
-  function openEdit(lic: any) {
+  function openEdit(lic: License) {
     setEditingId(lic.licenseId);
     setForm({
       applicationName: lic.applicationName ?? '',
@@ -212,7 +213,7 @@ export function AssetDetail() {
     }
   }
 
-  function copyKey(lic: any) {
+  function copyKey(lic: License) {
     navigator.clipboard.writeText(lic.licenseKey ?? '').then(() => {
       setCopyMsg(lic.licenseId);
       setTimeout(() => setCopyMsg(null), 1500);
@@ -222,9 +223,9 @@ export function AssetDetail() {
   // ── Data ──────────────────────────────────────────────────────────────────────
   const asset = assetRes?.data?.data;
   const history = [...(histRes?.data?.data ?? [])].reverse();
-  const records: any[] = maintRes?.data?.data ?? [];
-  const assetAlerts: any[] = alertsRes?.data?.data ?? [];
-  const licenses: any[] = licensesRes?.data?.data ?? [];
+  const records: MaintenanceRecord[] = maintRes?.data?.data ?? [];
+  const assetAlerts: Alert[] = alertsRes?.data?.data ?? [];
+  const licenses: License[] = licensesRes?.data?.data ?? [];
   const isOnline = asset?.isOnline === true || asset?.isOnline === 1;
   const hasMonitoring = asset?.cpuUsage != null || asset?.temperature != null;
 
@@ -411,7 +412,7 @@ export function AssetDetail() {
                       tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                     <YAxis domain={[0, 100]} tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                     <Tooltip {...CHART_STYLE.contentStyle && { contentStyle: CHART_STYLE.contentStyle }}
-                      formatter={(v: any) => [`${Number(v).toFixed(1)}%`, 'CPU']}
+                      formatter={(v: number | string) => [`${Number(v).toFixed(1)}%`, 'CPU']}
                       labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
                     <Line type="monotone" dataKey="cpuUsage" stroke="#22D3EE" strokeWidth={1.5} dot={false} />
                   </LineChart>
@@ -429,7 +430,7 @@ export function AssetDetail() {
                         tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                       <YAxis tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                       <Tooltip contentStyle={CHART_STYLE.contentStyle}
-                        formatter={(v: any) => [`${Number(v).toFixed(1)}°C`, 'Sıcaklık']}
+                        formatter={(v: number | string) => [`${Number(v).toFixed(1)}°C`, 'Sıcaklık']}
                         labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
                       <Line type="monotone" dataKey="temperature" stroke="#F59E0B" strokeWidth={1.5} dot={false} />
                     </LineChart>
@@ -445,7 +446,7 @@ export function AssetDetail() {
                         tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                       <YAxis tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
                       <Tooltip contentStyle={CHART_STYLE.contentStyle}
-                        formatter={(v: any) => [`${Number(v).toFixed(0)}W`, 'Güç']}
+                        formatter={(v: number | string) => [`${Number(v).toFixed(0)}W`, 'Güç']}
                         labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
                       <Line type="monotone" dataKey="powerConsumption" stroke="#10B981" strokeWidth={1.5} dot={false} />
                     </LineChart>
@@ -467,7 +468,7 @@ export function AssetDetail() {
         <div className="card overflow-hidden">
           {records.length > 0 ? (
             <div className="divide-y divide-[#1E2D45]">
-              {records.map((r: any) => (
+              {records.map(r => (
                 <div key={r.maintenanceId} className="p-3 hover:bg-[#131C2E] transition-colors">
                   <div className="flex items-start gap-3">
                     <span className={cn(
@@ -519,7 +520,7 @@ export function AssetDetail() {
       {/* ── Uyarılar ──────────────────────────────────────────────────────────── */}
       {tab === 'alerts' && (
         <div className="space-y-2">
-          {assetAlerts.length > 0 ? assetAlerts.map((al: any) => {
+          {assetAlerts.length > 0 ? assetAlerts.map(al => {
             const Icon = al.alertSeverity === 'Critical' ? AlertCircle
               : al.alertSeverity === 'Warning' ? AlertTriangle
                 : Info;
@@ -572,7 +573,7 @@ export function AssetDetail() {
           </div>
 
           {/* Lisans kartları */}
-          {licenses.length > 0 ? licenses.map((lic: any) => {
+          {licenses.length > 0 ? licenses.map(lic => {
             const flags: string[] = lic.featureFlags ? JSON.parse(lic.featureFlags) : [];
             const expColor = expiryColor(lic.expiryDate);
             const expLabel = expiryLabel(lic.expiryDate);

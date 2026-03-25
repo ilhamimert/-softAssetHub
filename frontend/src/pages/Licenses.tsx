@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { KeyRound, Search, AlertTriangle, CheckCircle2, Clock, XCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { licenseApi } from '@/api/client';
+import type { License } from '@/types';
+import type { TFunction } from 'i18next';
 
 type StatusFilter = 'all' | 'active' | 'inactive' | 'expiring' | 'expired';
 
@@ -17,7 +19,7 @@ function expiryColor(daysLeft: number | null, isActive: boolean): string {
   return 'text-green-400';
 }
 
-function expiryBadge(daysLeft: number | null, isActive: boolean, t: any) {
+function expiryBadge(daysLeft: number | null, isActive: boolean, t: TFunction) {
   if (!isActive) return null;
   if (daysLeft === null) return null;
   if (daysLeft < 0) return { label: t('licenses.expiry.expired'), cls: 'bg-red-500/10 border-red-500/20 text-red-400' };
@@ -46,11 +48,13 @@ export function Licenses() {
   const [status, setStatus] = useState<StatusFilter>('all');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Debounce
   const handleSearch = (val: string) => {
     setSearch(val);
-    clearTimeout((window as any).__licSearchTimer);
-    (window as any).__licSearchTimer = setTimeout(() => setDebouncedSearch(val), 300);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => setDebouncedSearch(val), 300);
   };
 
   const params: Record<string, string> = {};
@@ -59,7 +63,7 @@ export function Licenses() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['licenses-all', debouncedSearch, status],
-    queryFn: () => licenseApi.getAll(params).then(r => r.data.data as any[]),
+    queryFn: () => licenseApi.getAll(params).then(r => r.data.data as License[]),
     staleTime: 30000,
   });
 
@@ -148,7 +152,7 @@ export function Licenses() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1E2D45]/60">
-              {licenses.map((lic: any) => {
+              {licenses.map((lic: License) => {
                 const daysLeft = lic.daysLeft ?? null;
                 const badge = expiryBadge(daysLeft, lic.isActive, t);
                 const flags: string[] = (() => {

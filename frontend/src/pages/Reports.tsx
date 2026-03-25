@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { reportApi, channelApi } from '@/api/client';
+import type { Channel } from '@/types';
 import {
   FileText, Plus, Trash2, Download, Eye, BarChart3,
   Calendar, User, Filter, FileBarChart, Activity, Wrench, Bell,
@@ -167,7 +168,7 @@ export function Reports() {
     queryKey: ['channels'],
     queryFn: () => channelApi.getAll(),
   });
-  const channels: any[] = channelsData?.data?.data ?? [];
+  const channels: Channel[] = channelsData?.data?.data ?? [];
 
   const { data: reportsData, isLoading } = useQuery({
     queryKey: ['reports', channelFilter, typeFilter],
@@ -185,7 +186,7 @@ export function Reports() {
       setShowForm(false);
       setForm(EMPTY_FORM);
     },
-    onError: (e: any) => setFormError(e?.response?.data?.message ?? 'Hata'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setFormError(e?.response?.data?.message ?? 'Hata'),
   });
 
   const deleteReport = useMutation({

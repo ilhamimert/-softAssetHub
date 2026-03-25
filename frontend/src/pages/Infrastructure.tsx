@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { channelApi, buildingApi, roomApi, assetApi } from '@/api/client';
+import type { Asset, Channel } from '@/types';
 import {
   Building2, ChevronDown, ChevronRight, Plus, Edit, Trash2,
   DoorOpen, MapPin, Layers, LayoutGrid, Monitor,
@@ -116,7 +117,7 @@ function RoomRow({
     enabled: open,
     staleTime: 60_000,
   });
-  const assets: any[] = assetsData?.data?.data ?? [];
+  const assets: Asset[] = assetsData?.data?.data ?? [];
 
   return (
     <>
@@ -155,7 +156,7 @@ function RoomRow({
           ) : assets.length === 0 ? (
             <p className="px-14 py-2 text-[10px] text-[#3D5275] italic">Bu odada varlık yok</p>
           ) : (
-            assets.map((asset: any) => (
+            assets.map((asset: Asset) => (
               <div
                 key={asset.assetId}
                 className="flex items-center gap-2 px-14 py-2 border-b border-[#1E2D45]/30 last:border-b-0 hover:bg-[#0D1829]/40"
@@ -214,7 +215,7 @@ function BuildingRow({
       setEditRoom(null);
       setRoomForm(EMPTY_ROOM);
     },
-    onError: (e: any) => setRoomError(e?.response?.data?.message ?? 'Hata'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setRoomError(e?.response?.data?.message ?? 'Hata'),
   });
 
   const deleteRoom = useMutation({
@@ -362,7 +363,7 @@ export function Infrastructure() {
     queryKey: ['channels'],
     queryFn: () => channelApi.getAll(),
   });
-  const channels: any[] = channelsData?.data?.data ?? [];
+  const channels: Channel[] = channelsData?.data?.data ?? [];
 
   // Fetch buildings for the selected channel, or all channels
   const filteredChannels = channelFilter
@@ -374,7 +375,7 @@ export function Infrastructure() {
     queryFn: async () => {
       const targets = filteredChannels;
       const results = await Promise.all(targets.map(c => buildingApi.getByChannel(c.channelId)));
-      return results.flatMap((r: any) => r.data?.data ?? []);
+      return results.flatMap((r: { data?: { data?: Building[] } }) => r.data?.data ?? []);
     },
     enabled: filteredChannels.length > 0,
   });
@@ -389,7 +390,7 @@ export function Infrastructure() {
       setEditBldg(null);
       setBldgForm(EMPTY_BLDG);
     },
-    onError: (e: any) => setBldgError(e?.response?.data?.message ?? 'Hata'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setBldgError(e?.response?.data?.message ?? 'Hata'),
   });
 
   const deleteBldg = useMutation({

@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { analyticsApi, alertApi, monitoringApi } from '@/api/client';
 import { cn, alertBg, timeAgo, getLocalSlots, aggregatePowerData, CHART_TOOLTIP_STYLE, REFETCH } from '@/lib/utils';
-import type { Alert, DashboardKPI } from '@/types';
+import type { Alert, DashboardKPI, HeatmapAsset, HealthRecord } from '@/types';
 
 // ─── KPI Card ────────────────────────────────────────────────
 interface KPICardProps {
@@ -174,7 +174,7 @@ export function Dashboard() {
 
   // Pie chart — fiziksel ağaç node_type dağılımı (physical_nodes öncelikli, yoksa assets fallback)
   const physicalNodes = (physicalDistData?.data?.data ?? []) as { nodeType: string; count: number }[];
-  const health = (healthData?.data?.data ?? []) as { assetType: string; totalAssets: number }[];
+  const health: HealthRecord[] = (healthData?.data?.data ?? []) as HealthRecord[];
   const pieData = physicalNodes.length > 0
     ? physicalNodes.map(n => ({ name: n.nodeType, value: n.count }))
     : (() => {
@@ -184,7 +184,7 @@ export function Dashboard() {
       })();
 
   // Heatmap sample (top 12 by temperature)
-  const heatAssets = ((heatmapData?.data?.data ?? []) as { id: string; name: string; temperature?: number }[])
+  const heatAssets: HeatmapAsset[] = ((heatmapData?.data?.data ?? []) as HeatmapAsset[])
     .slice(0, 12);
 
   const uptime = kpi.totalAssets > 0
@@ -332,7 +332,7 @@ export function Dashboard() {
           </div>
           {heatAssets.length > 0 ? (
             <div className="space-y-2 max-h-52 overflow-y-auto">
-              {heatAssets.map((a: any) => (
+              {heatAssets.map((a: HeatmapAsset) => (
                 <div key={a.assetId} className="flex items-center gap-3 p-2 rounded bg-[#131C2E] border border-[#1E2D45]">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-[#E2EAF4] truncate leading-tight">{a.assetName}</p>
@@ -384,7 +384,7 @@ export function Dashboard() {
           </div>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart
-              data={health.reduce((acc: any[], curr: any) => {
+              data={health.reduce((acc: { channel: string; aktif: number; bakim: number; arizali: number }[], curr: HealthRecord) => {
                 const ex = acc.find(x => x.channel === curr.channelName);
                 if (ex) {
                   ex.aktif += curr.activeCount ?? 0;

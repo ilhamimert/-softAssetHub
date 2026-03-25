@@ -8,8 +8,9 @@ import {
 import { Zap, TrendingUp, DollarSign, Wrench } from 'lucide-react';
 import { analyticsApi } from '@/api/client';
 import { cn, formatCurrency, getLocalSlots, aggregatePowerData, CHART_TOOLTIP_STYLE, REFETCH } from '@/lib/utils';
+import type { HealthRecord, BudgetRecord, ForecastRecord } from '@/types';
 
-function SectionTitle({ icon: Icon, title, sub }: { icon: any; title: string; sub: string }) {
+function SectionTitle({ icon: Icon, title, sub }: { icon: React.ComponentType<{ size?: number; className?: string }>; title: string; sub: string }) {
   return (
     <div className="flex items-center gap-3 mb-4">
       <div className="w-8 h-8 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
@@ -69,9 +70,9 @@ export function Analytics() {
     [powerData],
   );
 
-  const health: any[] = healthData?.data?.data ?? [];
-  const budget: any[] = budgetData?.data?.data ?? [];
-  const forecast: any[] = forecastData?.data?.data ?? [];
+  const health: HealthRecord[] = healthData?.data?.data ?? [];
+  const budget: BudgetRecord[] = budgetData?.data?.data ?? [];
+  const forecast: ForecastRecord[] = forecastData?.data?.data ?? [];
 
   // Budget totals
   const totalCost = budget.reduce((s, b) => s + Number(b.totalPurchaseCost ?? 0), 0);
@@ -142,7 +143,7 @@ export function Analytics() {
           {health.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
-                data={health.reduce((acc: any[], curr: any) => {
+                data={health.reduce((acc: { channel: string; aktif: number; bakim: number; arizali: number }[], curr: HealthRecord) => {
                   const name = curr.channelName || 'Bilinmeyen';
                   const ex = acc.find(x => x.channel === name.slice(0, 8));
                   if (ex) {
@@ -177,7 +178,7 @@ export function Analytics() {
           {budget.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
-                data={budget.reduce((acc: any[], curr: any) => {
+                data={budget.reduce((acc: { channel: string; maliyet: number; deger: number }[], curr: BudgetRecord) => {
                   const name = curr.channelName || 'Bilinmeyen';
                   const ex = acc.find(x => x.channel === name.slice(0, 8));
                   if (ex) {
@@ -194,7 +195,7 @@ export function Analytics() {
                 <XAxis dataKey="channel" tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false}
                   tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} formatter={(v: any) => [`$${Number(v).toLocaleString()}`]} />
+                  <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} formatter={(v: string | number | undefined) => [`$${Number(v).toLocaleString()}`]} />
                 <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: '#6B84A3' }} />
                 <Bar dataKey="maliyet" fill="#22D3EE" radius={[2, 2, 0, 0]} name={i18n.language === 'tr' ? 'Satın Alma' : 'Purchase'} />
                 <Bar dataKey="deger" fill="#10B981" radius={[2, 2, 0, 0]} name={t('analytics.charts.cost_vs_value').split('/')[1].trim()} />
@@ -225,7 +226,7 @@ export function Analytics() {
                 </tr>
               </thead>
               <tbody>
-                {forecast.slice((page - 1) * limit, page * limit).map((f: any) => (
+                {forecast.slice((page - 1) * limit, page * limit).map((f: ForecastRecord) => (
                   <tr key={f.assetId} className="border-b border-[#1E2D45] hover:bg-[#131C2E] transition-colors">
                     <td className="py-2.5 px-3 text-xs text-[#E2EAF4]">{f.assetName}</td>
                     <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{f.maintenanceType ?? '-'}</td>

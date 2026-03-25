@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { assetGroupApi, channelApi } from '@/api/client';
+import type { Channel } from '@/types';
 import {
   Layers, Plus, Edit, Trash2, Server, HardDrive, Wifi, Archive, Database,
   CheckCircle, AlertTriangle, Wrench,
@@ -132,7 +133,7 @@ export function AssetGroups() {
     queryKey: ['channels'],
     queryFn: () => channelApi.getAll(),
   });
-  const channels: any[] = channelsData?.data?.data ?? [];
+  const channels: Channel[] = channelsData?.data?.data ?? [];
 
   const { data: groupsData, isLoading } = useQuery({
     queryKey: ['assetgroups', channelFilter, typeFilter],
@@ -152,13 +153,13 @@ export function AssetGroups() {
       setEditGroup(null);
       setForm(EMPTY_FORM);
     },
-    onError: (e: any) => setFormError(e?.response?.data?.message ?? 'Hata'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setFormError(e?.response?.data?.message ?? 'Hata'),
   });
 
   const deleteGroup = useMutation({
     mutationFn: (id: number) => assetGroupApi.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['assetgroups'] }),
-    onError: (e: any) => alert(e?.response?.data?.message ?? 'Silinemedi'),
+    onError: (e: { response?: { data?: { message?: string } } }) => alert(e?.response?.data?.message ?? 'Silinemedi'),
   });
 
   function openAdd() {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { monitoringApi, alertApi } from '@/api/client';
-import type { AssetMonitoring } from '@/types';
+import type { AssetMonitoring, HeatmapAsset, Alert, MonitoringAsset } from '@/types';
 import { cn, tempColor, usageColor } from '@/lib/utils';
 import {
   Wifi, WifiOff, Zap, Thermometer, Activity,
@@ -111,12 +111,12 @@ export function Monitoring() {
     refetchInterval: 30_000,
   });
 
-  const assets: any[] = heatmapRes?.data?.data ?? [];
+  const assets: HeatmapAsset[] = heatmapRes?.data?.data ?? [];
 
   // Alert count per asset
   const alertsByAsset = new Map<number, number>();
-  (alertRes?.data?.data ?? []).forEach((al: any) => {
-    if (!al.isResolved) {
+  (alertRes?.data?.data ?? []).forEach((al: Alert) => {
+    if (!al.isResolved && al.assetId != null) {
       alertsByAsset.set(al.assetId, (alertsByAsset.get(al.assetId) ?? 0) + 1);
     }
   });
@@ -189,12 +189,12 @@ export function Monitoring() {
           } else if (msg.type === 'BATCH_UPDATE' && Array.isArray(msg.data)) {
             setLiveData((p) => {
               const next = new Map(p);
-              msg.data.forEach((d: any) => next.set(d.assetId, d));
+              msg.data.forEach((d: AssetMonitoring) => next.set(d.assetId, d));
               return next;
             });
             setLastUpdated((p) => {
               const next = new Map(p);
-              msg.data.forEach((d: any) => next.set(d.assetId, now));
+              msg.data.forEach((d: AssetMonitoring) => next.set(d.assetId, now));
               return next;
             });
           }
@@ -276,7 +276,7 @@ export function Monitoring() {
     : [{ label: '', items: filtered }];
 
   // ── Card renderer ─────────────────────────────────────────────
-  const renderCard = (asset: any) => {
+  const renderCard = (asset: MonitoringAsset) => {
     const isOnline = asset.isOnline !== false;
     const isFlash = flashOffline.has(asset.assetId);
     return (
@@ -364,7 +364,7 @@ export function Monitoring() {
   };
 
   // ── List row renderer ─────────────────────────────────────────
-  const renderRow = (asset: any) => {
+  const renderRow = (asset: MonitoringAsset) => {
     const isOnline = asset.isOnline !== false;
     const cpuPct = Math.min(asset.cpuUsage ?? 0, 100);
     return (

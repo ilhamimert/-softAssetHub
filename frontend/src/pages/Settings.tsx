@@ -9,6 +9,7 @@ import {
 import { cn, formatDateTime, roleLabel, inputCls } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
+import type { User as UserType, Channel, UserFormBody } from '@/types';
 
 // ─── Password field ───────────────────────────────────────────
 function PasswordInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
@@ -61,7 +62,7 @@ const EMPTY_USER: UserFormData = {
 
 function UserFormModal({
   editUser, onClose, channels,
-}: { editUser: any | null; onClose: () => void; channels: any[] }) {
+}: { editUser: UserType | null; onClose: () => void; channels: Channel[] }) {
   const qc = useQueryClient();
   const isEdit = !!editUser;
 
@@ -80,18 +81,18 @@ function UserFormModal({
   );
   const [error, setError] = useState('');
 
-  const setField = (key: keyof UserFormData, val: any) => setForm(f => ({ ...f, [key]: val }));
+  const setField = (key: keyof UserFormData, val: string | boolean) => setForm(f => ({ ...f, [key]: val }));
 
   const createMut = useMutation({
     mutationFn: (body: object) => userApi.create(body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); onClose(); },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Kullanıcı oluşturulamadı.'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setError(e?.response?.data?.message ?? 'Kullanıcı oluşturulamadı.'),
   });
 
   const updateMut = useMutation({
-    mutationFn: (body: object) => userApi.update(editUser.userId, body),
+    mutationFn: (body: object) => userApi.update(editUser!.userId, body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); onClose(); },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Güncelleme başarısız.'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setError(e?.response?.data?.message ?? 'Güncelleme başarısız.'),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -100,7 +101,7 @@ function UserFormModal({
     if (!isEdit && !form.password) { setError('Şifre zorunludur.'); return; }
     if (form.password && form.password.length < 8) { setError('Şifre en az 8 karakter olmalı.'); return; }
 
-    const body: any = {
+    const body: UserFormBody = {
       email: form.email,
       fullName: form.fullName,
       role: form.role,
@@ -150,7 +151,7 @@ function UserFormModal({
           <FormField label="Kanal">
             <select className={inputCls} value={form.channelId} onChange={e => setField('channelId', e.target.value)}>
               <option value="">Tüm Kanallar</option>
-              {channels.map((c: any) => <option key={c.channelId} value={String(c.channelId)}>{c.channelName}</option>)}
+              {channels.map(c => <option key={c.channelId} value={String(c.channelId)}>{c.channelName}</option>)}
             </select>
           </FormField>
           <FormField label="Telefon">
@@ -218,7 +219,7 @@ function ChangePasswordModal({ userId, onClose }: { userId: number; onClose: () 
   const pwMut = useMutation({
     mutationFn: (body: object) => userApi.changePassword(userId, body),
     onSuccess: () => setSuccess(true),
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Şifre değiştirilemedi.'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setError(e?.response?.data?.message ?? 'Şifre değiştirilemedi.'),
   });
 
   const pwRules = {
@@ -310,9 +311,9 @@ export function Settings() {
   const qc = useQueryClient();
 
   const [showUserForm, setShowUserForm] = useState(false);
-  const [editUser, setEditUser] = useState<any | null>(null);
+  const [editUser, setEditUser] = useState<UserType | null>(null);
   const [showChangePw, setShowChangePw] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<UserType | null>(null);
 
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -328,8 +329,8 @@ export function Settings() {
     queryFn: () => channelApi.getAll(),
   });
 
-  const users: any[] = data?.data?.data ?? [];
-  const channels: any[] = channelsData?.data?.data ?? [];
+  const users: UserType[] = data?.data?.data ?? [];
+  const channels: Channel[] = channelsData?.data?.data ?? [];
 
   const deleteMut = useMutation({
     mutationFn: (id: number) => userApi.delete(id),
@@ -450,7 +451,7 @@ export function Settings() {
                         >
                           <Edit size={12} />
                         </button>
-                        {u.userId !== (user as any)?.userId && (
+                        {u.userId !== user?.userId && (
                           <button
                             onClick={() => setDeleteTarget(u)}
                             className="p-1.5 rounded text-[#6B84A3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
@@ -546,7 +547,7 @@ export function Settings() {
 
       {showChangePw && user && (
         <ChangePasswordModal
-          userId={(user as any).userId}
+          userId={user.userId}
           onClose={() => setShowChangePw(false)}
         />
       )}

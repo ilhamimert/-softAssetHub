@@ -13,7 +13,7 @@ import {
 } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
-import type { Asset } from '@/types';
+import type { Asset, AssetFormData, Channel } from '@/types';
 
 const PAGE_SIZES = [10, 25, 50];
 
@@ -146,7 +146,7 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
 function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const [form, setForm] = useState<any>(
+  const [form, setForm] = useState<AssetFormData>(
     asset ? {
       assetName: asset.assetName,
       assetType: asset.assetType,
@@ -166,17 +166,17 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
       purchaseDate: asset.purchaseDate?.slice(0, 10),
       warrantyEndDate: asset.warrantyEndDate?.slice(0, 10),
       notes: asset.notes,
-    } as any : { assetName: '', assetType: 'Server', status: 'Active' }
+    } : { assetName: '', assetType: 'Server', status: 'Active' }
   );
   const [error, setError] = useState('');
 
   const updateMut = useMutation({
     mutationFn: (body: object) => assetApi.update(asset!.assetId, body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['assets'] }); onClose(); },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Bir hata oluştu.'),
+    onError: (e: { response?: { data?: { message?: string } } }) => setError(e?.response?.data?.message ?? 'Bir hata oluştu.'),
   });
 
-  const setField = (key: string, val: any) => setForm((f: any) => ({ ...f, [key]: val }));
+  const setField = <K extends keyof AssetFormData>(key: K, val: AssetFormData[K]) => setForm(f => ({ ...f, [key]: val }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,21 +185,21 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
       assetName: form.assetName,
       assetCode: form.assetCode || undefined,
       assetType: form.assetType,
-      model: (form as any).model || undefined,
-      serialNumber: (form as any).serialNumber || undefined,
-      manufacturer: (form as any).manufacturer || undefined,
-      supplier: (form as any).supplier || undefined,
-      ipAddress: (form as any).ipAddress || undefined,
-      macAddress: (form as any).macAddress || undefined,
-      firmwareVersion: (form as any).firmwareVersion || undefined,
-      rackPosition: (form as any).rackPosition || undefined,
+      model: form.model || undefined,
+      serialNumber: form.serialNumber || undefined,
+      manufacturer: form.manufacturer || undefined,
+      supplier: form.supplier || undefined,
+      ipAddress: form.ipAddress || undefined,
+      macAddress: form.macAddress || undefined,
+      firmwareVersion: form.firmwareVersion || undefined,
+      rackPosition: form.rackPosition || undefined,
       status: form.status,
-      purchaseCost: (form as any).purchaseCost ? parseFloat(String((form as any).purchaseCost)) : undefined,
-      currentValue: (form as any).currentValue ? parseFloat(String((form as any).currentValue)) : undefined,
-      depreciationRate: (form as any).depreciationRate ? parseFloat(String((form as any).depreciationRate)) : undefined,
-      purchaseDate: (form as any).purchaseDate || undefined,
-      warrantyEndDate: (form as any).warrantyEndDate || undefined,
-      notes: (form as any).notes || undefined,
+      purchaseCost: form.purchaseCost ? parseFloat(String(form.purchaseCost)) : undefined,
+      currentValue: form.currentValue ? parseFloat(String(form.currentValue)) : undefined,
+      depreciationRate: form.depreciationRate ? parseFloat(String(form.depreciationRate)) : undefined,
+      purchaseDate: form.purchaseDate || undefined,
+      warrantyEndDate: form.warrantyEndDate || undefined,
+      notes: form.notes || undefined,
     });
   };
 
@@ -209,13 +209,13 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField label={t('assets.toolbar.search_placeholder').split(':')[1]?.split(',')[0]?.trim() || 'Varlık Adı'} required>
-            <input className={inputCls} value={(form as any).assetName ?? ''} onChange={e => setField('assetName', e.target.value)} required />
+            <input className={inputCls} value={form.assetName ?? ''} onChange={e => setField('assetName', e.target.value)} required />
           </FormField>
           <FormField label={t('dashboard.charts.heatmap').includes('Sıcaklık') ? 'Varlık Kodu' : 'Asset Code'}>
-            <input className={inputCls} value={(form as any).assetCode ?? ''} onChange={e => setField('assetCode', e.target.value)} placeholder="BC-001" />
+            <input className={inputCls} value={form.assetCode ?? ''} onChange={e => setField('assetCode', e.target.value)} placeholder="BC-001" />
           </FormField>
           <FormField label={t('assets.details.type')} required>
-            <select className={inputCls} value={(form as any).assetType} onChange={e => setField('assetType', e.target.value)} required>
+            <select className={inputCls} value={form.assetType} onChange={e => setField('assetType', e.target.value)} required>
               <option value="GPU">GPU Kartı</option>
               <option value="DisplayCard">Görüntü Kartı</option>
               <option value="Server">Sunucu</option>
@@ -224,7 +224,7 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
             </select>
           </FormField>
           <FormField label={t('common.status')}>
-            <select className={inputCls} value={(form as any).status} onChange={e => setField('status', e.target.value)}>
+            <select className={inputCls} value={form.status} onChange={e => setField('status', e.target.value)}>
               <option value="Active">{t('common.active')}</option>
               <option value="Inactive">{t('common.inactive')}</option>
               <option value="Maintenance">{t('common.maintenance_short')}</option>
@@ -233,51 +233,51 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
             </select>
           </FormField>
           <FormField label="Model">
-            <input className={inputCls} value={(form as any).model ?? ''} onChange={e => setField('model', e.target.value)} />
+            <input className={inputCls} value={form.model ?? ''} onChange={e => setField('model', e.target.value)} />
           </FormField>
           <FormField label="Seri No">
-            <input className={inputCls} value={(form as any).serialNumber ?? ''} onChange={e => setField('serialNumber', e.target.value)} />
+            <input className={inputCls} value={form.serialNumber ?? ''} onChange={e => setField('serialNumber', e.target.value)} />
           </FormField>
           <FormField label="Üretici">
-            <input className={inputCls} value={(form as any).manufacturer ?? ''} onChange={e => setField('manufacturer', e.target.value)} />
+            <input className={inputCls} value={form.manufacturer ?? ''} onChange={e => setField('manufacturer', e.target.value)} />
           </FormField>
           <FormField label="Tedarikçi">
-            <input className={inputCls} value={(form as any).supplier ?? ''} onChange={e => setField('supplier', e.target.value)} />
+            <input className={inputCls} value={form.supplier ?? ''} onChange={e => setField('supplier', e.target.value)} />
           </FormField>
           <FormField label="IP Adresi">
-            <input className={inputCls} value={(form as any).ipAddress ?? ''} onChange={e => setField('ipAddress', e.target.value)} placeholder="192.168.1.1" />
+            <input className={inputCls} value={form.ipAddress ?? ''} onChange={e => setField('ipAddress', e.target.value)} placeholder="192.168.1.1" />
           </FormField>
           <FormField label="MAC Adresi">
-            <input className={inputCls} value={(form as any).macAddress ?? ''} onChange={e => setField('macAddress', e.target.value)} placeholder="AA:BB:CC:DD:EE:FF" />
+            <input className={inputCls} value={form.macAddress ?? ''} onChange={e => setField('macAddress', e.target.value)} placeholder="AA:BB:CC:DD:EE:FF" />
           </FormField>
           <FormField label="Firmware Versiyonu">
-            <input className={inputCls} value={(form as any).firmwareVersion ?? ''} onChange={e => setField('firmwareVersion', e.target.value)} />
+            <input className={inputCls} value={form.firmwareVersion ?? ''} onChange={e => setField('firmwareVersion', e.target.value)} />
           </FormField>
           <FormField label={t('assets.details.rack')}>
-            <input className={inputCls} value={(form as any).rackPosition ?? ''} onChange={e => setField('rackPosition', e.target.value)} placeholder="U1-U2" />
+            <input className={inputCls} value={form.rackPosition ?? ''} onChange={e => setField('rackPosition', e.target.value)} placeholder="U1-U2" />
           </FormField>
 
           <p className="col-span-2 text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val pt-2 border-t border-[#1E2D45]">{t('assets.details.finance_info')}</p>
 
           <FormField label="Satın Alma Tarihi">
-            <input type="date" className={inputCls} value={(form as any).purchaseDate ?? ''} onChange={e => setField('purchaseDate', e.target.value)} />
+            <input type="date" className={inputCls} value={form.purchaseDate ?? ''} onChange={e => setField('purchaseDate', e.target.value)} />
           </FormField>
           <FormField label="Garanti Bitiş Tarihi">
-            <input type="date" className={inputCls} value={(form as any).warrantyEndDate ?? ''} onChange={e => setField('warrantyEndDate', e.target.value)} />
+            <input type="date" className={inputCls} value={form.warrantyEndDate ?? ''} onChange={e => setField('warrantyEndDate', e.target.value)} />
           </FormField>
           <FormField label="Satın Alma Maliyeti ($)">
-            <input type="number" step="0.01" min="0" className={inputCls} value={(form as any).purchaseCost ?? ''} onChange={e => setField('purchaseCost', e.target.value)} />
+            <input type="number" step="0.01" min="0" className={inputCls} value={form.purchaseCost ?? ''} onChange={e => setField('purchaseCost', e.target.value)} />
           </FormField>
           <FormField label="Güncel Değer ($)">
-            <input type="number" step="0.01" min="0" className={inputCls} value={(form as any).currentValue ?? ''} onChange={e => setField('currentValue', e.target.value)} />
+            <input type="number" step="0.01" min="0" className={inputCls} value={form.currentValue ?? ''} onChange={e => setField('currentValue', e.target.value)} />
           </FormField>
           <FormField label="Amortisman Oranı (% / Yıl)">
-            <input type="number" step="0.1" min="0" max="100" className={inputCls} value={(form as any).depreciationRate ?? ''} onChange={e => setField('depreciationRate', e.target.value)} />
+            <input type="number" step="0.1" min="0" max="100" className={inputCls} value={form.depreciationRate ?? ''} onChange={e => setField('depreciationRate', e.target.value)} />
           </FormField>
 
           <div className="col-span-2">
             <FormField label="Notlar">
-              <textarea rows={2} className={inputCls + ' resize-none'} value={(form as any).notes ?? ''} onChange={e => setField('notes', e.target.value)} />
+              <textarea rows={2} className={inputCls + ' resize-none'} value={form.notes ?? ''} onChange={e => setField('notes', e.target.value)} />
             </FormField>
           </div>
         </div>
@@ -392,7 +392,7 @@ export function AssetList() {
 
   const assets: Asset[] = data?.data?.data ?? [];
   const pagination = data?.data?.pagination ?? { page: 1, limit, total: 0, totalPages: 1 };
-  const channels = channelsData?.data?.data ?? [];
+  const channels: Channel[] = channelsData?.data?.data ?? [];
 
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); sp({ q: search, page: '' }); };
   const toggleSort = (col: string) => {
@@ -443,7 +443,7 @@ export function AssetList() {
         {[
           {
             value: channelId, onChange: (v: string) => sp({ channel: v, page: '' }),
-            options: [{ value: '', label: t('assets.toolbar.all_channels') }, ...channels.map((c: any) => ({ value: String(c.channelId), label: c.channelName }))],
+            options: [{ value: '', label: t('assets.toolbar.all_channels') }, ...channels.map((c: Channel) => ({ value: String(c.channelId), label: c.channelName }))],
           },
           {
             value: status, onChange: (v: string) => sp({ status: v, page: '' }),

@@ -25,8 +25,9 @@ export function Login() {
       await login(username, password);
       queryClient.clear();
       window.location.replace(from || '/');
-    } catch (err: any) {
-      setError(err?.response?.data?.message || t('login.error'));
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error?.response?.data?.message || t('login.error'));
     }
   };
 

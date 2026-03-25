@@ -18,7 +18,6 @@ const Analytics   = lazy(() => import('@/pages/Analytics').then(m => ({ default:
 const Settings    = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })));
 const Licenses    = lazy(() => import('@/pages/Licenses').then(m => ({ default: m.Licenses })));
 const Logs           = lazy(() => import('@/pages/Logs').then(m => ({ default: m.Logs })));
-const Infrastructure = lazy(() => import('@/pages/Infrastructure').then(m => ({ default: m.Infrastructure })));
 const AssetGroups    = lazy(() => import('@/pages/AssetGroups').then(m => ({ default: m.AssetGroups })));
 const Reports        = lazy(() => import('@/pages/Reports').then(m => ({ default: m.Reports })));
 
@@ -73,7 +72,6 @@ export default function App() {
               <Route path="analytics"   element={<Analytics />}   />
               <Route path="settings"    element={<Settings />}    />
               <Route path="logs"           element={<Logs />}           />
-              <Route path="infrastructure" element={<Infrastructure />}  />
               <Route path="asset-groups"   element={<AssetGroups />}     />
               <Route path="reports"        element={<Reports />}         />
             </Route>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/api/client';
+import type { ActivityLog } from '@/types';
 import { formatDateTime } from '@/lib/utils';
 import { ScrollText, Search, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -36,7 +37,7 @@ export function Logs() {
     staleTime: 30_000,
   });
 
-  const logs: any[] = data?.data?.data ?? [];
+  const logs: ActivityLog[] = data?.data?.data ?? [];
 
   // Client-side name/action filter
   const filtered = search
@@ -122,7 +123,7 @@ export function Logs() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((log: any) => (
+              {filtered.map((log: ActivityLog) => (
                 <tr key={log.logId} className="border-b border-[#1E2D45]/50 hover:bg-[#0D1421]/60 transition-colors">
                   <td className="py-2 px-3">
                     <span className="text-[10px] text-[#6B84A3] font-mono-val whitespace-nowrap">
