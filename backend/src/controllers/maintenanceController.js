@@ -22,7 +22,7 @@ const getByAsset = async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const result = await query(
-      `SELECT * FROM maintenance_records WHERE asset_id = $1 ORDER BY maintenance_date DESC LIMIT 500`,
+      `SELECT * FROM maintenance_records WHERE asset_id = $1 AND is_active = TRUE ORDER BY maintenance_date DESC LIMIT 500`,
       [parseInt(assetId)]
     );
     res.json({ success: true, data: result.recordset, total: result.recordset.length });
@@ -38,7 +38,7 @@ const getById = async (req, res, next) => {
     const result = await query(
       `SELECT m.*, a.asset_name, a.asset_code FROM maintenance_records m
        JOIN assets a ON m.asset_id = a.asset_id
-       WHERE m.maintenance_id = $1`,
+       WHERE m.maintenance_id = $1 AND m.is_active = TRUE`,
       [parseInt(id)]
     );
     const record = result.recordset[0];
@@ -161,7 +161,7 @@ const remove = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await query(
-      `DELETE FROM maintenance_records WHERE maintenance_id = $1 RETURNING maintenance_id`,
+      `UPDATE maintenance_records SET is_active = FALSE WHERE maintenance_id = $1 AND is_active = TRUE RETURNING maintenance_id`,
       [parseInt(id)]
     );
     if (!result.recordset.length) return next(createError('Bakım kaydı bulunamadı.', 404, 'NOT_FOUND'));
@@ -190,7 +190,8 @@ const getScheduled = async (req, res, next) => {
        JOIN assets a ON m.asset_id = a.asset_id
        LEFT JOIN asset_groups ag ON a.asset_group_id = ag.asset_group_id
        JOIN channels c ON a.channel_id = c.channel_id
-       WHERE COALESCE(m.next_maintenance_date, m.maintenance_date) <= (CURRENT_DATE + ($1 || ' days')::INTERVAL)
+       WHERE m.is_active = TRUE
+         AND COALESCE(m.next_maintenance_date, m.maintenance_date) <= (CURRENT_DATE + ($1 || ' days')::INTERVAL)
          AND COALESCE(m.next_maintenance_date, m.maintenance_date) >= (CURRENT_DATE - ($1 || ' days')::INTERVAL)
          ${channelFilter}
        ORDER BY COALESCE(m.next_maintenance_date, m.maintenance_date) ASC`,
