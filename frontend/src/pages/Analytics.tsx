@@ -17,7 +17,7 @@ function SectionTitle({ icon: Icon, title, sub }: { icon: React.ComponentType<{ 
         <Icon size={14} className="text-amber-400" />
       </div>
       <div>
-        <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{sub}</p>
+        <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{sub}</p>
         <p className="text-sm font-display font-semibold text-white">{title}</p>
       </div>
     </div>
@@ -96,7 +96,7 @@ export function Analytics() {
         ].map(({ label, value, icon: Icon, border, text }) => (
           <div key={label} className={`card p-4 border ${border}`}>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{label}</p>
+              <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{label}</p>
               <Icon size={13} className={text} />
             </div>
             <p className={`font-display font-bold text-2xl ${text}`}>{value}</p>
@@ -110,20 +110,20 @@ export function Analytics() {
         {power.length > 0 ? (
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={power} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
               <XAxis
                 dataKey="label"
-                tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }}
                 tickLine={false} axisLine={false}
               />
-              <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
               <Tooltip {...CHART_TOOLTIP_STYLE} />
-              <Line type="monotone" dataKey="avgPowerW" stroke="#F59E0B" strokeWidth={2} dot={{ r: 3, fill: '#F59E0B' }} name={t('analytics.charts.avg_power')} />
+              <Line type="monotone" dataKey="avgPowerW" stroke="#e09f3e" strokeWidth={2} dot={{ r: 3, fill: '#e09f3e' }} name={t('analytics.charts.avg_power')} />
             </LineChart>
           </ResponsiveContainer>
         ) : (
           <div className="h-48 flex items-center justify-center text-xs font-mono-val">
-            <span className={powerError ? 'text-red-400' : 'text-[#3D5275]'}>
+            <span className={powerError ? 'text-red-400' : 'text-[#555d6e]'}>
               {powerError
                 ? (i18n.language === 'tr' ? 'Veri yüklenemedi' : 'Failed to load data')
                 : powerPending
@@ -157,18 +157,18 @@ export function Analytics() {
                 }, [])}
                 margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" vertical={false} />
-                <XAxis dataKey="channel" tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" vertical={false} />
+                <XAxis dataKey="channel" tick={{ fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} />
-                <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: '#6B84A3' }} />
-                <Bar dataKey="aktif" stackId="a" fill="#10B981" name={t('common.active')} />
-                <Bar dataKey="bakim" stackId="a" fill="#F59E0B" name={t('common.maintenance')} />
-                <Bar dataKey="arizali" stackId="a" fill="#EF4444" radius={[2, 2, 0, 0]} name={i18n.language === 'tr' ? 'Arızalı' : 'Faulty'} />
+                <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: '#8b919e' }} />
+                <Bar dataKey="aktif" stackId="a" fill="#4caf82" name={t('common.active')} />
+                <Bar dataKey="bakim" stackId="a" fill="#e09f3e" name={t('common.maintenance')} />
+                <Bar dataKey="arizali" stackId="a" fill="#d9534f" radius={[2, 2, 0, 0]} name={i18n.language === 'tr' ? 'Arızalı' : 'Faulty'} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-[#3D5275] text-xs font-mono-val">Veri yok</div>
+            <div className="h-48 flex items-center justify-center text-[#555d6e] text-xs font-mono-val">Veri yok</div>
           )}
         </div>
 
@@ -191,18 +191,18 @@ export function Analytics() {
                 }, [])}
                 margin={{ top: 4, right: 4, left: -10, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" vertical={false} />
-                <XAxis dataKey="channel" tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false}
+                <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" vertical={false} />
+                <XAxis dataKey="channel" tick={{ fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false}
                   tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
                   <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} formatter={(v: string | number | undefined) => [`$${Number(v).toLocaleString()}`]} />
-                <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: '#6B84A3' }} />
-                <Bar dataKey="maliyet" fill="#22D3EE" radius={[2, 2, 0, 0]} name={i18n.language === 'tr' ? 'Satın Alma' : 'Purchase'} />
-                <Bar dataKey="deger" fill="#10B981" radius={[2, 2, 0, 0]} name={t('analytics.charts.cost_vs_value').split('/')[1].trim()} />
+                <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: '#8b919e' }} />
+                <Bar dataKey="maliyet" fill="#5b9bd5" radius={[2, 2, 0, 0]} name={i18n.language === 'tr' ? 'Satın Alma' : 'Purchase'} />
+                <Bar dataKey="deger" fill="#4caf82" radius={[2, 2, 0, 0]} name={t('analytics.charts.cost_vs_value').split('/')[1].trim()} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-[#3D5275] text-xs font-mono-val">Veri yok</div>
+            <div className="h-48 flex items-center justify-center text-[#555d6e] text-xs font-mono-val">Veri yok</div>
           )}
         </div>
       </div>
@@ -215,23 +215,23 @@ export function Analytics() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[600px]">
               <thead>
-                <tr className="border-b border-[#1E2D45]">
-                  <th className="py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.asset')}</th>
-                  <th className="py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.type')}</th>
-                  <th className="py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.channel')}</th>
-                  <th className="py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.building')}</th>
-                  <th className="py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.date')}</th>
-                  <th className="py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.days_left')}</th>
-                  <th className="py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.warranty')}</th>
+                <tr className="border-b border-[#2e333d]">
+                  <th className="py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.asset')}</th>
+                  <th className="py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.type')}</th>
+                  <th className="py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.channel')}</th>
+                  <th className="py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.building')}</th>
+                  <th className="py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.date')}</th>
+                  <th className="py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.days_left')}</th>
+                  <th className="py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('analytics.maintenance.table.warranty')}</th>
                 </tr>
               </thead>
               <tbody>
                 {forecast.slice((page - 1) * limit, page * limit).map((f: ForecastRecord) => (
-                  <tr key={f.assetId} className="border-b border-[#1E2D45] hover:bg-[#131C2E] transition-colors">
-                    <td className="py-2.5 px-3 text-xs text-[#E2EAF4]">{f.assetName}</td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{f.maintenanceType ?? '-'}</td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{f.channelName}</td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{f.buildingName}</td>
+                  <tr key={f.assetId} className="border-b border-[#2e333d] hover:bg-[#22262e] transition-colors">
+                    <td className="py-2.5 px-3 text-xs text-[#e4e7ec]">{f.assetName}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#8b919e]">{f.maintenanceType ?? '-'}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#8b919e]">{f.channelName}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#8b919e]">{f.buildingName}</td>
                     <td className="py-2.5 px-3 text-[10px] text-amber-400 font-mono-val">
                       {f.nextMaintenanceDate ? new Date(f.nextMaintenanceDate).toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US') : '-'}
                     </td>
@@ -245,7 +245,7 @@ export function Analytics() {
                         </span>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-[10px] text-[#6B84A3] font-mono-val">
+                    <td className="py-2.5 px-3 text-[10px] text-[#8b919e] font-mono-val">
                       {f.warrantyEndDate ? new Date(f.warrantyEndDate).toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US') : '-'}
                       {f.daysUntilWarrantyExpiry != null && f.daysUntilWarrantyExpiry <= 90 && (
                         <span className="ml-1 text-red-400">(!)</span>
@@ -257,15 +257,15 @@ export function Analytics() {
             </table>
           </div>
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1E2D45]">
-              <span className="text-[10px] text-[#3D5275] font-mono-val">
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#2e333d]">
+              <span className="text-[10px] text-[#555d6e] font-mono-val">
                 {t('common.page')} {page} / {totalPages} · {i18n.language === 'tr' ? `Toplam ${totalForecast} bakım` : `Total ${totalForecast} maintenance`}
               </span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   ‹ Önceki
                 </button>
@@ -280,7 +280,7 @@ export function Analytics() {
                         'w-7 h-7 rounded text-[10px] font-mono-val border transition-colors',
                         p === page
                           ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                          : 'bg-[#131C2E] border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4]'
+                          : 'bg-[#22262e] border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec]'
                       )}
                     >
                       {p}
@@ -290,7 +290,7 @@ export function Analytics() {
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   {t('common.next')} ›
                 </button>
@@ -299,7 +299,7 @@ export function Analytics() {
           )}
           </>
         ) : (
-          <p className="text-center text-[#3D5275] text-sm font-mono-val py-8">
+          <p className="text-center text-[#555d6e] text-sm font-mono-val py-8">
             {t('analytics.maintenance.no_maintenance')}
           </p>
         )}

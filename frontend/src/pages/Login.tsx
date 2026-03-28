@@ -32,30 +32,27 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070B14] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
+    <div className="min-h-screen bg-[#111318] flex items-center justify-center p-4 relative overflow-hidden">
 
       <div className="w-full max-w-md animate-fade-in relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-amber-400/5 border border-amber-500/30 mb-4 shadow-lg shadow-amber-500/10">
-            <ShieldCheck className="text-amber-400 w-8 h-8" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#22262e] border border-[#2e333d] mb-4">
+            <ShieldCheck className="text-[#5b8fd5] w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-display font-bold text-white tracking-tight mb-2">
-            İSOFT ASSET<span className="text-amber-500">HUB</span>
+          <h1 className="text-2xl font-display font-bold text-[#e4e7ec] tracking-tight mb-2">
+            İSOFT VARLIK <span className="text-[#5b8fd5]">MERKEZİ</span>
           </h1>
-          <p className="text-gray-400 text-sm font-medium">{t('login.subtitle')}</p>
+          <p className="text-[#8b919e] text-sm font-medium">{t('login.subtitle')}</p>
         </div>
 
-        <div className="bg-[#0D1421]/60 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-2xl">
+        <div className="bg-[#1a1d23] border border-[#2e333d] p-8 rounded-2xl shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-[11px] font-mono-val text-gray-500 uppercase tracking-widest mb-2 px-1">
+              <label className="block text-[11px] font-mono-val text-[#8b919e] uppercase tracking-widest mb-2 px-1">
                 {t('login.username')}
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-amber-400 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#555d6e] group-focus-within:text-[#5b8fd5] transition-colors">
                   <User size={18} />
                 </div>
                 <input
@@ -63,18 +60,18 @@ export function Login() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all sm:text-sm"
+                  className="block w-full bg-[#22262e] border border-[#2e333d] rounded-lg py-3 pl-10 pr-3 text-[#e4e7ec] placeholder-[#555d6e] focus:outline-none focus:ring-2 focus:ring-[#5b8fd5]/40 focus:border-[#5b8fd5]/40 transition-all sm:text-sm"
                   placeholder={t('login.username').toLowerCase() + '...'}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono-val text-gray-500 uppercase tracking-widest mb-2 px-1">
+              <label className="block text-[11px] font-mono-val text-[#8b919e] uppercase tracking-widest mb-2 px-1">
                 {t('login.password')}
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-amber-400 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#555d6e] group-focus-within:text-[#5b8fd5] transition-colors">
                   <Lock size={18} />
                 </div>
                 <input
@@ -82,13 +79,13 @@ export function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-12 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all sm:text-sm"
+                  className="block w-full bg-[#22262e] border border-[#2e333d] rounded-lg py-3 pl-10 pr-12 text-[#e4e7ec] placeholder-[#555d6e] focus:outline-none focus:ring-2 focus:ring-[#5b8fd5]/40 focus:border-[#5b8fd5]/40 transition-all sm:text-sm"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#555d6e] hover:text-[#e4e7ec] transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -96,16 +93,16 @@ export function Login() {
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <p className="text-xs text-red-400 font-medium">{error}</p>
+              <div className="bg-[#d9534f]/10 border border-[#d9534f]/20 rounded-lg p-3 flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#d9534f]" />
+                <p className="text-xs text-[#d9534f] font-medium">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-amber-600/20 ring-offset-2 ring-offset-[#070B14] focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full bg-[#5b8fd5] hover:bg-[#4a7ec4] text-white font-semibold py-3.5 rounded-lg focus:ring-2 focus:ring-[#5b8fd5]/50 ring-offset-2 ring-offset-[#111318] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -115,12 +112,12 @@ export function Login() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+          <div className="mt-8 pt-6 border-t border-[#2e333d] flex items-center justify-between">
              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                <span className="text-[10px] text-gray-500 font-mono-val uppercase tracking-tighter">{t('login.server_active')}</span>
+                <div className="w-2 h-2 rounded-full bg-[#4caf82]" />
+                <span className="text-[10px] text-[#8b919e] font-mono-val uppercase tracking-tighter">{t('login.server_active')}</span>
              </div>
-             <span className="text-[10px] text-gray-600 font-mono-val">v1.2.4-stable</span>
+             <span className="text-[10px] text-[#555d6e] font-mono-val">v1.2.4-kararlı</span>
           </div>
         </div>
       </div>

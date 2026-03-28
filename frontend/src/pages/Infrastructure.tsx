@@ -122,51 +122,51 @@ function RoomRow({
   return (
     <>
       <div
-        className="flex items-center gap-3 px-8 py-2.5 border-b border-[#1E2D45]/50 last:border-b-0 hover:bg-[#0D1829]/50 group"
+        className="flex items-center gap-3 px-8 py-2.5 border-b border-[#2e333d]/50 last:border-b-0 hover:bg-[#0D1829]/50 group"
       >
         <button
           onClick={() => setOpen(v => !v)}
-          className="text-[#3D5275] hover:text-[#6B84A3] flex-shrink-0"
+          className="text-[#555d6e] hover:text-[#8b919e] flex-shrink-0"
         >
           {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
         </button>
-        <DoorOpen size={12} className="text-[#6B84A3] flex-shrink-0" />
-        <span className="text-xs text-[#E2EAF4] flex-1 truncate">{room.roomName}</span>
-        <span className="text-[10px] text-[#6B84A3] font-mono-val">Kat {room.floor}</span>
+        <DoorOpen size={12} className="text-[#8b919e] flex-shrink-0" />
+        <span className="text-xs text-[#e4e7ec] flex-1 truncate">{room.roomName}</span>
+        <span className="text-[10px] text-[#8b919e] font-mono-val">Kat {room.floor}</span>
         <RoomTypeBadge type={room.roomType} />
-        <span className="text-[10px] text-[#6B84A3] font-mono-val ml-2">{room.assetCount ?? assets.length} varlık</span>
+        <span className="text-[10px] text-[#8b919e] font-mono-val ml-2">{room.assetCount ?? assets.length} varlık</span>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => onEdit(room)}
-            className="p-1 text-[#6B84A3] hover:text-amber-400 hover:bg-amber-400/10 rounded"
+            className="p-1 text-[#8b919e] hover:text-[#5b8fd5] hover:bg-amber-400/10 rounded"
           ><Edit size={11} /></button>
           <button
             onClick={() => onDelete(room)}
-            className="p-1 text-[#6B84A3] hover:text-red-400 hover:bg-red-400/10 rounded"
+            className="p-1 text-[#8b919e] hover:text-red-400 hover:bg-red-400/10 rounded"
           ><Trash2 size={11} /></button>
         </div>
       </div>
 
       {open && (
-        <div className="bg-[#060D18] border-b border-[#1E2D45]/50">
+        <div className="bg-[#060D18] border-b border-[#2e333d]/50">
           {assetsLoading ? (
             <div className="px-14 py-2 space-y-1">
-              {[1,2,3].map(i => <div key={i} className="h-6 bg-[#1E2D45]/30 rounded animate-pulse" />)}
+              {[1,2,3].map(i => <div key={i} className="h-6 bg-[#2e333d]/30 rounded animate-pulse" />)}
             </div>
           ) : assets.length === 0 ? (
-            <p className="px-14 py-2 text-[10px] text-[#3D5275] italic">Bu odada varlık yok</p>
+            <p className="px-14 py-2 text-[10px] text-[#555d6e] italic">Bu odada varlık yok</p>
           ) : (
             assets.map((asset: Asset) => (
               <div
                 key={asset.assetId}
-                className="flex items-center gap-2 px-14 py-2 border-b border-[#1E2D45]/30 last:border-b-0 hover:bg-[#0D1829]/40"
+                className="flex items-center gap-2 px-14 py-2 border-b border-[#2e333d]/30 last:border-b-0 hover:bg-[#0D1829]/40"
               >
-                <Monitor size={11} className="text-[#3D5275] flex-shrink-0" />
+                <Monitor size={11} className="text-[#555d6e] flex-shrink-0" />
                 <span className="text-[11px] text-[#C4D4E8] flex-1 truncate">{asset.assetName}</span>
-                <span className="text-[9px] text-[#3D5275] font-mono-val hidden sm:block">{asset.assetType}</span>
+                <span className="text-[9px] text-[#555d6e] font-mono-val hidden sm:block">{asset.assetType}</span>
                 {asset.groupType && <GroupTypeBadge type={asset.groupType} />}
                 {asset.groupName && (
-                  <span className="text-[9px] text-[#3D5275] font-mono-val truncate max-w-[80px] hidden md:block">
+                  <span className="text-[9px] text-[#555d6e] font-mono-val truncate max-w-[80px] hidden md:block">
                     {asset.groupName}
                   </span>
                 )}
@@ -252,37 +252,37 @@ function BuildingRow({
   }
 
   return (
-    <div className="border border-[#1E2D45] rounded-lg overflow-hidden bg-[#0A1220]">
+    <div className="border border-[#2e333d] rounded-lg overflow-hidden bg-[#0A1220]">
       {/* Building header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-[#0D1829] hover:bg-[#111E30] transition-colors">
-        <button onClick={() => setOpen(v => !v)} className="text-[#6B84A3] hover:text-[#E2EAF4]">
+        <button onClick={() => setOpen(v => !v)} className="text-[#8b919e] hover:text-[#e4e7ec]">
           {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
         <Building2 size={14} className="text-amber-400 flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-display font-semibold text-[#E2EAF4] truncate">{building.buildingName}</p>
-          <p className="text-[10px] text-[#6B84A3] truncate flex items-center gap-1 mt-0.5">
+          <p className="text-sm font-display font-semibold text-[#e4e7ec] truncate">{building.buildingName}</p>
+          <p className="text-[10px] text-[#8b919e] truncate flex items-center gap-1 mt-0.5">
             <MapPin size={8} /> {building.city}{building.address ? ` — ${building.address}` : ''}
           </p>
         </div>
-        <div className="flex items-center gap-4 flex-shrink-0 text-[10px] text-[#6B84A3] font-mono-val">
+        <div className="flex items-center gap-4 flex-shrink-0 text-[10px] text-[#8b919e] font-mono-val">
           <span className="flex items-center gap-1"><DoorOpen size={10} /> {building.roomCount ?? rooms.length} oda</span>
           <span className="flex items-center gap-1"><Layers size={10} /> {building.assetCount ?? 0} varlık</span>
         </div>
         <div className="flex items-center gap-1 ml-2">
           <button
             onClick={openAddRoom}
-            className="p-1.5 text-[#6B84A3] hover:text-green-400 hover:bg-green-400/10 rounded transition-colors"
+            className="p-1.5 text-[#8b919e] hover:text-green-400 hover:bg-green-400/10 rounded transition-colors"
             title="Oda Ekle"
           ><Plus size={12} /></button>
           <button
             onClick={() => onEdit(building)}
-            className="p-1.5 text-[#6B84A3] hover:text-amber-400 hover:bg-amber-400/10 rounded transition-colors"
+            className="p-1.5 text-[#8b919e] hover:text-[#5b8fd5] hover:bg-amber-400/10 rounded transition-colors"
             title="Düzenle"
           ><Edit size={12} /></button>
           <button
             onClick={() => onDelete(building)}
-            className="p-1.5 text-[#6B84A3] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+            className="p-1.5 text-[#8b919e] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
             title="Sil"
           ><Trash2 size={12} /></button>
         </div>
@@ -290,9 +290,9 @@ function BuildingRow({
 
       {/* Rooms list */}
       {open && (
-        <div className="border-t border-[#1E2D45]">
+        <div className="border-t border-[#2e333d]">
           {rooms.length === 0 ? (
-            <p className="px-8 py-3 text-[11px] text-[#6B84A3] italic">Henüz oda yok</p>
+            <p className="px-8 py-3 text-[11px] text-[#8b919e] italic">Henüz oda yok</p>
           ) : (
             rooms.map(room => (
               <RoomRow
@@ -335,11 +335,11 @@ function BuildingRow({
           {roomError && <p className="text-xs text-red-400">{roomError}</p>}
           <div className="flex gap-2 pt-1">
             <button onClick={submitRoom} disabled={saveRoom.isPending}
-              className="flex-1 py-2 text-xs font-mono-val rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 transition-all disabled:opacity-50">
+              className="flex-1 py-2 text-xs font-mono-val rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-[#5b8fd5]/20 transition-all disabled:opacity-50">
               {saveRoom.isPending ? 'Kaydediliyor...' : 'Kaydet'}
             </button>
             <button onClick={() => { setShowRoomForm(false); setEditRoom(null); }}
-              className="px-4 py-2 text-xs font-mono-val rounded border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] hover:bg-[#131C2E] transition-all">
+              className="px-4 py-2 text-xs font-mono-val rounded border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] hover:bg-[#22262e] transition-all">
               İptal
             </button>
           </div>
@@ -432,15 +432,15 @@ export function Infrastructure() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-display font-bold text-[#E2EAF4] flex items-center gap-2">
+          <h1 className="text-lg font-display font-bold text-[#e4e7ec] flex items-center gap-2">
             <Building2 size={18} className="text-amber-400" />
             Altyapı Yönetimi
           </h1>
-          <p className="text-[11px] text-[#6B84A3] mt-0.5">Binalar ve odalar</p>
+          <p className="text-[11px] text-[#8b919e] mt-0.5">Binalar ve odalar</p>
         </div>
         <button
           onClick={openAddBldg}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono-val rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all"
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono-val rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-[#5b8fd5]/20 transition-all"
         >
           <Plus size={13} /> Bina Ekle
         </button>
@@ -453,13 +453,13 @@ export function Infrastructure() {
           { label: 'Toplam Oda', value: totalRooms, icon: DoorOpen, color: 'text-cyan-400' },
           { label: 'Toplam Varlık', value: totalAssets, icon: Layers, color: 'text-green-400' },
         ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-[#0D1525] border border-[#1E2D45] rounded-lg p-4 flex items-center gap-3">
+          <div key={label} className="bg-[#1a1d23] border border-[#2e333d] rounded-lg p-4 flex items-center gap-3">
             <div className={cn('w-8 h-8 rounded flex items-center justify-center bg-current/10', color)}>
               <Icon size={15} className={color} />
             </div>
             <div>
-              <p className="text-xl font-display font-bold text-[#E2EAF4]">{value}</p>
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-wider">{label}</p>
+              <p className="text-xl font-display font-bold text-[#e4e7ec]">{value}</p>
+              <p className="text-[10px] text-[#8b919e] uppercase tracking-wider">{label}</p>
             </div>
           </div>
         ))}
@@ -467,11 +467,11 @@ export function Infrastructure() {
 
       {/* Filters */}
       <div className="flex items-center gap-3">
-        <LayoutGrid size={13} className="text-[#6B84A3]" />
+        <LayoutGrid size={13} className="text-[#8b919e]" />
         <select
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value)}
-          className="text-xs bg-[#0D1525] border border-[#1E2D45] rounded px-3 py-1.5 text-[#E2EAF4] focus:outline-none focus:border-amber-500/50"
+          className="text-xs bg-[#1a1d23] border border-[#2e333d] rounded px-3 py-1.5 text-[#e4e7ec] focus:outline-none focus:border-[#5b8fd5]/40"
         >
           <option value="">Tüm Kanallar</option>
           {channels.map(c => (
@@ -482,11 +482,11 @@ export function Infrastructure() {
 
       {/* Buildings */}
       {buildingQueries.isLoading ? (
-        <p className="text-xs text-[#6B84A3]">Yükleniyor...</p>
+        <p className="text-xs text-[#8b919e]">Yükleniyor...</p>
       ) : buildings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Building2 size={32} className="text-[#1E2D45] mb-3" />
-          <p className="text-sm text-[#6B84A3]">Henüz bina yok</p>
+          <Building2 size={32} className="text-[#2e333d] mb-3" />
+          <p className="text-sm text-[#8b919e]">Henüz bina yok</p>
           <button onClick={openAddBldg} className="mt-3 text-xs text-amber-400 hover:underline">+ Bina ekle</button>
         </div>
       ) : (
@@ -535,11 +535,11 @@ export function Infrastructure() {
           {bldgError && <p className="text-xs text-red-400">{bldgError}</p>}
           <div className="flex gap-2 pt-1">
             <button onClick={submitBldg} disabled={saveBldg.isPending}
-              className="flex-1 py-2 text-xs font-mono-val rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 transition-all disabled:opacity-50">
+              className="flex-1 py-2 text-xs font-mono-val rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-[#5b8fd5]/20 transition-all disabled:opacity-50">
               {saveBldg.isPending ? 'Kaydediliyor...' : 'Kaydet'}
             </button>
             <button onClick={() => { setShowBldgForm(false); setEditBldg(null); }}
-              className="px-4 py-2 text-xs font-mono-val rounded border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] hover:bg-[#131C2E] transition-all">
+              className="px-4 py-2 text-xs font-mono-val rounded border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] hover:bg-[#22262e] transition-all">
               İptal
             </button>
           </div>

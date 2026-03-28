@@ -187,9 +187,9 @@ function TreeNode({
           'flex items-center gap-1.5 py-[5px] pr-1.5 rounded-md cursor-pointer select-none',
           'text-[11px] transition-colors group',
           isSel
-            ? 'bg-[#162032] text-[#E2EAF4] border border-[#2A3F5F]'
+            ? 'bg-[#162032] text-[#e4e7ec] border border-[#383e4a]'
             : isMulti
-              ? 'bg-blue-500/10 text-[#E2EAF4] border border-blue-500/20'
+              ? 'bg-blue-500/10 text-[#e4e7ec] border border-blue-500/20'
               : isDropTarget
                 ? 'bg-amber-500/10 border border-amber-500/30'
                 : 'hover:bg-[#0F1A2E] text-[#A0B4CC]',
@@ -212,7 +212,7 @@ function TreeNode({
       >
         {/* Drag handle */}
         {canDrag && (
-          <span className="opacity-0 group-hover:opacity-50 text-[#3D5275] cursor-grab active:cursor-grabbing flex-shrink-0">
+          <span className="opacity-0 group-hover:opacity-50 text-[#555d6e] cursor-grab active:cursor-grabbing flex-shrink-0">
             <GripVertical size={9} />
           </span>
         )}
@@ -231,7 +231,7 @@ function TreeNode({
         </span>
 
         {/* Icon */}
-        <span className={cn('flex-shrink-0 transition-colors', isSel ? color : 'text-[#3D5275]')}>
+        <span className={cn('flex-shrink-0 transition-colors', isSel ? color : 'text-[#555d6e]')}>
           <Icon size={11} />
         </span>
 
@@ -248,7 +248,7 @@ function TreeNode({
             }}
             onBlur={submitEdit}
             onClick={e => e.stopPropagation()}
-            className="flex-1 min-w-0 text-[11px] bg-[#070B14] border border-amber-500/50 rounded px-1 py-0 text-[#E2EAF4] font-mono-val focus:outline-none"
+            className="flex-1 min-w-0 text-[11px] bg-[#111318] border border-amber-500/50 rounded px-1 py-0 text-[#e4e7ec] font-mono-val focus:outline-none"
           />
         ) : (
           <span className="flex-1 truncate" onDoubleClick={startEdit} title="Çift tıkla: Yeniden adlandır">
@@ -269,7 +269,7 @@ function TreeNode({
 
         {/* Child count */}
         {hasKids && (
-          <span className="text-[9px] font-mono-val px-1 rounded bg-[#1E2D45] text-[#4A6080] opacity-0 group-hover:opacity-100 transition-opacity mr-0.5">
+          <span className="text-[9px] font-mono-val px-1 rounded bg-[#2e333d] text-[#4A6080] opacity-0 group-hover:opacity-100 transition-opacity mr-0.5">
             {node.children.length}
           </span>
         )}
@@ -279,7 +279,7 @@ function TreeNode({
           <button
             onClick={e => { e.stopPropagation(); onAddChild(node.id, level); }}
             title={`${LEVEL_CFG[CHILD_OF[level]!].label} ekle`}
-            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-blue-500/20 text-[#3D5275] hover:text-blue-400 transition-all"
+            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-blue-500/20 text-[#555d6e] hover:text-blue-400 transition-all"
           >
             <Plus size={9} />
           </button>
@@ -289,7 +289,7 @@ function TreeNode({
         <button
           onClick={e => { e.stopPropagation(); onDelete(node.id, level, node.name); }}
           title={`${label} sil`}
-          className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/20 text-[#3D5275] hover:text-red-400 transition-all"
+          className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/20 text-[#555d6e] hover:text-red-400 transition-all"
         >
           <Trash2 size={9} />
         </button>
@@ -715,7 +715,7 @@ export function Assets() {
           </button>
           <button
             onClick={() => { setMultiSel(new Set()); setMultiLvl(null); }}
-            className="ml-auto text-[#3D5275] hover:text-[#6B84A3]"
+            className="ml-auto text-[#555d6e] hover:text-[#8b919e]"
           >
             <X size={12} />
           </button>
@@ -730,15 +730,15 @@ export function Assets() {
         <div className="w-72 flex-shrink-0 card overflow-hidden flex flex-col">
 
           {/* Header */}
-          <div className="px-3 pt-3 pb-2 border-b border-[#1E2D45] flex-shrink-0 space-y-2">
+          <div className="px-3 pt-3 pb-2 border-b border-[#2e333d] flex-shrink-0 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">
+              <span className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">
                 Fiziksel Hiyerarşi
               </span>
               <button
                 onClick={() => refetch()}
                 title="Yenile"
-                className="p-1 rounded text-[#3D5275] hover:text-[#6B84A3] hover:bg-[#1E2D45] transition-all"
+                className="p-1 rounded text-[#555d6e] hover:text-[#8b919e] hover:bg-[#2e333d] transition-all"
               >
                 <RefreshCw size={10} />
               </button>
@@ -746,24 +746,24 @@ export function Assets() {
 
             {/* Search */}
             <div className="relative">
-              <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#3D5275]" />
+              <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#555d6e]" />
               <input
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder="Ara..."
-                className="w-full pl-6 pr-2 py-1.5 text-[10px] bg-[#070B14] border border-[#1E2D45] rounded-md text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none focus:border-[#2A3F5F]"
+                className="w-full pl-6 pr-2 py-1.5 text-[10px] bg-[#111318] border border-[#2e333d] rounded-md text-[#e4e7ec] placeholder:text-[#555d6e] font-mono-val focus:outline-none focus:border-[#383e4a]"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#3D5275] hover:text-[#6B84A3]"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#555d6e] hover:text-[#8b919e]"
                 >
                   <X size={9} />
                 </button>
               )}
             </div>
 
-            <p className="text-[9px] text-[#2A3F5F] font-mono-val">
+            <p className="text-[9px] text-[#383e4a] font-mono-val">
               Holding → Kanal → Bina → Oda → Bilgisayar → Eklenti
             </p>
 
@@ -771,14 +771,14 @@ export function Assets() {
             <div className="flex gap-1">
               <button
                 onClick={loadDemo}
-                className="flex-1 text-[9px] font-mono-val py-1.5 rounded bg-[#111827] text-[#6B84A3] hover:text-amber-400 hover:bg-amber-500/10 border border-[#1E2D45] hover:border-amber-500/20 transition-all"
+                className="flex-1 text-[9px] font-mono-val py-1.5 rounded bg-[#22262e] text-[#8b919e] hover:text-[#5b8fd5] hover:bg-[#5b8fd5]/10 border border-[#2e333d] hover:border-[#5b8fd5]/20 transition-all"
               >
                 Gerçek Veri Yükle
               </button>
               <button
                 onClick={doAutoLink}
                 title="Bilgisayarları SQL Assets ile isim benzerliğine göre otomatik eşleştir"
-                className="flex-1 text-[9px] font-mono-val py-1.5 rounded bg-[#111827] text-[#6B84A3] hover:text-green-400 hover:bg-green-500/10 border border-[#1E2D45] hover:border-green-500/20 transition-all flex items-center justify-center gap-1"
+                className="flex-1 text-[9px] font-mono-val py-1.5 rounded bg-[#22262e] text-[#8b919e] hover:text-green-400 hover:bg-green-500/10 border border-[#2e333d] hover:border-green-500/20 transition-all flex items-center justify-center gap-1"
               >
                 <Link2 size={8} /> Otomatik Eşleştir
               </button>
@@ -787,7 +787,7 @@ export function Assets() {
                   setShowRootForm(v => !v);
                   setTimeout(() => document.getElementById('rootInput')?.focus(), 50);
                 }}
-                className="px-2.5 py-1.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all text-[9px] font-mono-val flex items-center gap-1"
+                className="px-2.5 py-1.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-[#5b8fd5]/20 transition-all text-[9px] font-mono-val flex items-center gap-1"
               >
                 <Plus size={9} /> Holding
               </button>
@@ -805,12 +805,12 @@ export function Assets() {
                     if (e.key === 'Escape') { setShowRootForm(false); setAddRootName(''); }
                   }}
                   placeholder="Holding adı..."
-                  className="flex-1 text-[10px] bg-[#070B14] border border-amber-500/30 rounded px-2 py-1 text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none"
+                  className="flex-1 text-[10px] bg-[#111318] border border-amber-500/30 rounded px-2 py-1 text-[#e4e7ec] placeholder:text-[#555d6e] font-mono-val focus:outline-none"
                 />
-                <button onClick={() => doAddRoot(addRootName)} className="p-1.5 rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25">
+                <button onClick={() => doAddRoot(addRootName)} className="p-1.5 rounded bg-amber-500/15 text-amber-400 hover:bg-[#5b8fd5]/25">
                   <Check size={10} />
                 </button>
-                <button onClick={() => { setShowRootForm(false); setAddRootName(''); }} className="p-1.5 rounded text-[#3D5275] hover:text-[#6B84A3]">
+                <button onClick={() => { setShowRootForm(false); setAddRootName(''); }} className="p-1.5 rounded text-[#555d6e] hover:text-[#8b919e]">
                   <X size={10} />
                 </button>
               </div>
@@ -822,19 +822,19 @@ export function Assets() {
             {isError ? (
               <div className="flex flex-col items-center justify-center py-10 text-center px-3 gap-2">
                 <AlertCircle size={22} className="text-red-400/40" />
-                <p className="text-[10px] text-[#3D5275] font-mono-val leading-relaxed">
+                <p className="text-[10px] text-[#555d6e] font-mono-val leading-relaxed">
                   Fiziksel ağaç verisi yüklenemedi<br />
-                  <span className="text-[#2A3F5F]">Backend bağlantısını kontrol edin</span>
+                  <span className="text-[#383e4a]">Backend bağlantısını kontrol edin</span>
                 </p>
               </div>
             ) : isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Activity size={14} className="animate-pulse text-[#3D5275]" />
+                <Activity size={14} className="animate-pulse text-[#555d6e]" />
               </div>
             ) : filteredHoldings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-                <Boxes size={26} className="text-[#1E2D45]" />
-                <p className="text-[10px] text-[#3D5275] font-mono-val leading-relaxed">
+                <Boxes size={26} className="text-[#2e333d]" />
+                <p className="text-[10px] text-[#555d6e] font-mono-val leading-relaxed">
                   {searchTerm ? 'Eşleşen öğe yok.' : 'Veri yok.\nDemo yükle veya holding ekle.'}
                 </p>
               </div>
@@ -881,12 +881,12 @@ export function Assets() {
                       if (e.key === 'Escape') { setTreeAddTo(null); setTreeAddName(''); }
                     }}
                     placeholder="Ad..."
-                    className="flex-1 text-[10px] bg-[#070B14] border border-blue-500/30 rounded px-2 py-1 text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none"
+                    className="flex-1 text-[10px] bg-[#111318] border border-blue-500/30 rounded px-2 py-1 text-[#e4e7ec] placeholder:text-[#555d6e] font-mono-val focus:outline-none"
                   />
                   <button onClick={submitTreeAdd} className="p-1.5 rounded bg-blue-500/15 text-blue-400 hover:bg-blue-500/25">
                     <Check size={10} />
                   </button>
-                  <button onClick={() => { setTreeAddTo(null); setTreeAddName(''); }} className="p-1.5 rounded text-[#3D5275] hover:text-[#6B84A3]">
+                  <button onClick={() => { setTreeAddTo(null); setTreeAddName(''); }} className="p-1.5 rounded text-[#555d6e] hover:text-[#8b919e]">
                     <X size={10} />
                   </button>
                 </div>
@@ -903,9 +903,9 @@ export function Assets() {
           {/* Empty state */}
           {!sel || !liveNode ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-8 gap-3">
-              <Boxes size={48} className="text-[#1E2D45]" />
-              <p className="text-[#3D5275] font-mono-val text-sm">Sol menüden bir öğe seçin</p>
-              <p className="text-[#2A3F5F] font-mono-val text-[10px]">
+              <Boxes size={48} className="text-[#2e333d]" />
+              <p className="text-[#555d6e] font-mono-val text-sm">Sol menüden bir öğe seçin</p>
+              <p className="text-[#383e4a] font-mono-val text-[10px]">
                 Ctrl+Tık ile çoklu seçim • Sürükle-Bırak ile taşıma
               </p>
             </div>
@@ -913,7 +913,7 @@ export function Assets() {
             <div className="p-5 space-y-6">
 
               {/* ── Node header ─────────────────────────────── */}
-              <div className="flex items-start gap-4 pb-5 border-b border-[#1E2D45]">
+              <div className="flex items-start gap-4 pb-5 border-b border-[#2e333d]">
                 {/* Big icon */}
                 <div className={cn(
                   'w-14 h-14 rounded-xl border-2 flex items-center justify-center flex-shrink-0',
@@ -951,7 +951,7 @@ export function Assets() {
                       );
                     })()}
                   </div>
-                  <p className="text-[10px] text-[#3D5275] font-mono-val break-all leading-relaxed">{liveNode.path}</p>
+                  <p className="text-[10px] text-[#555d6e] font-mono-val break-all leading-relaxed">{liveNode.path}</p>
                   <p className="text-[10px] text-[#4A6080] font-mono-val mt-1">
                     {liveNode.children?.length ?? 0} alt öğe
                   </p>
@@ -969,13 +969,13 @@ export function Assets() {
               {/* ── Metadata (holding / kanal / bina / oda) ── */}
               {PAYLOAD_FIELDS[sel.level] && (
                 <div>
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
+                  <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">
                     {sel.level === 'holding' ? 'Holding Bilgileri' : sel.level === 'kanal' ? 'Kanal Bilgileri' : sel.level === 'bina' ? 'Bina Bilgileri' : 'Oda Bilgileri'}
                   </p>
                   <div className="space-y-2">
                     {PAYLOAD_FIELDS[sel.level]!.map(field => (
                       <div key={field.key}>
-                        <label className="text-[10px] text-[#6B84A3] uppercase tracking-wider font-mono-val block mb-1">
+                        <label className="text-[10px] text-[#8b919e] uppercase tracking-wider font-mono-val block mb-1">
                           {field.label}
                         </label>
                         {field.type === 'boolean' ? (
@@ -986,7 +986,7 @@ export function Assets() {
                               onChange={e => setPayloadForm(f => ({ ...f, [field.key]: e.target.checked }))}
                               className="rounded"
                             />
-                            <span className="text-xs text-[#E2EAF4] font-mono-val">
+                            <span className="text-xs text-[#e4e7ec] font-mono-val">
                               {payloadForm[field.key] ? 'Evet' : 'Hayır'}
                             </span>
                           </label>
@@ -998,7 +998,7 @@ export function Assets() {
                               ...f,
                               [field.key]: field.type === 'number' ? Number(e.target.value) : e.target.value,
                             }))}
-                            className="w-full px-3 py-2 text-sm bg-[#0D1525] border border-[#1E2D45] focus:border-[#3D5275] rounded-lg text-[#E2EAF4] font-mono-val focus:outline-none transition-colors placeholder:text-[#3D5275]"
+                            className="w-full px-3 py-2 text-sm bg-[#1a1d23] border border-[#2e333d] focus:border-[#555d6e] rounded-lg text-[#e4e7ec] font-mono-val focus:outline-none transition-colors placeholder:text-[#555d6e]"
                           />
                         )}
                       </div>
@@ -1017,20 +1017,20 @@ export function Assets() {
               {/* ── SQL Asset Bağlantısı (Bilgisayar only) ── */}
               {sel.level === 'bilgisayar' && (
                 <div>
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
+                  <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">
                     SQL Varlık Bağlantısı
                   </p>
                   {linkedAsset ? (
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
                       <Link2 size={14} className="text-green-400 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[#E2EAF4] font-medium truncate">{linkedAsset.assetName}</p>
-                        <p className="text-[10px] text-[#3D5275] font-mono-val">{linkedAsset.assetCode} · ID: {linkedAsset.assetId}</p>
+                        <p className="text-sm text-[#e4e7ec] font-medium truncate">{linkedAsset.assetName}</p>
+                        <p className="text-[10px] text-[#555d6e] font-mono-val">{linkedAsset.assetCode} · ID: {linkedAsset.assetId}</p>
                       </div>
                       <button
                         onClick={() => doLink(liveNode.id, null)}
                         title="Bağlantıyı kaldır"
-                        className="p-1.5 rounded hover:bg-red-500/10 text-[#3D5275] hover:text-red-400 transition-all"
+                        className="p-1.5 rounded hover:bg-red-500/10 text-[#555d6e] hover:text-red-400 transition-all"
                       >
                         <Unlink size={12} />
                       </button>
@@ -1038,34 +1038,34 @@ export function Assets() {
                   ) : (
                     <div className="space-y-2">
                       <div className="relative">
-                        <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#3D5275]" />
+                        <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#555d6e]" />
                         <input
                           value={linkSearch}
                           onChange={e => setLinkSearch(e.target.value)}
                           placeholder="Varlık adı veya kodu..."
-                          className="w-full pl-8 pr-3 py-2 text-sm bg-[#0D1525] border border-[#1E2D45] focus:border-[#3D5275] rounded-lg text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none transition-colors"
+                          className="w-full pl-8 pr-3 py-2 text-sm bg-[#1a1d23] border border-[#2e333d] focus:border-[#555d6e] rounded-lg text-[#e4e7ec] placeholder:text-[#555d6e] font-mono-val focus:outline-none transition-colors"
                         />
                       </div>
                       {linkSearchResults.length > 0 && (
-                        <div className="rounded-lg border border-[#1E2D45] overflow-hidden">
+                        <div className="rounded-lg border border-[#2e333d] overflow-hidden">
                           {linkSearchResults.map(a => (
                             <button
                               key={a.assetId}
                               onClick={() => doLink(liveNode.id, a.assetId)}
-                              className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#0F1A2E] border-b border-[#1E2D45] last:border-0 transition-colors"
+                              className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[#0F1A2E] border-b border-[#2e333d] last:border-0 transition-colors"
                             >
                               <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', onlineMap.get(a.assetId) ? 'bg-green-400' : 'bg-red-400')} />
                               <span className="flex-1 min-w-0">
-                                <span className="text-xs text-[#E2EAF4] block truncate">{a.assetName}</span>
-                                <span className="text-[10px] text-[#3D5275] font-mono-val">{a.assetCode}</span>
+                                <span className="text-xs text-[#e4e7ec] block truncate">{a.assetName}</span>
+                                <span className="text-[10px] text-[#555d6e] font-mono-val">{a.assetCode}</span>
                               </span>
-                              <Link2 size={10} className="text-[#3D5275] flex-shrink-0" />
+                              <Link2 size={10} className="text-[#555d6e] flex-shrink-0" />
                             </button>
                           ))}
                         </div>
                       )}
                       {!linkSearch && (
-                        <p className="text-[10px] text-[#2A3F5F] font-mono-val">
+                        <p className="text-[10px] text-[#383e4a] font-mono-val">
                           SQL Assets tablosundaki varlıkları arayın ve bağlayın
                         </p>
                       )}
@@ -1078,7 +1078,7 @@ export function Assets() {
               {/* ── Alt öğe ekle ────────────────────────────── */}
               {childLevel && (
                 <div>
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">
+                  <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-2">
                     Yeni {LEVEL_CFG[childLevel].label}
                   </p>
                   <div className="flex gap-2">
@@ -1090,7 +1090,7 @@ export function Assets() {
                         if (e.key === 'Escape') setAddChildName('');
                       }}
                       placeholder={`${LEVEL_CFG[childLevel].label} adı girin...`}
-                      className="flex-1 text-sm bg-[#0D1525] border border-[#1E2D45] focus:border-[#3D5275] rounded-lg px-3 py-2 text-[#E2EAF4] placeholder:text-[#3D5275] font-mono-val focus:outline-none transition-colors"
+                      className="flex-1 text-sm bg-[#1a1d23] border border-[#2e333d] focus:border-[#555d6e] rounded-lg px-3 py-2 text-[#e4e7ec] placeholder:text-[#555d6e] font-mono-val focus:outline-none transition-colors"
                     />
                     <button
                       onClick={submitRightAdd}
@@ -1112,9 +1112,9 @@ export function Assets() {
               {/* ── Children grid ───────────────────────────── */}
               {(liveNode.children?.length ?? 0) > 0 && (
                 <div>
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
+                  <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">
                     {childLevel ? LEVEL_CFG[childLevel].label : 'Alt Öğe'}ler{' '}
-                    <span className="text-[#3D5275] normal-case">({liveNode.children.length})</span>
+                    <span className="text-[#555d6e] normal-case">({liveNode.children.length})</span>
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     {liveNode.children.map(child => {
@@ -1126,7 +1126,7 @@ export function Assets() {
                       return (
                         <div
                           key={child.id}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-[#0D1525] border border-[#1A2540] cursor-pointer hover:border-[#2A3F5F] hover:bg-[#111827] transition-all group"
+                          className="flex items-center gap-3 p-3 rounded-lg bg-[#1a1d23] border border-[#2e333d] cursor-pointer hover:border-[#383e4a] hover:bg-[#22262e] transition-all group"
                           onClick={() => {
                             select(child, cLvl);
                             expand(liveNode.id);
@@ -1137,7 +1137,7 @@ export function Assets() {
                             <Icon size={14} className={color} />
                             {childOnline !== undefined && (
                               <span className={cn(
-                                'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#0D1525]',
+                                'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#1a1d23]',
                                 childOnline ? 'bg-green-400' : 'bg-red-400',
                               )} />
                             )}
@@ -1145,8 +1145,8 @@ export function Assets() {
 
                           {/* Info */}
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs text-[#E2EAF4] font-medium truncate">{child.name}</p>
-                            <p className="text-[10px] text-[#3D5275] font-mono-val">{label}</p>
+                            <p className="text-xs text-[#e4e7ec] font-medium truncate">{child.name}</p>
+                            <p className="text-[10px] text-[#555d6e] font-mono-val">{label}</p>
                             {(child.children?.length ?? 0) > 0 && (
                               <p className="text-[10px] text-[#4A6080] font-mono-val">{child.children.length} alt öğe</p>
                             )}
@@ -1155,7 +1155,7 @@ export function Assets() {
                           {/* Delete */}
                           <button
                             onClick={e => { e.stopPropagation(); doDelete(child.id, cLvl, child.name); }}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-red-500/20 text-[#3D5275] hover:text-red-400 transition-all"
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-red-500/20 text-[#555d6e] hover:text-red-400 transition-all"
                           >
                             <Trash2 size={11} />
                           </button>
@@ -1180,20 +1180,20 @@ export function Assets() {
           onClick={() => setShowAudit(v => !v)}
           className="flex items-center gap-2 w-full text-left"
         >
-          <History size={11} className="text-[#6B84A3]" />
-          <span className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val flex-1">
+          <History size={11} className="text-[#8b919e]" />
+          <span className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val flex-1">
             Değişiklik Geçmişi
           </span>
-          <ChevronRight size={10} className={cn('text-[#3D5275] transition-transform', showAudit && 'rotate-90')} />
+          <ChevronRight size={10} className={cn('text-[#555d6e] transition-transform', showAudit && 'rotate-90')} />
         </button>
 
         {showAudit && (
           <div className="mt-3 max-h-48 overflow-y-auto space-y-1">
             {!auditData || auditData.length === 0 ? (
-              <p className="text-[10px] text-[#3D5275] font-mono-val py-4 text-center">Henüz değişiklik yok</p>
+              <p className="text-[10px] text-[#555d6e] font-mono-val py-4 text-center">Henüz değişiklik yok</p>
             ) : auditData.map((e: { timestamp: string; action: string; nodeType: string; nodeName: string }, i: number) => (
-              <div key={i} className="flex items-center gap-3 py-1.5 border-b border-[#1E2D45] last:border-0">
-                <span className="text-[9px] text-[#3D5275] font-mono-val flex-shrink-0 w-36">
+              <div key={i} className="flex items-center gap-3 py-1.5 border-b border-[#2e333d] last:border-0">
+                <span className="text-[9px] text-[#555d6e] font-mono-val flex-shrink-0 w-36">
                   {new Date(e.timestamp).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'medium' })}
                 </span>
                 <span className={cn(

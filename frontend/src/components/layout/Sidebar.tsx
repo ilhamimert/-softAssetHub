@@ -45,7 +45,7 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
     <aside
       className={cn(
         'flex flex-col h-full transition-all duration-300 ease-in-out',
-        'bg-[#070B14] border-r border-[#1E2D45]',
+        'bg-[#111318] border-r border-[#2e333d]',
         // Mobile: fixed overlay, sağdan kaymaz soldan gelir
         'fixed inset-y-0 left-0 z-50 w-56',
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
@@ -56,18 +56,18 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
     >
       {/* Logo */}
       <div className={cn(
-        'flex items-center gap-3 px-3 py-4 border-b border-[#1E2D45]',
+        'flex items-center gap-3 px-3 py-4 border-b border-[#2e333d]',
         collapsed && 'justify-center px-0'
       )}>
-        <div className="flex-shrink-0 w-8 h-8 rounded bg-amber-500/15 border border-amber-500/30 flex items-center justify-center glow-amber">
-          <span className="text-amber-400 font-display font-bold text-sm">BC</span>
+        <div className="flex-shrink-0 w-8 h-8 rounded bg-[#22262e] border border-[#2e333d] flex items-center justify-center">
+          <span className="text-[#5b8fd5] font-display font-bold text-sm">BC</span>
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <p className="font-display font-semibold text-sm text-white leading-tight tracking-wide truncate">
+            <p className="font-display font-semibold text-sm text-[#e4e7ec] leading-tight tracking-wide truncate">
               BROADCAST
             </p>
-            <p className="text-[10px] text-[#6B84A3] tracking-widest uppercase leading-tight truncate">
+            <p className="text-[10px] text-[#8b919e] tracking-widest uppercase leading-tight truncate">
               Asset Management
             </p>
           </div>
@@ -77,13 +77,13 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
       {/* Hiyerarşi göstergesi */}
       {!collapsed && (
         <div className="px-3 pt-2 pb-1">
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-green-500/5 border border-green-500/15 mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot flex-shrink-0" />
-            <span className="text-[10px] text-green-400 font-mono tracking-wider">{t('sidebar.live_monitoring')}</span>
+          <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-[#4caf82]/5 border border-[#4caf82]/15 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4caf82] animate-pulse flex-shrink-0" />
+            <span className="text-[10px] text-[#4caf82] font-mono tracking-wider">{t('sidebar.live_monitoring')}</span>
           </div>
           <div className="flex items-center gap-1 px-1 py-1">
-            <Building2 size={9} className="text-[#3D5275]" />
-            <span className="text-[9px] text-[#3D5275] tracking-wider">
+            <Building2 size={9} className="text-[#555d6e]" />
+            <span className="text-[9px] text-[#555d6e] tracking-wider">
               {t('sidebar.hierarchy')}
             </span>
           </div>
@@ -118,22 +118,19 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
             className={({ isActive }) => cn(
               'group flex items-center gap-3 px-2.5 py-2 rounded text-sm transition-all duration-150 relative',
               isActive
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                : 'text-[#6B84A3] hover:text-[#E2EAF4] hover:bg-[#131C2E]',
+                ? 'bg-[#22262e] text-[#5b8fd5] border-l-2 border-l-[#5b8fd5] border border-[#2e333d]'
+                : 'text-[#8b919e] hover:text-[#e4e7ec] hover:bg-[#1a1d23]',
               collapsed && 'justify-center px-0 w-10 mx-auto'
             )}
             title={collapsed ? label : undefined}
           >
             {({ isActive }) => (
               <>
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-amber-400 rounded-r" />
-                )}
                 <Icon size={15} className="flex-shrink-0" />
                 {!collapsed && (
                   <>
                     <span className="flex-1 truncate">{label}</span>
-                    {isActive && <ChevronRight size={12} className="text-amber-400/60" />}
+                    {isActive && <ChevronRight size={12} className="text-[#5b8fd5]/60" />}
                   </>
                 )}
               </>
@@ -143,23 +140,23 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
       </nav>
 
       <div className={cn(
-        'border-t border-[#1E2D45] p-2',
+        'border-t border-[#2e333d] p-2',
         collapsed && 'flex justify-center'
       )}>
         {!collapsed ? (
           <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/5 group transition-all duration-200">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-[#5b8fd5] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
               {user?.fullName?.charAt(0) ?? 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-display font-bold text-[#E2EAF4] truncate leading-tight uppercase tracking-tight">{user?.fullName}</p>
-              <p className="text-[9px] text-amber-500 font-mono-val truncate leading-tight mt-0.5 uppercase">
+              <p className="text-[11px] font-display font-bold text-[#e4e7ec] truncate leading-tight uppercase tracking-tight">{user?.fullName}</p>
+              <p className="text-[9px] text-[#5b8fd5] font-mono-val truncate leading-tight mt-0.5 uppercase">
                 {user?.role === 'Admin' ? t('common.system_admin') : user?.role}
               </p>
             </div>
             <button
               onClick={() => logout()}
-              className="opacity-0 group-hover:opacity-100 transition-all text-[#6B84A3] hover:text-red-400 p-1.5 hover:bg-red-400/10 rounded-lg"
+              className="opacity-0 group-hover:opacity-100 transition-all text-[#8b919e] hover:text-[#d9534f] p-1.5 hover:bg-[#d9534f]/10 rounded-lg"
               title={t('common.logout')}
             >
               <LogOut size={12} />
@@ -168,7 +165,7 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
         ) : (
           <button
             onClick={() => logout()}
-            className="p-2 text-[#6B84A3] hover:text-red-400 transition-colors rounded hover:bg-[#131C2E]"
+            className="p-2 text-[#8b919e] hover:text-[#d9534f] transition-colors rounded hover:bg-[#1a1d23]"
             title={t('common.logout')}
           >
             <LogOut size={15} />

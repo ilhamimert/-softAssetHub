@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -27,7 +27,6 @@ export default defineConfig({
       },
     },
   },
-  // Sanal RAM sayesinde daha büyük chunk limiti
   build: {
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
@@ -37,17 +36,21 @@ export default defineConfig({
           charts: ['recharts'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-tabs', '@radix-ui/react-select'],
           query: ['@tanstack/react-query', 'zustand', 'axios'],
+          icons: ['lucide-react'],
+          dates: ['date-fns'],
+          i18n: ['i18next', 'react-i18next'],
         },
       },
     },
     target: 'esnext',
     minify: 'esbuild',
   },
-  // Worker sayısı: sanal RAM ile daha fazla paralel işlem
   worker: {
     format: 'es',
   },
   esbuild: {
     target: 'esnext',
+    // Production build'de console.log ve debugger'ları kaldır
+    ...(mode === 'production' ? { drop: ['console', 'debugger'] } : {}),
   },
-})
+}))

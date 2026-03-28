@@ -18,7 +18,7 @@ const SEVERITY_BARS = (n: number) => (
         key={i}
         className={cn(
           'w-1 rounded-sm',
-          i < n ? (n >= 4 ? 'bg-red-400' : n >= 3 ? 'bg-amber-400' : 'bg-cyan-400') : 'bg-[#1E2D45]'
+          i < n ? (n >= 4 ? 'bg-red-400' : n >= 3 ? 'bg-amber-400' : 'bg-cyan-400') : 'bg-[#2e333d]'
         )}
         style={{ height: `${(i + 1) * 3 + 4}px` }}
       />
@@ -97,7 +97,7 @@ export function Alerts() {
             {icon}
             <div>
               <p className={`font-display font-bold text-2xl leading-none ${text}`}>{count}</p>
-              <p className="text-[10px] text-[#6B84A3] font-mono-val uppercase tracking-wider mt-0.5">{label}</p>
+              <p className="text-[10px] text-[#8b919e] font-mono-val uppercase tracking-wider mt-0.5">{label}</p>
             </div>
           </div>
         ))}
@@ -106,7 +106,7 @@ export function Alerts() {
       {/* Toolbar */}
       <div className="card p-3 flex items-center gap-3">
         {/* Tabs */}
-        <div className="flex gap-1 bg-[#131C2E] rounded p-0.5">
+        <div className="flex gap-1 bg-[#22262e] rounded p-0.5">
           {(['unresolved', 'all'] as const).map(t => (
             <button
               key={t}
@@ -115,7 +115,7 @@ export function Alerts() {
                 'px-3 py-1.5 rounded text-xs font-mono-val transition-all',
                 tab === t
                   ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
-                  : 'text-[#6B84A3] hover:text-[#E2EAF4]'
+                  : 'text-[#8b919e] hover:text-[#e4e7ec]'
               )}
             >
               {t === 'unresolved' ? 'Açık Uyarılar' : 'Tümü'}
@@ -127,7 +127,7 @@ export function Alerts() {
         <select
           value={typeFilter}
           onChange={e => { setTypeFilter(e.target.value); setPage(1); setSelected([]); }}
-          className="bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] px-2 py-1.5 outline-none"
+          className="bg-[#22262e] border border-[#2e333d] rounded text-xs text-[#e4e7ec] px-2 py-1.5 outline-none"
         >
           <option value="">Tüm Türler</option>
           <option value="Critical">Kritik</option>
@@ -138,12 +138,12 @@ export function Alerts() {
         <div className="flex-1" />
 
         {!isLoading && unresolvedAlertsOnPage.length > 0 && (
-          <label className="flex items-center gap-2 text-[10px] uppercase font-mono-val tracking-widest text-[#6B84A3] cursor-pointer hover:text-[#E2EAF4] mr-2">
+          <label className="flex items-center gap-2 text-[10px] uppercase font-mono-val tracking-widest text-[#8b919e] cursor-pointer hover:text-[#e4e7ec] mr-2">
             <input
               type="checkbox"
               checked={allSelected}
               onChange={toggleSelectAll}
-              className="accent-amber-500"
+              className="accent-[#5b8fd5]"
             />
             Tümünü Seç
           </label>
@@ -165,13 +165,13 @@ export function Alerts() {
       <div className="space-y-2">
         {isLoading
           ? Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="card p-4 h-16 animate-pulse bg-[#131C2E]" />
+            <div key={i} className="card p-4 h-16 animate-pulse bg-[#22262e]" />
           ))
           : alerts.length === 0
             ? (
               <div className="card p-12 text-center">
                 <CheckCircle size={32} className="text-green-400 mx-auto mb-3" />
-                <p className="text-sm text-[#6B84A3] font-mono-val">Tüm uyarılar çözüldü</p>
+                <p className="text-sm text-[#8b919e] font-mono-val">Tüm uyarılar çözüldü</p>
               </div>
             )
             : alerts.map(alert => (
@@ -181,7 +181,7 @@ export function Alerts() {
                   'card p-3 border flex items-start gap-3 transition-all',
                   alertBg(alert.alertType),
                   alert.isResolved && 'opacity-50',
-                  selected.includes(alert.alertId) && 'ring-1 ring-amber-500/40'
+                  selected.includes(alert.alertId) && 'ring-1 ring-[#5b8fd5]/40'
                 )}
               >
                 {/* Checkbox */}
@@ -190,7 +190,7 @@ export function Alerts() {
                     type="checkbox"
                     checked={selected.includes(alert.alertId)}
                     onChange={() => toggleSelect(alert.alertId)}
-                    className="mt-0.5 accent-amber-500 cursor-pointer"
+                    className="mt-0.5 accent-[#5b8fd5] cursor-pointer"
                   />
                 )}
 
@@ -247,13 +247,13 @@ export function Alerts() {
       {pagination.totalPages > 1 && (
         <div className="card px-4 py-3 flex items-center justify-between fade-in-up">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] text-[#3D5275] font-mono-val">
+            <span className="text-[10px] text-[#555d6e] font-mono-val">
               Sayfa {pagination.page} / {pagination.totalPages} · {pagination.total.toLocaleString()} kayıt
             </span>
             <select
               value={limit}
               onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
-              className="bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#6B84A3] px-2 py-1 outline-none"
+              className="bg-[#22262e] border border-[#2e333d] rounded text-xs text-[#8b919e] px-2 py-1 outline-none"
             >
               {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} satır</option>)}
             </select>
@@ -263,7 +263,7 @@ export function Alerts() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               ‹ Önceki
             </button>
@@ -277,7 +277,7 @@ export function Alerts() {
                     'w-7 h-7 rounded text-[10px] font-mono-val border transition-colors',
                     p === page
                       ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                      : 'bg-[#131C2E] border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4]'
+                      : 'bg-[#22262e] border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec]'
                   )}
                 >
                   {p}
@@ -287,7 +287,7 @@ export function Alerts() {
             <button
               onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
               disabled={page === pagination.totalPages}
-              className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Sonraki ›
             </button>

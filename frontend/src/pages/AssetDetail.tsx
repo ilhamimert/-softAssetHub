@@ -23,9 +23,9 @@ const FEATURE_FLAGS = ['GPI', 'VTR CONTROL', 'A/B', 'LORES', 'DEV VIZ', 'SHOT BO
 function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
   if (value == null || value === '') return null;
   return (
-    <div className="flex gap-3 py-2 border-b border-[#1E2D45] last:border-0">
-      <span className="w-36 flex-shrink-0 text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{label}</span>
-      <span className="text-xs text-[#E2EAF4] font-mono-val break-all">{String(value)}</span>
+    <div className="flex gap-3 py-2 border-b border-[#2e333d] last:border-0">
+      <span className="w-36 flex-shrink-0 text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{label}</span>
+      <span className="text-xs text-[#e4e7ec] font-mono-val break-all">{String(value)}</span>
     </div>
   );
 }
@@ -39,12 +39,12 @@ function MetricBar({ label, value, unit = '%', max = 100 }: {
   return (
     <div>
       <div className="flex justify-between mb-1">
-        <span className="text-[10px] text-[#6B84A3] font-mono-val uppercase tracking-wider">{label}</span>
-        <span className={cn('text-xs font-mono-val font-semibold', value != null ? text : 'text-[#3D5275]')}>
+        <span className="text-[10px] text-[#8b919e] font-mono-val uppercase tracking-wider">{label}</span>
+        <span className={cn('text-xs font-mono-val font-semibold', value != null ? text : 'text-[#555d6e]')}>
           {value != null ? `${value.toFixed(1)}${unit}` : '—'}
         </span>
       </div>
-      <div className="h-1.5 bg-[#1E2D45] rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[#2e333d] rounded-full overflow-hidden">
         <div className={cn('h-full rounded-full transition-all duration-500', bar)} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -52,7 +52,7 @@ function MetricBar({ label, value, unit = '%', max = 100 }: {
 }
 
 function expiryColor(dateStr?: string | null) {
-  if (!dateStr) return 'text-[#6B84A3]';
+  if (!dateStr) return 'text-[#8b919e]';
   const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
   if (days < 0) return 'text-red-400';
   if (days <= 7) return 'text-red-400';
@@ -70,8 +70,8 @@ function expiryLabel(dateStr?: string | null) {
 }
 
 const CHART_STYLE = {
-  contentStyle: { background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' },
-  tickStyle: { fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' },
+  contentStyle: { background: '#1a1d23', border: '1px solid #2e333d', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' },
+  tickStyle: { fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' },
 };
 
 const TABS = [
@@ -243,8 +243,8 @@ export function AssetDetail() {
   if (!asset) {
     return (
       <div className="card p-16 text-center">
-        <Server size={36} className="text-[#1E2D45] mx-auto mb-3" />
-        <p className="text-sm text-[#3D5275] font-mono-val mb-4">Varlık bulunamadı</p>
+        <Server size={36} className="text-[#2e333d] mx-auto mb-3" />
+        <p className="text-sm text-[#555d6e] font-mono-val mb-4">Varlık bulunamadı</p>
         <button onClick={() => navigate(-1)} className="text-xs text-amber-400 hover:underline font-mono-val">← Geri dön</button>
       </div>
     );
@@ -259,7 +259,7 @@ export function AssetDetail() {
         <div className="flex items-start gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="flex-shrink-0 p-1.5 rounded text-[#6B84A3] hover:text-[#E2EAF4] hover:bg-[#1E2D45] transition-colors mt-0.5"
+            className="flex-shrink-0 p-1.5 rounded text-[#8b919e] hover:text-[#e4e7ec] hover:bg-[#2e333d] transition-colors mt-0.5"
           >
             <ArrowLeft size={15} />
           </button>
@@ -276,7 +276,7 @@ export function AssetDetail() {
                   ? isOnline
                     ? 'text-green-400 bg-green-500/10 border-green-500/20'
                     : 'text-red-400 bg-red-500/10 border-red-500/20'
-                  : 'text-[#6B84A3] bg-[#1E2D45] border-[#1E2D45]'
+                  : 'text-[#8b919e] bg-[#2e333d] border-[#2e333d]'
               )}>
                 {hasMonitoring ? (isOnline ? <Wifi size={9} /> : <WifiOff size={9} />) : null}
                 {hasMonitoring ? (isOnline ? 'ONLİNE' : 'OFFLİNE') : 'VERİ YOK'}
@@ -290,12 +290,12 @@ export function AssetDetail() {
                 </span>
               )}
               {(asset.channelName || asset.buildingName || asset.roomName) && (
-                <span className="flex items-center gap-1 text-[10px] text-[#6B84A3] font-mono-val">
+                <span className="flex items-center gap-1 text-[10px] text-[#8b919e] font-mono-val">
                   <MapPin size={9} />
                   {[asset.channelName, asset.buildingName, asset.roomName].filter(Boolean).join(' · ')}
                 </span>
               )}
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1E2D45] text-[#6B84A3] font-mono-val border border-[#253550]">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2e333d] text-[#8b919e] font-mono-val border border-[#383e4a]">
                 {asset.assetType}
               </span>
             </div>
@@ -304,7 +304,7 @@ export function AssetDetail() {
 
         {/* Canlı metrik çubukları */}
         {hasMonitoring && isOnline && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-[#1E2D45]">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-[#2e333d]">
             <MetricBar label="CPU" value={asset.cpuUsage} />
             <MetricBar label="RAM" value={asset.ramUsage} />
             <MetricBar label="GPU" value={asset.gpuUsage} />
@@ -317,7 +317,7 @@ export function AssetDetail() {
           <div className="flex gap-6 pt-1">
             {asset.temperature != null && (
               <span className="flex items-center gap-1.5 text-sm">
-                <Thermometer size={13} className="text-[#6B84A3]" />
+                <Thermometer size={13} className="text-[#8b919e]" />
                 <span className={cn('font-mono-val font-semibold', tempColor(asset.temperature))}>
                   {asset.temperature}°C
                 </span>
@@ -330,7 +330,7 @@ export function AssetDetail() {
               </span>
             )}
             {asset.lastMonitoringTime && (
-              <span className="flex items-center gap-1.5 text-[10px] text-[#3D5275] font-mono-val ml-auto">
+              <span className="flex items-center gap-1.5 text-[10px] text-[#555d6e] font-mono-val ml-auto">
                 <Clock size={9} />Son: {timeAgo(asset.lastMonitoringTime)}
               </span>
             )}
@@ -339,7 +339,7 @@ export function AssetDetail() {
       </div>
 
       {/* ── Sekmeler ──────────────────────────────────────────────────────────── */}
-      <div className="flex gap-1 bg-[#0D1421] rounded-lg p-1 border border-[#1E2D45]">
+      <div className="flex gap-1 bg-[#1a1d23] rounded-lg p-1 border border-[#2e333d]">
         {TABS.map(({ key, label, Icon }) => (
           <button
             key={key}
@@ -348,7 +348,7 @@ export function AssetDetail() {
               'flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-mono-val transition-all flex-1',
               tab === key
                 ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
-                : 'text-[#6B84A3] hover:text-[#E2EAF4]'
+                : 'text-[#8b919e] hover:text-[#e4e7ec]'
             )}
           >
             <Icon size={12} />{label}
@@ -360,7 +360,7 @@ export function AssetDetail() {
       {tab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="card p-4">
-            <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">Cihaz Bilgileri</p>
+            <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">Cihaz Bilgileri</p>
             <InfoRow label="Varlık Adı" value={asset.assetName} />
             <InfoRow label="Kod" value={asset.assetCode} />
             <InfoRow label="Tür" value={asset.assetType} />
@@ -375,7 +375,7 @@ export function AssetDetail() {
 
           <div className="space-y-4">
             <div className="card p-4">
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">Konum</p>
+              <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">Konum</p>
               <InfoRow label="Holding" value={asset.holdingName} />
               <InfoRow label="Kanal" value={asset.channelName} />
               <InfoRow label="Bina" value={asset.buildingName} />
@@ -383,7 +383,7 @@ export function AssetDetail() {
               <InfoRow label="Grup" value={asset.groupName} />
             </div>
             <div className="card p-4">
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">Finansal / Tarih</p>
+              <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">Finansal / Tarih</p>
               <InfoRow label="Alış Tarihi" value={formatDate(asset.purchaseDate)} />
               <InfoRow label="Alış Maliyeti" value={asset.purchaseCost ? formatCurrency(asset.purchaseCost) : null} />
               <InfoRow label="Güncel Değer" value={asset.currentValue ? formatCurrency(asset.currentValue) : null} />
@@ -401,12 +401,12 @@ export function AssetDetail() {
           {history.length > 0 ? (
             <>
               <div className="card p-4">
-                <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">
+                <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">
                   CPU Kullanımı — Son {history.length} Kayıt
                 </p>
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
                     <XAxis dataKey="monitoringTime"
                       tickFormatter={(v) => new Date(v).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                       tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
@@ -414,17 +414,17 @@ export function AssetDetail() {
                     <Tooltip {...CHART_STYLE.contentStyle && { contentStyle: CHART_STYLE.contentStyle }}
                       formatter={(v: number | string | undefined) => [`${Number(v ?? 0).toFixed(1)}%`, 'CPU']}
                       labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
-                    <Line type="monotone" dataKey="cpuUsage" stroke="#22D3EE" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" dataKey="cpuUsage" stroke="#5b9bd5" strokeWidth={1.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="card p-4">
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">Sıcaklık (°C)</p>
+                  <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">Sıcaklık (°C)</p>
                   <ResponsiveContainer width="100%" height={140}>
                     <LineChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
                       <XAxis dataKey="monitoringTime"
                         tickFormatter={(v) => new Date(v).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                         tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
@@ -432,15 +432,15 @@ export function AssetDetail() {
                       <Tooltip contentStyle={CHART_STYLE.contentStyle}
                         formatter={(v: number | string | undefined) => [`${Number(v ?? 0).toFixed(1)}°C`, 'Sıcaklık']}
                         labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
-                      <Line type="monotone" dataKey="temperature" stroke="#F59E0B" strokeWidth={1.5} dot={false} />
+                      <Line type="monotone" dataKey="temperature" stroke="#e09f3e" strokeWidth={1.5} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="card p-4">
-                  <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-3">Güç Tüketimi (W)</p>
+                  <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">Güç Tüketimi (W)</p>
                   <ResponsiveContainer width="100%" height={140}>
                     <LineChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
                       <XAxis dataKey="monitoringTime"
                         tickFormatter={(v) => new Date(v).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                         tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
@@ -448,7 +448,7 @@ export function AssetDetail() {
                       <Tooltip contentStyle={CHART_STYLE.contentStyle}
                         formatter={(v: number | string | undefined) => [`${Number(v ?? 0).toFixed(0)}W`, 'Güç']}
                         labelFormatter={(l) => new Date(l).toLocaleString('tr-TR')} />
-                      <Line type="monotone" dataKey="powerConsumption" stroke="#10B981" strokeWidth={1.5} dot={false} />
+                      <Line type="monotone" dataKey="powerConsumption" stroke="#4caf82" strokeWidth={1.5} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -456,8 +456,8 @@ export function AssetDetail() {
             </>
           ) : (
             <div className="card p-16 text-center">
-              <Activity size={32} className="text-[#1E2D45] mx-auto mb-3" />
-              <p className="text-sm text-[#3D5275] font-mono-val">Monitoring verisi yok</p>
+              <Activity size={32} className="text-[#2e333d] mx-auto mb-3" />
+              <p className="text-sm text-[#555d6e] font-mono-val">Monitoring verisi yok</p>
             </div>
           )}
         </div>
@@ -467,30 +467,30 @@ export function AssetDetail() {
       {tab === 'maintenance' && (
         <div className="card overflow-hidden">
           {records.length > 0 ? (
-            <div className="divide-y divide-[#1E2D45]">
+            <div className="divide-y divide-[#2e333d]">
               {records.map(r => (
-                <div key={r.maintenanceId} className="p-3 hover:bg-[#131C2E] transition-colors">
+                <div key={r.maintenanceId} className="p-3 hover:bg-[#22262e] transition-colors">
                   <div className="flex items-start gap-3">
                     <span className={cn(
                       'flex-shrink-0 text-[10px] font-mono-val px-2 py-1 rounded border',
                       r.status === 'Completed' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
                         r.status === 'Scheduled' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                           r.status === 'Pending' ? 'bg-cyan-500/10  text-cyan-400  border-cyan-500/20' :
-                            'bg-[#1E2D45] text-[#6B84A3] border-[#1E2D45]'
+                            'bg-[#2e333d] text-[#8b919e] border-[#2e333d]'
                     )}>
                       {maintenanceStatusLabel(r.status)}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-[#E2EAF4]">{r.maintenanceType ?? 'Bakım'}</p>
-                      {r.description && <p className="text-[10px] text-[#6B84A3] mt-0.5 line-clamp-2">{r.description}</p>}
+                      <p className="text-xs text-[#e4e7ec]">{r.maintenanceType ?? 'Bakım'}</p>
+                      {r.description && <p className="text-[10px] text-[#8b919e] mt-0.5 line-clamp-2">{r.description}</p>}
                       <div className="flex gap-4 mt-1.5">
                         {r.technicianName && (
-                          <span className="flex items-center gap-1 text-[10px] text-[#6B84A3]">
+                          <span className="flex items-center gap-1 text-[10px] text-[#8b919e]">
                             <User size={9} />{r.technicianName}
                           </span>
                         )}
                         {r.costAmount != null && (
-                          <span className="flex items-center gap-1 text-[10px] text-[#6B84A3]">
+                          <span className="flex items-center gap-1 text-[10px] text-[#8b919e]">
                             <DollarSign size={9} />{formatCurrency(r.costAmount)}
                           </span>
                         )}
@@ -499,7 +499,7 @@ export function AssetDetail() {
                     <div className="text-right flex-shrink-0">
                       <p className="text-[10px] text-amber-400 font-mono-val">{formatDate(r.maintenanceDate)}</p>
                       {r.nextMaintenanceDate && (
-                        <p className="text-[10px] text-[#6B84A3] font-mono-val mt-0.5">
+                        <p className="text-[10px] text-[#8b919e] font-mono-val mt-0.5">
                           Sonraki: {formatDate(r.nextMaintenanceDate)}
                         </p>
                       )}
@@ -510,8 +510,8 @@ export function AssetDetail() {
             </div>
           ) : (
             <div className="p-16 text-center">
-              <Wrench size={32} className="text-[#1E2D45] mx-auto mb-3" />
-              <p className="text-sm text-[#3D5275] font-mono-val">Bakım kaydı yok</p>
+              <Wrench size={32} className="text-[#2e333d] mx-auto mb-3" />
+              <p className="text-sm text-[#555d6e] font-mono-val">Bakım kaydı yok</p>
             </div>
           )}
         </div>
@@ -529,13 +529,13 @@ export function AssetDetail() {
                 : 'text-cyan-400';
             const cardCls = al.alertType === 'Critical' ? 'border-red-500/20 bg-red-500/5'
               : al.alertType === 'Warning' ? 'border-amber-500/20 bg-amber-500/5'
-                : 'border-[#1E2D45]';
+                : 'border-[#2e333d]';
             return (
               <div key={al.alertId} className={cn('card p-3 border flex items-start gap-3', cardCls, al.isResolved && 'opacity-50')}>
                 <Icon size={14} className={cn(iconCls, 'mt-0.5 flex-shrink-0')} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-[#E2EAF4] leading-snug">{al.alertMessage}</p>
-                  <div className="flex gap-3 mt-1 text-[10px] text-[#6B84A3] font-mono-val flex-wrap">
+                  <p className="text-xs text-[#e4e7ec] leading-snug">{al.alertMessage}</p>
+                  <div className="flex gap-3 mt-1 text-[10px] text-[#8b919e] font-mono-val flex-wrap">
                     <span className="flex items-center gap-1"><Clock size={9} />{timeAgo(al.triggeredTime)}</span>
                     {al.alertCategory && <span>{al.alertCategory}</span>}
                     {al.isResolved && (
@@ -550,7 +550,7 @@ export function AssetDetail() {
           }) : (
             <div className="card p-16 text-center">
               <CheckCircle size={32} className="text-green-400/30 mx-auto mb-3" />
-              <p className="text-sm text-[#3D5275] font-mono-val">Bu varlık için uyarı kaydı yok</p>
+              <p className="text-sm text-[#555d6e] font-mono-val">Bu varlık için uyarı kaydı yok</p>
             </div>
           )}
         </div>
@@ -561,12 +561,12 @@ export function AssetDetail() {
         <div className="space-y-3">
           {/* Başlık + Ekle butonu */}
           <div className="flex items-center justify-between">
-            <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">
+            <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">
               {licenses.length} lisans
             </p>
             <button
               onClick={openCreate}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors font-mono-val"
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-[#5b8fd5]/20 transition-colors font-mono-val"
             >
               <Plus size={12} />Lisans Ekle
             </button>
@@ -585,7 +585,7 @@ export function AssetDetail() {
                     <KeyRound size={14} className="text-amber-400 flex-shrink-0" />
                     <span className="text-sm font-display font-semibold text-white">{lic.applicationName}</span>
                     {!lic.isActive && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1E2D45] text-[#6B84A3] border border-[#253550] font-mono-val">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2e333d] text-[#8b919e] border border-[#383e4a] font-mono-val">
                         PASİF
                       </span>
                     )}
@@ -593,7 +593,7 @@ export function AssetDetail() {
                   <div className="flex gap-1 flex-shrink-0">
                     <button
                       onClick={() => openEdit(lic)}
-                      className="p-1.5 rounded text-[#6B84A3] hover:text-amber-400 hover:bg-[#1E2D45] transition-colors"
+                      className="p-1.5 rounded text-[#8b919e] hover:text-[#5b8fd5] hover:bg-[#2e333d] transition-colors"
                       title="Düzenle"
                     >
                       <Edit2 size={12} />
@@ -604,7 +604,7 @@ export function AssetDetail() {
                           deleteLicense.mutate(lic.licenseId);
                         }
                       }}
-                      className="p-1.5 rounded text-[#6B84A3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded text-[#8b919e] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       title="Sil"
                     >
                       <Trash2 size={12} />
@@ -614,13 +614,13 @@ export function AssetDetail() {
 
                 {/* Lisans anahtarı */}
                 {lic.licenseKey && (
-                  <div className="flex items-center gap-2 bg-[#0D1421] rounded p-2 border border-[#1E2D45]">
+                  <div className="flex items-center gap-2 bg-[#1a1d23] rounded p-2 border border-[#2e333d]">
                     <code className="text-[10px] text-cyan-400 font-mono-val flex-1 break-all line-clamp-2">
                       {lic.licenseKey}
                     </code>
                     <button
                       onClick={() => copyKey(lic)}
-                      className="flex-shrink-0 p-1 rounded text-[#6B84A3] hover:text-cyan-400 transition-colors"
+                      className="flex-shrink-0 p-1 rounded text-[#8b919e] hover:text-cyan-400 transition-colors"
                       title="Kopyala"
                     >
                       {copyMsg === lic.licenseId
@@ -635,20 +635,20 @@ export function AssetDetail() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-[10px] font-mono-val">
                   {lic.macId && (
                     <div>
-                      <span className="text-[#6B84A3] uppercase tracking-widest block mb-0.5">MAC ID</span>
-                      <span className="text-[#E2EAF4]">{lic.macId}</span>
+                      <span className="text-[#8b919e] uppercase tracking-widest block mb-0.5">MAC ID</span>
+                      <span className="text-[#e4e7ec]">{lic.macId}</span>
                     </div>
                   )}
                   {lic.expiryDate && (
                     <div>
-                      <span className="text-[#6B84A3] uppercase tracking-widest block mb-0.5">Bitiş</span>
+                      <span className="text-[#8b919e] uppercase tracking-widest block mb-0.5">Bitiş</span>
                       <span className={cn('font-semibold', expColor)}>{expLabel}</span>
                     </div>
                   )}
                   {lic.description && (
                     <div className="col-span-2">
-                      <span className="text-[#6B84A3] uppercase tracking-widest block mb-0.5">Açıklama</span>
-                      <span className="text-[#E2EAF4]">{lic.description}</span>
+                      <span className="text-[#8b919e] uppercase tracking-widest block mb-0.5">Açıklama</span>
+                      <span className="text-[#e4e7ec]">{lic.description}</span>
                     </div>
                   )}
                 </div>
@@ -667,8 +667,8 @@ export function AssetDetail() {
             );
           }) : (
             <div className="card p-16 text-center">
-              <KeyRound size={32} className="text-[#1E2D45] mx-auto mb-3" />
-              <p className="text-sm text-[#3D5275] font-mono-val">Henüz lisans eklenmemiş</p>
+              <KeyRound size={32} className="text-[#2e333d] mx-auto mb-3" />
+              <p className="text-sm text-[#555d6e] font-mono-val">Henüz lisans eklenmemiş</p>
               <button
                 onClick={openCreate}
                 className="mt-3 text-xs text-amber-400 hover:underline font-mono-val"
@@ -683,12 +683,12 @@ export function AssetDetail() {
       {/* ── Lisans Modal ──────────────────────────────────────────────────────── */}
       {licenseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#0D1421] border border-[#1E2D45] rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="flex items-center justify-between p-4 border-b border-[#1E2D45]">
+          <div className="bg-[#1a1d23] border border-[#2e333d] rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-[#2e333d]">
               <h2 className="text-sm font-display font-bold text-white">
                 {editingId ? 'Lisansı Düzenle' : 'Yeni Lisans Ekle'}
               </h2>
-              <button onClick={closeModal} className="p-1.5 rounded text-[#6B84A3] hover:text-white hover:bg-[#1E2D45] transition-colors">
+              <button onClick={closeModal} className="p-1.5 rounded text-[#8b919e] hover:text-white hover:bg-[#2e333d] transition-colors">
                 <X size={14} />
               </button>
             </div>
@@ -696,7 +696,7 @@ export function AssetDetail() {
             <form onSubmit={submitLicense} className="p-4 space-y-4">
               {/* Uygulama Adı */}
               <div>
-                <label className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val block mb-1.5">
+                <label className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val block mb-1.5">
                   Uygulama Adı <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -705,13 +705,13 @@ export function AssetDetail() {
                   value={form.applicationName}
                   onChange={e => setForm(f => ({ ...f, applicationName: e.target.value }))}
                   placeholder="XPression, AvP, CasparCG..."
-                  className="w-full bg-[#131C2E] border border-[#1E2D45] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-amber-500/50 placeholder:text-[#3D5275]"
+                  className="w-full bg-[#22262e] border border-[#2e333d] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-[#5b8fd5]/40 placeholder:text-[#555d6e]"
                 />
               </div>
 
               {/* Lisans Anahtarı */}
               <div>
-                <label className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val block mb-1.5">
+                <label className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val block mb-1.5">
                   Lisans Anahtarı
                 </label>
                 <textarea
@@ -719,14 +719,14 @@ export function AssetDetail() {
                   onChange={e => setForm(f => ({ ...f, licenseKey: e.target.value }))}
                   placeholder="XXXX-XXXX-XXXX-XXXX"
                   rows={2}
-                  className="w-full bg-[#131C2E] border border-[#1E2D45] rounded px-3 py-2 text-xs text-cyan-400 font-mono-val focus:outline-none focus:border-amber-500/50 placeholder:text-[#3D5275] resize-none"
+                  className="w-full bg-[#22262e] border border-[#2e333d] rounded px-3 py-2 text-xs text-cyan-400 font-mono-val focus:outline-none focus:border-[#5b8fd5]/40 placeholder:text-[#555d6e] resize-none"
                 />
               </div>
 
               {/* MAC ID + Bitiş Tarihi */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val block mb-1.5">
+                  <label className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val block mb-1.5">
                     MAC ID
                   </label>
                   <input
@@ -734,25 +734,25 @@ export function AssetDetail() {
                     value={form.macId}
                     onChange={e => setForm(f => ({ ...f, macId: e.target.value }))}
                     placeholder="AA:BB:CC:DD:EE:FF"
-                    className="w-full bg-[#131C2E] border border-[#1E2D45] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-amber-500/50 placeholder:text-[#3D5275]"
+                    className="w-full bg-[#22262e] border border-[#2e333d] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-[#5b8fd5]/40 placeholder:text-[#555d6e]"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val block mb-1.5">
+                  <label className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val block mb-1.5">
                     Bitiş Tarihi
                   </label>
                   <input
                     type="date"
                     value={form.expiryDate}
                     onChange={e => setForm(f => ({ ...f, expiryDate: e.target.value }))}
-                    className="w-full bg-[#131C2E] border border-[#1E2D45] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-amber-500/50"
+                    className="w-full bg-[#22262e] border border-[#2e333d] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-[#5b8fd5]/40"
                   />
                 </div>
               </div>
 
               {/* Özellik Bayrakları */}
               <div>
-                <label className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val block mb-2">
+                <label className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val block mb-2">
                   Özellik Bayrakları
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -765,7 +765,7 @@ export function AssetDetail() {
                         'text-[10px] px-2.5 py-1 rounded border font-mono-val transition-colors',
                         form.featureFlags.includes(flag)
                           ? 'bg-indigo-500/25 text-indigo-300 border-indigo-500/40'
-                          : 'bg-[#131C2E] text-[#6B84A3] border-[#1E2D45] hover:border-[#3D5275]'
+                          : 'bg-[#22262e] text-[#8b919e] border-[#2e333d] hover:border-[#555d6e]'
                       )}
                     >
                       {flag}
@@ -776,44 +776,44 @@ export function AssetDetail() {
 
               {/* Açıklama */}
               <div>
-                <label className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val block mb-1.5">
+                <label className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val block mb-1.5">
                   Açıklama
                 </label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2}
-                  className="w-full bg-[#131C2E] border border-[#1E2D45] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-amber-500/50 placeholder:text-[#3D5275] resize-none"
+                  className="w-full bg-[#22262e] border border-[#2e333d] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-[#5b8fd5]/40 placeholder:text-[#555d6e] resize-none"
                 />
               </div>
 
               {/* Harici API URL */}
               <div>
-                <label className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val block mb-1.5">
-                  API URL <span className="text-[#3D5275] normal-case">— ileride kullanılacak</span>
+                <label className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val block mb-1.5">
+                  API URL <span className="text-[#555d6e] normal-case">— ileride kullanılacak</span>
                 </label>
                 <input
                   type="url"
                   value={form.externalLicenseUrl}
                   onChange={e => setForm(f => ({ ...f, externalLicenseUrl: e.target.value }))}
                   placeholder="https://license.example.com/api/..."
-                  className="w-full bg-[#131C2E] border border-[#1E2D45] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-amber-500/50 placeholder:text-[#3D5275]"
+                  className="w-full bg-[#22262e] border border-[#2e333d] rounded px-3 py-2 text-xs text-white font-mono-val focus:outline-none focus:border-[#5b8fd5]/40 placeholder:text-[#555d6e]"
                 />
               </div>
 
               {/* Butonlar */}
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#1E2D45]">
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#2e333d]">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-xs rounded border border-[#1E2D45] text-[#6B84A3] hover:text-white hover:bg-[#1E2D45] transition-colors font-mono-val"
+                  className="px-4 py-2 text-xs rounded border border-[#2e333d] text-[#8b919e] hover:text-white hover:bg-[#2e333d] transition-colors font-mono-val"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
                   disabled={createLicense.isPending || updateLicense.isPending}
-                  className="px-4 py-2 text-xs rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500/30 transition-colors font-mono-val disabled:opacity-50"
+                  className="px-4 py-2 text-xs rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-[#5b8fd5]/30 transition-colors font-mono-val disabled:opacity-50"
                 >
                   {createLicense.isPending || updateLicense.isPending ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Ekle'}
                 </button>

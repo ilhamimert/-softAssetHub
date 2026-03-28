@@ -11,8 +11,8 @@ type StatusFilter = 'all' | 'active' | 'inactive' | 'expiring' | 'expired';
 
 
 function expiryColor(daysLeft: number | null, isActive: boolean): string {
-  if (!isActive) return 'text-[#3D5275]';
-  if (daysLeft === null) return 'text-[#6B84A3]';
+  if (!isActive) return 'text-[#555d6e]';
+  if (daysLeft === null) return 'text-[#8b919e]';
   if (daysLeft < 0) return 'text-red-400';
   if (daysLeft <= 7) return 'text-red-400';
   if (daysLeft <= 60) return 'text-amber-400';
@@ -33,7 +33,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-      className="ml-1 p-0.5 rounded text-[#3D5275] hover:text-amber-400 transition-colors flex-shrink-0"
+      className="ml-1 p-0.5 rounded text-[#555d6e] hover:text-[#5b8fd5] transition-colors flex-shrink-0"
       title="Kopyala"
     >
       {copied ? <Check size={11} className="text-green-400" /> : <Copy size={11} />}
@@ -86,10 +86,10 @@ export function Licenses() {
             <KeyRound size={15} className="text-amber-400" />
           </div>
           <div>
-            <h1 className="font-display text-base font-semibold text-[#E2EAF4] tracking-wide">
+            <h1 className="font-display text-base font-semibold text-[#e4e7ec] tracking-wide">
               {t('licenses.title')}
             </h1>
-            <p className="text-[10px] text-[#3D5275] font-mono tracking-wider">
+            <p className="text-[10px] text-[#555d6e] font-mono tracking-wider">
               {isLoading ? '...' : `${licenses.length} ${t('common.licenses').toLowerCase()}`}
             </p>
           </div>
@@ -100,12 +100,12 @@ export function Licenses() {
       <div className="flex flex-wrap gap-2 items-center">
         {/* Search */}
         <div className="relative flex-1 min-w-48 max-w-xs">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#3D5275]" />
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#555d6e]" />
           <input
             value={search}
             onChange={e => handleSearch(e.target.value)}
             placeholder={t('licenses.toolbar.search_placeholder')}
-            className="w-full pl-8 pr-3 py-1.5 bg-[#0D1421] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] placeholder-[#3D5275] focus:outline-none focus:border-amber-500/40"
+            className="w-full pl-8 pr-3 py-1.5 bg-[#1a1d23] border border-[#2e333d] rounded text-xs text-[#e4e7ec] placeholder-[#555d6e] focus:outline-none focus:border-[#5b8fd5]/40"
           />
         </div>
 
@@ -117,7 +117,7 @@ export function Licenses() {
               onClick={() => setStatus(btn.key)}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded border text-[10px] font-mono transition-all ${status === btn.key
                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                  : 'bg-[#0D1421] border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] hover:border-[#2A3F5F]'
+                  : 'bg-[#1a1d23] border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] hover:border-[#383e4a]'
                 }`}
             >
               {btn.icon}
@@ -130,28 +130,28 @@ export function Licenses() {
       {/* Table */}
       {isLoading ? (
         <div className="card p-8 text-center">
-          <div className="w-6 h-6 border-2 border-amber-500/30 border-t-amber-400 rounded-full animate-spin mx-auto" />
+          <div className="w-6 h-6 border-2 border-[#5b8fd5]/30 border-t-[#5b8fd5] rounded-full animate-spin mx-auto" />
         </div>
       ) : licenses.length === 0 ? (
         <div className="card p-12 text-center">
-          <KeyRound size={28} className="text-[#1E2D45] mx-auto mb-3" />
-          <p className="text-sm text-[#3D5275] font-mono-val">{t('licenses.no_licenses')}</p>
+          <KeyRound size={28} className="text-[#2e333d] mx-auto mb-3" />
+          <p className="text-sm text-[#555d6e] font-mono-val">{t('licenses.no_licenses')}</p>
         </div>
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-[#1E2D45]">
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.app')}</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.asset')}</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.key')}</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.mac')}</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.expiry')}</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.features')}</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#3D5275] tracking-wider">{t('licenses.table.status')}</th>
+              <tr className="border-b border-[#2e333d]">
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#555d6e] tracking-wider">{t('licenses.table.app')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#555d6e] tracking-wider">{t('licenses.table.asset')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#555d6e] tracking-wider">{t('licenses.table.key')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#555d6e] tracking-wider">{t('licenses.table.mac')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#555d6e] tracking-wider">{t('licenses.table.expiry')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#555d6e] tracking-wider">{t('licenses.table.features')}</th>
+                <th className="px-4 py-2.5 text-left text-[10px] font-mono text-[#555d6e] tracking-wider">{t('licenses.table.status')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1E2D45]/60">
+            <tbody className="divide-y divide-[#2e333d]/60">
               {licenses.map((lic: License) => {
                 const daysLeft = lic.daysLeft ?? null;
                 const badge = expiryBadge(daysLeft, lic.isActive, t);
@@ -161,7 +161,7 @@ export function Licenses() {
                 })();
 
                 return (
-                  <tr key={lic.licenseId} className="hover:bg-[#0D1421]/60 transition-colors">
+                  <tr key={lic.licenseId} className="hover:bg-[#1a1d23]/60 transition-colors">
                     {/* Application */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -169,9 +169,9 @@ export function Licenses() {
                           <KeyRound size={10} className="text-amber-400" />
                         </div>
                         <div>
-                          <p className="text-[#E2EAF4] font-mono-val font-medium">{lic.applicationName}</p>
+                          <p className="text-[#e4e7ec] font-mono-val font-medium">{lic.applicationName}</p>
                           {lic.description && (
-                            <p className="text-[9px] text-[#3D5275] truncate max-w-[140px]">{lic.description}</p>
+                            <p className="text-[9px] text-[#555d6e] truncate max-w-[140px]">{lic.description}</p>
                           )}
                         </div>
                       </div>
@@ -181,7 +181,7 @@ export function Licenses() {
                     <td className="px-4 py-3">
                       <button
                         onClick={() => navigate(`/assets/${lic.assetId}`)}
-                        className="text-[#6B84A3] hover:text-amber-400 transition-colors font-mono-val text-left"
+                        className="text-[#8b919e] hover:text-[#5b8fd5] transition-colors font-mono-val text-left"
                       >
                         {lic.assetName}
                       </button>
@@ -191,7 +191,7 @@ export function Licenses() {
                     <td className="px-4 py-3">
                       {lic.licenseKey ? (
                         <div className="flex items-center gap-1 max-w-[160px]">
-                          <span className="font-mono text-[10px] text-[#6B84A3] truncate">
+                          <span className="font-mono text-[10px] text-[#8b919e] truncate">
                             {lic.licenseKey.length > 20
                               ? `${lic.licenseKey.substring(0, 10)}...${lic.licenseKey.slice(-6)}`
                               : lic.licenseKey}
@@ -202,7 +202,7 @@ export function Licenses() {
                               href={lic.externalLicenseUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[#3D5275] hover:text-cyan-400 transition-colors flex-shrink-0"
+                              className="text-[#555d6e] hover:text-cyan-400 transition-colors flex-shrink-0"
                               title="Harici URL"
                             >
                               <ExternalLink size={10} />
@@ -210,7 +210,7 @@ export function Licenses() {
                           )}
                         </div>
                       ) : (
-                        <span className="text-[#2A3F5F] font-mono">—</span>
+                        <span className="text-[#383e4a] font-mono">—</span>
                       )}
                     </td>
 
@@ -218,11 +218,11 @@ export function Licenses() {
                     <td className="px-4 py-3">
                       {lic.macId ? (
                         <div className="flex items-center gap-1">
-                          <span className="font-mono text-[10px] text-[#6B84A3]">{lic.macId}</span>
+                          <span className="font-mono text-[10px] text-[#8b919e]">{lic.macId}</span>
                           <CopyButton text={lic.macId} />
                         </div>
                       ) : (
-                        <span className="text-[#2A3F5F] font-mono">—</span>
+                        <span className="text-[#383e4a] font-mono">—</span>
                       )}
                     </td>
 
@@ -240,7 +240,7 @@ export function Licenses() {
                           )}
                         </div>
                       ) : (
-                        <span className="text-[#2A3F5F] font-mono">—</span>
+                        <span className="text-[#383e4a] font-mono">—</span>
                       )}
                     </td>
 
@@ -255,7 +255,7 @@ export function Licenses() {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-[#2A3F5F] font-mono">—</span>
+                        <span className="text-[#383e4a] font-mono">—</span>
                       )}
                     </td>
 
@@ -263,9 +263,9 @@ export function Licenses() {
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[9px] font-mono ${lic.isActive
                           ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                          : 'bg-[#1E2D45]/40 border-[#1E2D45] text-[#3D5275]'
+                          : 'bg-[#2e333d]/40 border-[#2e333d] text-[#555d6e]'
                         }`}>
-                        <span className={`w-1 h-1 rounded-full ${lic.isActive ? 'bg-green-400' : 'bg-[#3D5275]'}`} />
+                        <span className={`w-1 h-1 rounded-full ${lic.isActive ? 'bg-green-400' : 'bg-[#555d6e]'}`} />
                         {lic.isActive ? t('common.active') : t('common.passive')}
                       </span>
                     </td>

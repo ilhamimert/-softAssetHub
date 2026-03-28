@@ -32,16 +32,25 @@ function getPool() {
   return pool;
 }
 
-/** snake_case → camelCase dönüştürücü */
+/** snake_case → camelCase dönüştürücü (sonuçları önbellekte tutar) */
+const _camelCache = new Map();
 function toCamelCase(str) {
-  return str.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
+  let r = _camelCache.get(str);
+  if (r === undefined) {
+    r = str.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
+    _camelCache.set(str, r);
+  }
+  return r;
 }
 
 function convertRow(row) {
   if (!row) return row;
-  return Object.fromEntries(
-    Object.entries(row).map(([k, v]) => [toCamelCase(k), v])
-  );
+  const keys = Object.keys(row);
+  const out = {};
+  for (let i = 0; i < keys.length; i++) {
+    out[toCamelCase(keys[i])] = row[keys[i]];
+  }
+  return out;
 }
 
 /**

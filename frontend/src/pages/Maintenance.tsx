@@ -17,7 +17,7 @@ function StatusBadge({ status }: { status: string }) {
     Scheduled: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     InProgress: 'bg-cyan-500/10  text-cyan-400  border-cyan-500/20',
     Cancelled: 'bg-red-500/10   text-red-400   border-red-500/20',
-    Pending: 'bg-[#1E2D45]    text-[#6B84A3] border-[#1E2D45]',
+    Pending: 'bg-[#2e333d]    text-[#8b919e] border-[#2e333d]',
   };
   return (
     <span className={cn('text-[10px] px-2 py-0.5 rounded font-mono-val border', map[status] ?? map.Pending)}>
@@ -209,7 +209,7 @@ export function Maintenance() {
             {icon}
             <div>
               <p className={`font-display font-bold text-2xl leading-none ${text}`}>{count}</p>
-              <p className="text-[10px] text-[#6B84A3] font-mono-val uppercase tracking-wider mt-0.5">{label}</p>
+              <p className="text-[10px] text-[#8b919e] font-mono-val uppercase tracking-wider mt-0.5">{label}</p>
             </div>
           </div>
         ))}
@@ -217,7 +217,7 @@ export function Maintenance() {
 
       {/* Toolbar */}
       <div className="card p-3 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1.5 text-[11px] text-[#6B84A3] font-mono-val">
+        <div className="flex items-center gap-1.5 text-[11px] text-[#8b919e] font-mono-val">
           <Filter size={12} /> Filtrele:
         </div>
 
@@ -259,7 +259,7 @@ export function Maintenance() {
 
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 text-xs font-mono-val transition-all"
+          className="flex items-center gap-2 px-4 py-2 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-[#5b8fd5]/25 text-xs font-mono-val transition-all"
         >
           <Plus size={13} /> YENİ BAKIM KAYDI
         </button>
@@ -267,22 +267,22 @@ export function Maintenance() {
 
       {/* Records list */}
       <div className="card overflow-hidden">
-        <div className="p-3 border-b border-[#1E2D45] bg-[#131C2E] flex items-center justify-between">
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">
+        <div className="p-3 border-b border-[#2e333d] bg-[#22262e] flex items-center justify-between">
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">
             Bakım Kayıtları — {filteredRecords.length} kayıt
           </p>
         </div>
 
-        <div className="divide-y divide-[#1E2D45]">
+        <div className="divide-y divide-[#2e333d]">
           {isLoading
             ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="p-4 h-20 animate-pulse bg-[#131C2E]/50" />
+              <div key={i} className="p-4 h-20 animate-pulse bg-[#22262e]/50" />
             ))
             : filteredRecords.length === 0
               ? (
                 <div className="py-16 flex flex-col items-center gap-3">
-                  <Wrench size={32} className="text-[#1E2D45]" />
-                  <p className="text-sm text-[#3D5275] font-mono-val">Yaklaşan bakım kaydı yok</p>
+                  <Wrench size={32} className="text-[#2e333d]" />
+                  <p className="text-sm text-[#555d6e] font-mono-val">Yaklaşan bakım kaydı yok</p>
                   <button
                     onClick={openCreate}
                     className="mt-2 text-xs text-amber-400 hover:underline font-mono-val"
@@ -294,7 +294,7 @@ export function Maintenance() {
               : filteredRecords.map(r => (
                 <div
                   key={`${r.assetId}-${r.maintenanceId ?? r.nextMaintenanceDate}`}
-                  className="p-3 hover:bg-[#131C2E] transition-colors group"
+                  className="p-3 hover:bg-[#22262e] transition-colors group"
                 >
                   <div className="flex items-start gap-3">
                     {/* Days badge */}
@@ -302,7 +302,7 @@ export function Maintenance() {
                       'flex-shrink-0 text-[10px] font-mono-val font-bold px-2 py-1.5 rounded min-w-[3rem] text-center',
                       r.daysUntilMaintenance != null
                         ? getDaysColor(r.daysUntilMaintenance)
-                        : 'text-[#6B84A3] bg-[#1E2D45] border border-[#1E2D45]'
+                        : 'text-[#8b919e] bg-[#2e333d] border border-[#2e333d]'
                     )}>
                       {r.daysUntilMaintenance != null ? `${r.daysUntilMaintenance}g` : '—'}
                     </div>
@@ -310,32 +310,32 @@ export function Maintenance() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-xs text-[#E2EAF4] font-medium">{r.assetName}</p>
+                        <p className="text-xs text-[#e4e7ec] font-medium">{r.assetName}</p>
                         <span className="text-[10px] font-mono-val text-cyan-400">{r.assetCode}</span>
                         <StatusBadge status={r.status} />
                         {r.maintenanceType && (
                           <span className="text-[10px] text-amber-400">{r.maintenanceType}</span>
                         )}
                       </div>
-                      <p className="text-[10px] text-[#6B84A3] font-mono-val mt-0.5">
+                      <p className="text-[10px] text-[#8b919e] font-mono-val mt-0.5">
                         {r.channelName} · {r.buildingName}
                       </p>
                       {r.description && (
-                        <p className="text-[10px] text-[#3D5275] mt-0.5 line-clamp-1">{r.description}</p>
+                        <p className="text-[10px] text-[#555d6e] mt-0.5 line-clamp-1">{r.description}</p>
                       )}
                       <div className="flex flex-wrap gap-4 mt-1.5">
                         {r.technicianName && (
-                          <span className="flex items-center gap-1 text-[10px] text-[#6B84A3]">
+                          <span className="flex items-center gap-1 text-[10px] text-[#8b919e]">
                             <User size={9} />{r.technicianName}
                           </span>
                         )}
                         {r.costAmount != null && (
-                          <span className="flex items-center gap-1 text-[10px] text-[#6B84A3]">
+                          <span className="flex items-center gap-1 text-[10px] text-[#8b919e]">
                             <DollarSign size={9} />{formatCurrency(r.costAmount)}
                           </span>
                         )}
                         {r.maintenanceInterval && (
-                          <span className="flex items-center gap-1 text-[10px] text-[#6B84A3]">
+                          <span className="flex items-center gap-1 text-[10px] text-[#8b919e]">
                             <Clock size={9} />Her {r.maintenanceInterval}g
                           </span>
                         )}
@@ -349,7 +349,7 @@ export function Maintenance() {
                         {formatDate(r.nextMaintenanceDate ?? r.maintenanceDate)}
                       </p>
                       {r.nextMaintenanceDate && r.maintenanceDate && (
-                        <p className="text-[10px] text-[#3D5275] font-mono-val mt-0.5">
+                        <p className="text-[10px] text-[#555d6e] font-mono-val mt-0.5">
                           Son: {formatDate(r.maintenanceDate)}
                         </p>
                       )}
@@ -359,7 +359,7 @@ export function Maintenance() {
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => openEdit(r)}
-                        className="p-1.5 rounded text-[#6B84A3] hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                        className="p-1.5 rounded text-[#8b919e] hover:text-[#5b8fd5] hover:bg-[#5b8fd5]/10 transition-colors"
                         title="Düzenle"
                       >
                         <Edit size={12} />
@@ -370,7 +370,7 @@ export function Maintenance() {
                             deleteMut.mutate(r.maintenanceId);
                           }
                         }}
-                        className="p-1.5 rounded text-[#6B84A3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        className="p-1.5 rounded text-[#8b919e] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         title="Sil"
                       >
                         <Trash2 size={12} />
@@ -532,21 +532,21 @@ export function Maintenance() {
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#1E2D45]">
+          <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#2e333d]">
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 rounded text-xs text-[#6B84A3] hover:text-[#E2EAF4] border border-[#1E2D45] hover:border-[#253550] transition-colors font-mono-val"
+              className="px-4 py-2 rounded text-xs text-[#8b919e] hover:text-[#e4e7ec] border border-[#2e333d] hover:border-[#383e4a] transition-colors font-mono-val"
             >
               İPTAL
             </button>
             <button
               type="submit"
               disabled={createMut.isPending || updateMut.isPending}
-              className="px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 font-mono-val transition-all flex items-center gap-2"
+              className="px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-[#5b8fd5]/25 disabled:opacity-50 font-mono-val transition-all flex items-center gap-2"
             >
               {(createMut.isPending || updateMut.isPending) && (
-                <span className="w-3 h-3 border border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                <span className="w-3 h-3 border border-[#5b8fd5]/30 border-t-[#5b8fd5] rounded-full animate-spin" />
               )}
               {editRecord ? 'GÜNCELLE' : 'OLUŞTUR'}
             </button>

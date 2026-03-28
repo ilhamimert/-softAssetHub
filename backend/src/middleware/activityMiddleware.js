@@ -45,13 +45,8 @@ function resolveEntityId(path) {
   return match ? parseInt(match[1]) : null;
 }
 
-// Loglanmayacak endpoint'ler
-const SKIP = [
-  '/auth/me', '/auth/refresh',
-  '/logs/', '/monitoring/', '/analytics/', '/assets/export',
-  '/assets/warranty', '/assets/qrcode', '/maintenance/scheduled',
-  '/alerts/dashboard', '/assets/tree',
-];
+// Loglanmayacak endpoint'ler (derleme zamanı regex — Array.some'dan daha hızlı)
+const SKIP_RE = /\/auth\/me|\/auth\/refresh|\/logs\/|\/monitoring\/|\/analytics\/|\/assets\/export|\/assets\/warranty|\/assets\/qrcode|\/maintenance\/scheduled|\/alerts\/dashboard|\/assets\/tree/;
 
 /**
  * Sadece mutating (POST/PUT/PATCH/DELETE) ve başarılı (2xx) istekleri loglar.
@@ -62,7 +57,7 @@ function activityLogger(req, res, next) {
   if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return next();
 
   const path = req.path;
-  if (SKIP.some(s => path.includes(s))) return next();
+  if (SKIP_RE.test(path)) return next();
   // Auth login/logout zaten authController'da loglanıyor
   if (path.includes('/auth/')) return next();
 

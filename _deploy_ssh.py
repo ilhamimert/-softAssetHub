@@ -1,8 +1,8 @@
 import paramiko, sys
 
-HOST = '192.168.88.241'
-USER = 'yesilozilhami'
-PASS = 'Rpz51gdL@28EV@KDwrYKD61!'
+HOST = '192.168.88.5'
+USER = 'ubuntu'
+PASS = 'ubuntu'
 
 def p(t): sys.stdout.buffer.write((str(t)+'\n').encode('utf-8','replace')); sys.stdout.buffer.flush()
 

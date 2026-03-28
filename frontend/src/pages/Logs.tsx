@@ -20,7 +20,7 @@ const ACTION_COLORS: Record<string, string> = {
 
 function actionCls(action: string) {
   const key = Object.keys(ACTION_COLORS).find(k => action?.toLowerCase().includes(k));
-  return key ? ACTION_COLORS[key] : 'text-[#6B84A3] bg-[#1E2D45]/50 border-[#1E2D45]';
+  return key ? ACTION_COLORS[key] : 'text-[#8b919e] bg-[#2e333d]/50 border-[#2e333d]';
 }
 
 const PAGE_SIZE = 50;
@@ -56,13 +56,13 @@ export function Logs() {
       <div className="flex items-center gap-3">
         <ScrollText size={16} className="text-amber-400 flex-shrink-0" />
         <div>
-          <h1 className="text-base font-display font-bold text-[#E2EAF4]">{t('common.logs')}</h1>
-          <p className="text-[10px] text-[#3D5275] font-mono-val">{t('logs.subtitle')}</p>
+          <h1 className="text-base font-display font-bold text-[#e4e7ec]">{t('common.logs')}</h1>
+          <p className="text-[10px] text-[#555d6e] font-mono-val">{t('logs.subtitle')}</p>
         </div>
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="ml-auto p-2 rounded border border-[#1E2D45] text-[#6B84A3] hover:text-amber-400 hover:border-amber-500/30 transition-colors disabled:opacity-50"
+          className="ml-auto p-2 rounded border border-[#2e333d] text-[#8b919e] hover:text-[#5b8fd5] hover:border-[#5b8fd5]/30 transition-colors disabled:opacity-50"
           title={t('logs.refresh')}
         >
           <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
@@ -72,19 +72,19 @@ export function Logs() {
       {/* Toolbar */}
       <div className="flex flex-wrap gap-2">
         <div className="relative">
-          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#3D5275]" />
+          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#555d6e]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('logs.search_placeholder')}
-            className="pl-6 pr-3 py-1.5 text-xs bg-[#0D1421] border border-[#1E2D45] rounded text-[#E2EAF4] placeholder-[#3D5275] focus:outline-none focus:border-amber-500/50 w-52"
+            className="pl-6 pr-3 py-1.5 text-xs bg-[#1a1d23] border border-[#2e333d] rounded text-[#e4e7ec] placeholder-[#555d6e] focus:outline-none focus:border-[#5b8fd5]/40 w-52"
           />
         </div>
 
         <select
           value={entityType}
           onChange={(e) => { setEntityType(e.target.value); setPage(1); }}
-          className="px-2 py-1.5 text-xs bg-[#0D1421] border border-[#1E2D45] rounded text-[#E2EAF4] focus:outline-none focus:border-amber-500/50"
+          className="px-2 py-1.5 text-xs bg-[#1a1d23] border border-[#2e333d] rounded text-[#e4e7ec] focus:outline-none focus:border-[#5b8fd5]/40"
         >
           <option value="">{t('logs.all_types')}</option>
           {entityTypes.map(et => (
@@ -92,7 +92,7 @@ export function Logs() {
           ))}
         </select>
 
-        <span className="ml-auto text-[10px] text-[#3D5275] font-mono-val self-center">
+        <span className="ml-auto text-[10px] text-[#555d6e] font-mono-val self-center">
           {t('logs.count', { count: filtered.length, page })}
         </span>
       </div>
@@ -102,36 +102,36 @@ export function Logs() {
         {isLoading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="h-8 bg-[#1E2D45]/40 rounded animate-pulse" />
+              <div key={i} className="h-8 bg-[#2e333d]/40 rounded animate-pulse" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <ScrollText size={32} className="text-[#1E2D45] mb-3" />
-            <p className="text-sm text-[#3D5275] font-mono-val">{t('logs.no_records')}</p>
+            <ScrollText size={32} className="text-[#2e333d] mb-3" />
+            <p className="text-sm text-[#555d6e] font-mono-val">{t('logs.no_records')}</p>
           </div>
         ) : (
           <table className="w-full min-w-[700px]">
             <thead>
-              <tr className="border-b border-[#1E2D45]">
-                <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('logs.table.date')}</th>
-                <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('logs.table.user')}</th>
-                <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('logs.table.action')}</th>
-                <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('logs.table.type')}</th>
-                <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('logs.table.record')}</th>
-                <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('logs.table.detail')}</th>
+              <tr className="border-b border-[#2e333d]">
+                <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('logs.table.date')}</th>
+                <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('logs.table.user')}</th>
+                <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('logs.table.action')}</th>
+                <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('logs.table.type')}</th>
+                <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('logs.table.record')}</th>
+                <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('logs.table.detail')}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((log: ActivityLog) => (
-                <tr key={log.logId} className="border-b border-[#1E2D45]/50 hover:bg-[#0D1421]/60 transition-colors">
+                <tr key={log.logId} className="border-b border-[#2e333d]/50 hover:bg-[#1a1d23]/60 transition-colors">
                   <td className="py-2 px-3">
-                    <span className="text-[10px] text-[#6B84A3] font-mono-val whitespace-nowrap">
+                    <span className="text-[10px] text-[#8b919e] font-mono-val whitespace-nowrap">
                       {formatDateTime(log.timestamp)}
                     </span>
                   </td>
                   <td className="py-2 px-3">
-                    <span className="text-xs text-[#E2EAF4] font-medium">{log.fullName ?? log.username ?? '—'}</span>
+                    <span className="text-xs text-[#e4e7ec] font-medium">{log.fullName ?? log.username ?? '—'}</span>
                   </td>
                   <td className="py-2 px-3">
                     <span className={cn('text-[10px] font-mono-val px-1.5 py-0.5 rounded border', actionCls(log.action))}>
@@ -139,15 +139,15 @@ export function Logs() {
                     </span>
                   </td>
                   <td className="py-2 px-3">
-                    <span className="text-[10px] text-[#6B84A3] font-mono-val">{log.entityType ?? '—'}</span>
+                    <span className="text-[10px] text-[#8b919e] font-mono-val">{log.entityType ?? '—'}</span>
                   </td>
                   <td className="py-2 px-3">
-                    <span className="text-xs text-[#E2EAF4] font-mono-val">
+                    <span className="text-xs text-[#e4e7ec] font-mono-val">
                       {log.entityId ? `#${log.entityId}` : '—'}
                     </span>
                   </td>
                   <td className="py-2 px-3 max-w-[260px]">
-                    <span className="text-[10px] text-[#6B84A3] font-mono-val truncate block"
+                    <span className="text-[10px] text-[#8b919e] font-mono-val truncate block"
                       title={log.newValue ?? log.oldValue ?? ''}>
                       {log.newValue ?? log.oldValue ?? '—'}
                     </span>
@@ -164,15 +164,15 @@ export function Logs() {
         <button
           onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page === 1}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs rounded border border-[#1E2D45] text-[#6B84A3] hover:text-amber-400 hover:border-amber-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 px-3 py-1.5 text-xs rounded border border-[#2e333d] text-[#8b919e] hover:text-[#5b8fd5] hover:border-[#5b8fd5]/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <ChevronLeft size={13} /> {t('common.previous')}
         </button>
-        <span className="text-[10px] text-[#3D5275] font-mono-val">{t('common.page')} {page}</span>
+        <span className="text-[10px] text-[#555d6e] font-mono-val">{t('common.page')} {page}</span>
         <button
           onClick={() => setPage(p => p + 1)}
           disabled={logs.length < PAGE_SIZE}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs rounded border border-[#1E2D45] text-[#6B84A3] hover:text-amber-400 hover:border-amber-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 px-3 py-1.5 text-xs rounded border border-[#2e333d] text-[#8b919e] hover:text-[#5b8fd5] hover:border-[#5b8fd5]/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {t('common.next')} <ChevronRight size={13} />
         </button>

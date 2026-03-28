@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 // ─── Mini SVG Sparkline ────────────────────────────────────────────
-function Sparkline({ data, color = '#22D3EE', width = 52, height = 16 }: {
+function Sparkline({ data, color = '#5b9bd5', width = 52, height = 16 }: {
   data: number[]; color?: string; width?: number; height?: number;
 }) {
   if (data.length < 2) return null;
@@ -48,12 +48,12 @@ function GaugeBar({ value, label, unit = '%', max = 100, variant: _variant = 'cp
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] text-[#6B84A3] font-mono-val uppercase tracking-wider">{label}</span>
-        <span className={cn('text-xs font-mono-val font-semibold', value != null ? text : 'text-[#3D5275]')}>
+        <span className="text-[10px] text-[#8b919e] font-mono-val uppercase tracking-wider">{label}</span>
+        <span className={cn('text-xs font-mono-val font-semibold', value != null ? text : 'text-[#555d6e]')}>
           {value != null ? `${value.toFixed(1)}${unit}` : '—'}
         </span>
       </div>
-      <div className="h-1.5 bg-[#1E2D45] rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[#2e333d] rounded-full overflow-hidden">
         <div className={cn('h-full rounded-full transition-all duration-500', bar)} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -284,7 +284,7 @@ export function Monitoring() {
         key={asset.assetId}
         className={cn(
           'card p-4 border transition-all duration-300',
-          isOnline ? 'border-[#1E2D45]' : 'border-red-500/40 bg-red-500/5',
+          isOnline ? 'border-[#2e333d]' : 'border-red-500/40 bg-red-500/5',
           isFlash && 'animate-pulse !border-red-500/80'
         )}
       >
@@ -293,7 +293,7 @@ export function Monitoring() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className={cn('w-2 h-2 rounded-full flex-shrink-0', isOnline ? 'bg-green-400 pulse-dot' : 'bg-red-400')} />
-              <p className="text-xs text-[#E2EAF4] font-medium truncate">{asset.assetName}</p>
+              <p className="text-xs text-[#e4e7ec] font-medium truncate">{asset.assetName}</p>
               {asset._alerts > 0 && (
                 <span className="flex-shrink-0 px-1 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
                   {asset._alerts}⚠
@@ -301,11 +301,11 @@ export function Monitoring() {
               )}
             </div>
             <div className="flex items-center justify-between mt-0.5 pl-4">
-              <p className="text-[10px] text-[#3D5275] font-mono-val truncate">
+              <p className="text-[10px] text-[#555d6e] font-mono-val truncate">
                 {asset.channelName} · {asset.groupName}
               </p>
               {asset._lastUpdated && (
-                <span className="text-[9px] text-[#3D5275] font-mono-val flex-shrink-0 ml-1">
+                <span className="text-[9px] text-[#555d6e] font-mono-val flex-shrink-0 ml-1">
                   {timeAgo(asset._lastUpdated)}
                 </span>
               )}
@@ -324,10 +324,10 @@ export function Monitoring() {
             {asset.ramUsage != null && <GaugeBar value={asset.ramUsage} label="RAM" variant="ram" />}
             {asset.diskUsage != null && <GaugeBar value={asset.diskUsage} label="Disk" variant="disk" />}
 
-            <div className="grid grid-cols-3 gap-1 pt-2 border-t border-[#1E2D45] items-center">
+            <div className="grid grid-cols-3 gap-1 pt-2 border-t border-[#2e333d] items-center">
               {asset.temperature != null && (
                 <div className="flex items-center gap-1">
-                  <Thermometer size={10} className="text-[#6B84A3]" />
+                  <Thermometer size={10} className="text-[#8b919e]" />
                   <span className={cn('text-xs font-mono-val font-semibold', tempColor(asset.temperature))}>
                     {asset.temperature}°C
                   </span>
@@ -341,7 +341,7 @@ export function Monitoring() {
               )}
               {asset._cpuHist.length >= 2 && (
                 <div className="flex justify-end">
-                  <Sparkline data={asset._cpuHist} color="#22D3EE" />
+                  <Sparkline data={asset._cpuHist} color="#5b9bd5" />
                 </div>
               )}
             </div>
@@ -353,7 +353,7 @@ export function Monitoring() {
               <span className="text-xs font-mono-val font-bold tracking-widest">OFFLINE</span>
             </div>
             {asset._lastSeen && (
-              <span className="text-[10px] text-[#6B84A3] font-mono-val">
+              <span className="text-[10px] text-[#8b919e] font-mono-val">
                 Son görülme: {timeAgo(asset._lastSeen)} önce
               </span>
             )}
@@ -368,18 +368,18 @@ export function Monitoring() {
     const isOnline = asset.isOnline !== false;
     const cpuPct = Math.min(asset.cpuUsage ?? 0, 100);
     return (
-      <tr key={asset.assetId} className={cn('border-b border-[#1E2D45] hover:bg-[#0D1421]/60 transition-colors', !isOnline && 'bg-red-500/5')}>
+      <tr key={asset.assetId} className={cn('border-b border-[#2e333d] hover:bg-[#1a1d23]/60 transition-colors', !isOnline && 'bg-red-500/5')}>
         <td className="py-2 px-3">
           <div className="flex items-center gap-2">
             <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', isOnline ? 'bg-green-400 pulse-dot' : 'bg-red-400')} />
-            <span className="text-xs text-[#E2EAF4] font-medium">{asset.assetName}</span>
+            <span className="text-xs text-[#e4e7ec] font-medium">{asset.assetName}</span>
             {asset._alerts > 0 && (
               <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
                 {asset._alerts}⚠
               </span>
             )}
           </div>
-          <p className="text-[10px] text-[#3D5275] font-mono-val pl-3.5 mt-0.5">{asset.channelName} · {asset.groupName}</p>
+          <p className="text-[10px] text-[#555d6e] font-mono-val pl-3.5 mt-0.5">{asset.channelName} · {asset.groupName}</p>
         </td>
         <td className="py-2 px-3">
           <span className={cn('text-[10px] font-mono-val font-bold tracking-wider', isOnline ? 'text-green-400' : 'text-red-400')}>
@@ -388,7 +388,7 @@ export function Monitoring() {
         </td>
         <td className="py-2 px-3">
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-[#1E2D45] rounded-full overflow-hidden w-16">
+            <div className="flex-1 h-1.5 bg-[#2e333d] rounded-full overflow-hidden w-16">
               <div className={cn('h-full rounded-full', barColor(cpuPct))} style={{ width: `${cpuPct}%` }} />
             </div>
             <span className={cn('text-xs font-mono-val w-8 text-right', usageColor(cpuPct))}>
@@ -413,12 +413,12 @@ export function Monitoring() {
         </td>
         <td className="py-2 px-3 text-right">
           {asset._cpuHist.length >= 2
-            ? <Sparkline data={asset._cpuHist} color="#22D3EE" width={48} height={14} />
-            : <span className="text-[9px] text-[#3D5275]">—</span>
+            ? <Sparkline data={asset._cpuHist} color="#5b9bd5" width={48} height={14} />
+            : <span className="text-[9px] text-[#555d6e]">—</span>
           }
         </td>
         <td className="py-2 px-3 text-right">
-          <span className="text-[9px] font-mono-val text-[#3D5275]">
+          <span className="text-[9px] font-mono-val text-[#555d6e]">
             {asset._lastUpdated ? timeAgo(asset._lastUpdated) : '—'}
           </span>
         </td>
@@ -434,13 +434,13 @@ export function Monitoring() {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         {[
           { label: t('common.online'), value: onlineCount, color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
-          { label: t('common.offline'), value: offlineCount, color: offlineCount > 0 ? 'text-red-400' : 'text-[#6B84A3]', bg: offlineCount > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#1E2D45]/30 border-[#1E2D45]' },
+          { label: t('common.offline'), value: offlineCount, color: offlineCount > 0 ? 'text-red-400' : 'text-[#8b919e]', bg: offlineCount > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#2e333d]/30 border-[#2e333d]' },
           { label: t('monitoring.stats.total_power'), value: `${totalPowerKW.toFixed(1)} kW`, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-          { label: t('monitoring.stats.avg_temp'), value: avgTemp > 0 ? `${avgTemp.toFixed(1)}°C` : '—', color: tempColor(avgTemp), bg: 'bg-[#1E2D45]/30 border-[#1E2D45]' },
-          { label: t('dashboard.charts.active_alert_short'), value: totalAlerts, color: totalAlerts > 0 ? 'text-red-400' : 'text-[#6B84A3]', bg: totalAlerts > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#1E2D45]/30 border-[#1E2D45]' },
+          { label: t('monitoring.stats.avg_temp'), value: avgTemp > 0 ? `${avgTemp.toFixed(1)}°C` : '—', color: tempColor(avgTemp), bg: 'bg-[#2e333d]/30 border-[#2e333d]' },
+          { label: t('dashboard.charts.active_alert_short'), value: totalAlerts, color: totalAlerts > 0 ? 'text-red-400' : 'text-[#8b919e]', bg: totalAlerts > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#2e333d]/30 border-[#2e333d]' },
         ].map((s) => (
           <div key={s.label} className={cn('card px-3 py-2.5 border', s.bg)}>
-            <p className="text-[9px] text-[#6B84A3] font-mono-val uppercase tracking-wider mb-0.5">{s.label}</p>
+            <p className="text-[9px] text-[#8b919e] font-mono-val uppercase tracking-wider mb-0.5">{s.label}</p>
             <p className={cn('text-xl font-display font-bold', s.color)}>{s.value}</p>
           </div>
         ))}
@@ -470,12 +470,12 @@ export function Monitoring() {
 
         {/* Search */}
         <div className="relative">
-          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#3D5275]" />
+          <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#555d6e]" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('monitoring.toolbar.search_placeholder')}
-            className="pl-6 pr-2 py-1.5 text-xs bg-[#0D1421] border border-[#1E2D45] rounded text-[#E2EAF4] placeholder-[#3D5275] focus:outline-none focus:border-amber-500/50 w-36"
+            className="pl-6 pr-2 py-1.5 text-xs bg-[#1a1d23] border border-[#2e333d] rounded text-[#e4e7ec] placeholder-[#555d6e] focus:outline-none focus:border-[#5b8fd5]/40 w-36"
           />
         </div>
 
@@ -483,21 +483,21 @@ export function Monitoring() {
         <select
           value={filterChannel}
           onChange={(e) => setFilterChannel(e.target.value)}
-          className="px-2 py-1.5 text-xs bg-[#0D1421] border border-[#1E2D45] rounded text-[#E2EAF4] focus:outline-none focus:border-amber-500/50"
+          className="px-2 py-1.5 text-xs bg-[#1a1d23] border border-[#2e333d] rounded text-[#e4e7ec] focus:outline-none focus:border-[#5b8fd5]/40"
         >
           <option value="">{t('monitoring.toolbar.all_channels')}</option>
           {channels.map((ch) => <option key={ch} value={ch}>{ch}</option>)}
         </select>
 
         {/* Status filter */}
-        <div className="flex rounded border border-[#1E2D45] overflow-hidden">
+        <div className="flex rounded border border-[#2e333d] overflow-hidden">
           {(['all', 'online', 'offline'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
               className={cn(
                 'px-2.5 py-1.5 text-[10px] font-mono-val uppercase transition-colors',
-                filterStatus === s ? 'bg-amber-500/20 text-amber-400' : 'text-[#6B84A3] hover:text-[#E2EAF4]'
+                filterStatus === s ? 'bg-amber-500/20 text-amber-400' : 'text-[#8b919e] hover:text-[#e4e7ec]'
               )}
             >
               {s === 'all' ? t('monitoring.toolbar.all') : s === 'online' ? t('common.online') : t('common.offline')}
@@ -509,7 +509,7 @@ export function Monitoring() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as any)}
-          className="px-2 py-1.5 text-xs bg-[#0D1421] border border-[#1E2D45] rounded text-[#E2EAF4] focus:outline-none focus:border-amber-500/50"
+          className="px-2 py-1.5 text-xs bg-[#1a1d23] border border-[#2e333d] rounded text-[#e4e7ec] focus:outline-none focus:border-[#5b8fd5]/40"
         >
           <option value="status">{t('monitoring.toolbar.sort_status')}</option>
           <option value="cpu">{t('monitoring.toolbar.sort_cpu')}</option>
@@ -523,34 +523,34 @@ export function Monitoring() {
           onClick={() => setGroupByChannel((v) => !v)}
           className={cn(
             'px-2.5 py-1.5 text-[10px] font-mono-val rounded border transition-colors',
-            groupByChannel ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4]'
+            groupByChannel ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec]'
           )}
         >
           {t('monitoring.toolbar.channel_group')}
         </button>
 
         {/* View toggle */}
-        <div className="ml-auto flex rounded border border-[#1E2D45] overflow-hidden">
+        <div className="ml-auto flex rounded border border-[#2e333d] overflow-hidden">
           <button
             onClick={() => setViewMode('grid')}
-            className={cn('p-1.5 transition-colors', viewMode === 'grid' ? 'bg-amber-500/20 text-amber-400' : 'text-[#6B84A3] hover:text-[#E2EAF4]')}
+            className={cn('p-1.5 transition-colors', viewMode === 'grid' ? 'bg-amber-500/20 text-amber-400' : 'text-[#8b919e] hover:text-[#e4e7ec]')}
           ><LayoutGrid size={14} /></button>
           <button
             onClick={() => setViewMode('list')}
-            className={cn('p-1.5 transition-colors', viewMode === 'list' ? 'bg-amber-500/20 text-amber-400' : 'text-[#6B84A3] hover:text-[#E2EAF4]')}
+            className={cn('p-1.5 transition-colors', viewMode === 'list' ? 'bg-amber-500/20 text-amber-400' : 'text-[#8b919e] hover:text-[#e4e7ec]')}
           ><List size={14} /></button>
         </div>
 
-        <span className="text-[10px] text-[#3D5275] font-mono-val">{filtered.length}/{enriched.length} cihaz</span>
+        <span className="text-[10px] text-[#555d6e] font-mono-val">{filtered.length}/{enriched.length} cihaz</span>
       </div>
 
       {/* Content groups */}
       {groups.map((group) => (
         <div key={group.label || 'all'} className="space-y-3">
           {groupByChannel && group.label && (
-            <h3 className="text-[10px] font-mono-val text-[#6B84A3] uppercase tracking-widest pb-1.5 border-b border-[#1E2D45]">
+            <h3 className="text-[10px] font-mono-val text-[#8b919e] uppercase tracking-widest pb-1.5 border-b border-[#2e333d]">
               {group.label}
-              <span className="ml-2 text-[#3D5275]">— {group.items.length} cihaz</span>
+              <span className="ml-2 text-[#555d6e]">— {group.items.length} cihaz</span>
             </h3>
           )}
 
@@ -562,15 +562,15 @@ export function Monitoring() {
             <div className="card overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-[#1E2D45]">
-                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.device')}</th>
-                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.status')}</th>
-                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.cpu')}</th>
-                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.temp')}</th>
-                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.power')}</th>
-                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.ram')}</th>
-                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-left">{t('monitoring.table.trend')}</th>
-                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#3D5275] uppercase tracking-wider text-right">{t('monitoring.table.update')}</th>
+                  <tr className="border-b border-[#2e333d]">
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('monitoring.table.device')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('monitoring.table.status')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('monitoring.table.cpu')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('monitoring.table.temp')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('monitoring.table.power')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('monitoring.table.ram')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-left">{t('monitoring.table.trend')}</th>
+                    <th className="py-2 px-3 text-[9px] font-mono-val text-[#555d6e] uppercase tracking-wider text-right">{t('monitoring.table.update')}</th>
                   </tr>
                 </thead>
                 <tbody>{group.items.map(renderRow)}</tbody>
@@ -583,9 +583,9 @@ export function Monitoring() {
       {/* Empty state */}
       {filtered.length === 0 && (
         <div className="card p-12 text-center">
-          <Activity size={32} className="text-[#1E2D45] mx-auto mb-3" />
-          <p className="text-sm text-[#3D5275] font-mono-val">Eşleşen cihaz bulunamadı</p>
-          <p className="text-xs text-[#3D5275] font-mono-val mt-1">Filtrelerinizi değiştirmeyi deneyin</p>
+          <Activity size={32} className="text-[#2e333d] mx-auto mb-3" />
+          <p className="text-sm text-[#555d6e] font-mono-val">Eşleşen cihaz bulunamadı</p>
+          <p className="text-xs text-[#555d6e] font-mono-val mt-1">Filtrelerinizi değiştirmeyi deneyin</p>
         </div>
       )}
     </div>

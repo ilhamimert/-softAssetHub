@@ -44,7 +44,7 @@ function KPICard({ label, value, sub, icon: Icon, accent = 'amber', delay = '0' 
       <div className={cn('absolute -top-4 -right-4 w-20 h-20 rounded-full blur-xl opacity-20', a.bg)} />
       <div className="relative">
         <div className="flex items-start justify-between mb-3">
-          <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{label}</p>
+          <p className="text-[11px] text-[#8b919e] uppercase tracking-widest font-mono-val">{label}</p>
           <div className={cn('w-7 h-7 rounded flex items-center justify-center', a.bg, `border ${a.border}`)}>
             <Icon size={13} className={a.text} />
           </div>
@@ -52,7 +52,7 @@ function KPICard({ label, value, sub, icon: Icon, accent = 'amber', delay = '0' 
         <p className={cn('font-display font-bold text-3xl leading-none mb-1', a.text)}>
           {value}
         </p>
-        {sub && <p className="text-[11px] text-[#3D5275] font-mono-val mt-1">{sub}</p>}
+        {sub && <p className="text-[11px] text-[#555d6e] font-mono-val mt-1">{sub}</p>}
       </div>
     </div>
   );
@@ -95,13 +95,13 @@ function HeatCell({ value, label, unit = '' }: { value?: number; label: string; 
       <div className={cn('w-10 h-10 rounded flex items-center justify-center text-[10px] font-mono-val font-semibold text-black', color)}>
         {value != null ? `${Math.round(pct)}${unit}` : '-'}
       </div>
-      <span className="text-[9px] text-[#3D5275] text-center leading-tight">{label}</span>
+      <span className="text-[9px] text-[#555d6e] text-center leading-tight">{label}</span>
     </div>
   );
 }
 
 // ─── Pie label ───────────────────────────────────────────────
-const PIE_COLORS = ['#22D3EE', '#F59E0B', '#10B981', '#EF4444', '#A855F7', '#FB923C', '#34D399', '#60A5FA', '#F472B6', '#FACC15'];
+const PIE_COLORS = ['#5b9bd5', '#e09f3e', '#4caf82', '#d9534f', '#8b7dc5', '#d97a3e', '#6ec49e', '#5b8fd5', '#c76b8a', '#e0b53e'];
 
 // ─── Dashboard ───────────────────────────────────────────────
 export function Dashboard() {
@@ -222,13 +222,13 @@ export function Dashboard() {
         <div className="card p-4 lg:col-span-2 fade-in-up delay-200">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.power_consumption')}</p>
+              <p className="text-[11px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('dashboard.charts.power_consumption')}</p>
               <p className="text-sm font-display font-semibold text-white mt-0.5">{todayLabel} — {i18n.language === 'tr' ? 'Son 12 Saat — 3 Saatlik Dilimler' : 'Last 12 Hours — 3H Slots'}</p>
             </div>
             <div className="flex flex-col items-end gap-1">
               <Zap size={14} className="text-amber-400" />
               {powerUpdatedAt > 0 && (
-                <span className="text-[9px] text-[#3D5275] font-mono-val">
+                <span className="text-[9px] text-[#555d6e] font-mono-val">
                   {i18n.language === 'tr' ? 'Güncellendi' : 'Updated'}{' '}
                   {new Date(powerUpdatedAt).toLocaleTimeString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                 </span>
@@ -240,19 +240,19 @@ export function Dashboard() {
               <AreaChart data={powerChart} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="powerGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#e09f3e" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#e09f3e" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" />
-                <XAxis dataKey="date" tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
+                <XAxis dataKey="date" tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <Tooltip {...CHART_TOOLTIP_STYLE} />
-                <Area type="monotone" dataKey="power" stroke="#F59E0B" strokeWidth={1.5} fill="url(#powerGrad)" />
+                <Area type="monotone" dataKey="power" stroke="#e09f3e" strokeWidth={1.5} fill="url(#powerGrad)" />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-40 flex items-center justify-center text-[#3D5275] text-xs font-mono-val">
+            <div className="h-40 flex items-center justify-center text-[#555d6e] text-xs font-mono-val">
               Monitoring verisi bekleniyor...
             </div>
           )}
@@ -261,7 +261,7 @@ export function Dashboard() {
         {/* Asset type pie */}
         <div className="card p-4 fade-in-up delay-300">
           <div className="mb-4">
-            <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.asset_distribution')}</p>
+            <p className="text-[11px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('dashboard.charts.asset_distribution')}</p>
             <p className="text-sm font-display font-semibold text-white mt-0.5">{physicalNodes.length > 0 ? (i18n.language === 'tr' ? 'Fiziksel Ağaç Node Türleri' : 'Physical Tree Node Types') : (i18n.language === 'tr' ? 'Ekipman Türlerine Göre' : 'By Equipment Types')}</p>
           </div>
           {pieData.length > 0 ? (
@@ -274,21 +274,21 @@ export function Dashboard() {
                       <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip {...CHART_TOOLTIP_STYLE} itemStyle={{ color: '#E2EAF4' }} />
+                  <Tooltip {...CHART_TOOLTIP_STYLE} itemStyle={{ color: '#e4e7ec' }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-1 mt-1">
                 {pieData.map((d, i) => (
                   <div key={d.name} className="flex items-center gap-2 text-xs">
                     <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    <span className="text-[#6B84A3] flex-1 truncate">{d.name}</span>
-                    <span className="font-mono-val text-[#E2EAF4]">{d.value}</span>
+                    <span className="text-[#8b919e] flex-1 truncate">{d.name}</span>
+                    <span className="font-mono-val text-[#e4e7ec]">{d.value}</span>
                   </div>
                 ))}
               </div>
             </>
           ) : (
-            <div className="h-40 flex items-center justify-center text-[#3D5275] text-xs font-mono-val">
+            <div className="h-40 flex items-center justify-center text-[#555d6e] text-xs font-mono-val">
               Veri yok
             </div>
           )}
@@ -302,7 +302,7 @@ export function Dashboard() {
         <div className="card p-4 fade-in-up delay-300">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.active_alerts')}</p>
+              <p className="text-[11px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('dashboard.charts.active_alerts')}</p>
               <div className="flex items-center gap-3 mt-1">
                 <span className="flex items-center gap-1 text-xs text-red-400">
                   <span className="font-mono-val font-semibold">{alertStats.criticalCount ?? 0}</span> {t('dashboard.alerts.critical')}
@@ -319,7 +319,7 @@ export function Dashboard() {
           <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
             {alerts.length > 0
               ? alerts.slice(0, 8).map(a => <AlertRow key={a.alertId} alert={a} />)
-              : <p className="text-center text-[#3D5275] text-xs font-mono-val py-6">{t('dashboard.alerts.no_alerts')}</p>
+              : <p className="text-center text-[#555d6e] text-xs font-mono-val py-6">{t('dashboard.alerts.no_alerts')}</p>
             }
           </div>
         </div>
@@ -327,16 +327,16 @@ export function Dashboard() {
         {/* Heatmap */}
         <div className="card p-4 fade-in-up delay-400">
           <div className="mb-3">
-            <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.heatmap')}</p>
+            <p className="text-[11px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('dashboard.charts.heatmap')}</p>
             <p className="text-sm font-display font-semibold text-white mt-0.5">{t('dashboard.charts.live_metrics')}</p>
           </div>
           {heatAssets.length > 0 ? (
             <div className="space-y-2 max-h-52 overflow-y-auto">
               {heatAssets.map((a: HeatmapAsset) => (
-                <div key={a.assetId} className="flex items-center gap-3 p-2 rounded bg-[#131C2E] border border-[#1E2D45]">
+                <div key={a.assetId} className="flex items-center gap-3 p-2 rounded bg-[#22262e] border border-[#2e333d]">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-[#E2EAF4] truncate leading-tight">{a.assetName}</p>
-                    <p className="text-[10px] text-[#3D5275] font-mono-val truncate">{a.channelName} · {a.roomName}</p>
+                    <p className="text-xs text-[#e4e7ec] truncate leading-tight">{a.assetName}</p>
+                    <p className="text-[10px] text-[#555d6e] font-mono-val truncate">{a.channelName} · {a.roomName}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <HeatCell value={a.temperature} label="°C" />
@@ -351,20 +351,20 @@ export function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="h-40 flex items-center justify-center text-[#3D5275] text-xs font-mono-val">
+            <div className="h-40 flex items-center justify-center text-[#555d6e] text-xs font-mono-val">
               Monitoring verisi bekleniyor...
             </div>
           )}
 
           {/* Legend */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#1E2D45]">
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#2e333d]">
             {[
               { color: 'bg-green-500', label: '< 50%' },
               { color: 'bg-yellow-500', label: '50-74%' },
               { color: 'bg-amber-500', label: '75-89%' },
               { color: 'bg-red-500', label: '≥ 90%' },
             ].map(({ color, label }) => (
-              <div key={label} className="flex items-center gap-1.5 text-[10px] text-[#3D5275]">
+              <div key={label} className="flex items-center gap-1.5 text-[10px] text-[#555d6e]">
                 <span className={cn('w-2.5 h-2.5 rounded-sm', color)} />
                 {label}
               </div>
@@ -378,7 +378,7 @@ export function Dashboard() {
         <div className="card p-4 fade-in-up delay-500">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{t('dashboard.charts.channel_health')}</p>
+              <p className="text-[11px] text-[#8b919e] uppercase tracking-widest font-mono-val">{t('dashboard.charts.channel_health')}</p>
               <p className="text-sm font-display font-semibold text-white mt-0.5">{i18n.language === 'tr' ? 'Kanal Bazlı Aktif / Bakım / Arızalı' : 'Channel-based Active / Maintenance / Faulty'}</p>
             </div>
           </div>
@@ -397,13 +397,13 @@ export function Dashboard() {
               }, [])}
               margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" vertical={false} />
-              <XAxis dataKey="channel" tick={{ fill: '#3D5275', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fill: '#3D5275', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" vertical={false} />
+              <XAxis dataKey="channel" tick={{ fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
               <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} />
-              <Bar dataKey="aktif" stackId="a" fill="#10B981" radius={[0, 0, 0, 0]} name="Aktif" />
-              <Bar dataKey="bakim" stackId="a" fill="#F59E0B" name="Bakım" />
-              <Bar dataKey="arizali" stackId="a" fill="#EF4444" radius={[2, 2, 0, 0]} name="Arızalı" />
+              <Bar dataKey="aktif" stackId="a" fill="#4caf82" radius={[0, 0, 0, 0]} name="Aktif" />
+              <Bar dataKey="bakim" stackId="a" fill="#e09f3e" name="Bakım" />
+              <Bar dataKey="arizali" stackId="a" fill="#d9534f" radius={[2, 2, 0, 0]} name="Arızalı" />
             </BarChart>
           </ResponsiveContainer>
         </div>

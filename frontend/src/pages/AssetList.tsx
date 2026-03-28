@@ -19,7 +19,7 @@ const PAGE_SIZES = [10, 25, 50];
 
 // ─── Sort icon ────────────────────────────────────────────────
 function SortIcon({ col, sortBy, sortOrder }: { col: string; sortBy: string; sortOrder: string }) {
-  if (sortBy !== col) return <ChevronsUpDown size={11} className="text-[#3D5275]" />;
+  if (sortBy !== col) return <ChevronsUpDown size={11} className="text-[#555d6e]" />;
   return sortOrder === 'ASC'
     ? <ChevronUp size={11} className="text-amber-400" />
     : <ChevronDown size={11} className="text-amber-400" />;
@@ -32,7 +32,7 @@ function Th({ label, col, className = '', sortBy, sortOrder, onSort }: {
 }) {
   return (
     <th
-      className={cn('py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val whitespace-nowrap', col && 'cursor-pointer hover:text-[#E2EAF4] select-none', className)}
+      className={cn('py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val whitespace-nowrap', col && 'cursor-pointer hover:text-[#e4e7ec] select-none', className)}
       onClick={col ? () => onSort(col) : undefined}
     >
       <span className="flex items-center gap-1">
@@ -52,9 +52,9 @@ function AssetTypeIcon({ type, size = 14 }: { type: string; size?: number }) {
 // ─── Info row ─────────────────────────────────────────────────
 function InfoRow({ label, value, mono }: { label: string; value?: string | number | null; mono?: boolean }) {
   return (
-    <div className="flex items-start gap-2 py-1.5 border-b border-[#131C2E] last:border-0">
-      <span className="text-[10px] text-[#6B84A3] uppercase tracking-wider font-mono-val w-32 flex-shrink-0 pt-0.5">{label}</span>
-      <span className={cn('text-xs text-[#E2EAF4] flex-1', mono && 'font-mono-val')}>{value ?? '-'}</span>
+    <div className="flex items-start gap-2 py-1.5 border-b border-[#22262e] last:border-0">
+      <span className="text-[10px] text-[#8b919e] uppercase tracking-wider font-mono-val w-32 flex-shrink-0 pt-0.5">{label}</span>
+      <span className={cn('text-xs text-[#e4e7ec] flex-1', mono && 'font-mono-val')}>{value ?? '-'}</span>
     </div>
   );
 }
@@ -67,7 +67,7 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
   return (
     <Modal open={!!asset} onClose={onClose} title={asset.assetName} size="lg">
       {/* Header */}
-      <div className="flex items-start gap-4 mb-5 pb-4 border-b border-[#1E2D45]">
+      <div className="flex items-start gap-4 mb-5 pb-4 border-b border-[#2e333d]">
         <div className="w-14 h-14 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0">
           <AssetTypeIcon type={asset.assetType} size={24} />
         </div>
@@ -82,7 +82,7 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
               asset.isOnline === false ? 'bg-red-400' : 'bg-green-400 pulse-dot'
             )} />
           </div>
-          <p className="text-xs text-[#6B84A3] mt-1 font-mono-val">
+          <p className="text-xs text-[#8b919e] mt-1 font-mono-val">
             {asset.channelName}{asset.groupName ? ` › ${asset.groupName}` : ''}
           </p>
           {asset.assetCode && (
@@ -91,7 +91,7 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
         </div>
         <button
           onClick={onEdit}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 font-mono-val transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-[#5b8fd5]/20 font-mono-val transition-all"
         >
           <Edit size={11} /> {t('common.edit').toUpperCase()}
         </button>
@@ -100,7 +100,7 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
       {/* Details grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">{t('assets.details.device_info')}</p>
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-2">{t('assets.details.device_info')}</p>
           <InfoRow label={t('assets.details.type')} value={assetTypeLabel(asset.assetType)} />
           <InfoRow label={t('assets.details.model')} value={asset.model} />
           <InfoRow label={t('assets.details.serial_no')} value={asset.serialNumber} mono />
@@ -112,7 +112,7 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
           <InfoRow label={t('assets.details.rack')} value={asset.rackPosition} mono />
         </div>
         <div>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2">{t('assets.details.finance_info')}</p>
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-2">{t('assets.details.finance_info')}</p>
           <InfoRow label={t('assets.details.purchase')} value={formatDate(asset.purchaseDate ?? undefined)} />
           <InfoRow label={t('assets.details.warranty')} value={formatDate(asset.warrantyEndDate ?? undefined)} />
           <InfoRow label={t('assets.details.cost')} value={formatCurrency(asset.purchaseCost ?? undefined)} />
@@ -122,7 +122,7 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
           {/* Live stats if available */}
           {asset.lastTemperature != null && (
             <>
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-2 mt-4">{t('assets.details.live_status')}</p>
+              <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-2 mt-4">{t('assets.details.live_status')}</p>
               <InfoRow label={t('monitoring.table.temp')} value={`${asset.lastTemperature}°C`} mono />
               {asset.lastPowerConsumption != null && (
                 <InfoRow label={t('monitoring.table.power')} value={`${asset.lastPowerConsumption}W`} mono />
@@ -132,8 +132,8 @@ function ViewModal({ asset, onClose, onEdit }: { asset: Asset | null; onClose: (
 
           {asset.notes && (
             <div className="mt-3">
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val mb-1">{t('assets.details.notes')}</p>
-              <p className="text-xs text-[#E2EAF4] bg-[#131C2E] rounded p-2 leading-relaxed">{asset.notes}</p>
+              <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-1">{t('assets.details.notes')}</p>
+              <p className="text-xs text-[#e4e7ec] bg-[#22262e] rounded p-2 leading-relaxed">{asset.notes}</p>
             </div>
           )}
         </div>
@@ -257,7 +257,7 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
             <input className={inputCls} value={form.rackPosition ?? ''} onChange={e => setField('rackPosition', e.target.value)} placeholder="U1-U2" />
           </FormField>
 
-          <p className="col-span-2 text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val pt-2 border-t border-[#1E2D45]">{t('assets.details.finance_info')}</p>
+          <p className="col-span-2 text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val pt-2 border-t border-[#2e333d]">{t('assets.details.finance_info')}</p>
 
           <FormField label="Satın Alma Tarihi">
             <input type="date" className={inputCls} value={form.purchaseDate ?? ''} onChange={e => setField('purchaseDate', e.target.value)} />
@@ -286,16 +286,16 @@ function EditModal({ asset, onClose }: { asset: Asset | null; onClose: () => voi
           <div className="bg-red-500/10 border border-red-500/25 rounded px-3 py-2 text-xs text-red-400 font-mono-val">{error}</div>
         )}
 
-        <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#1E2D45]">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded text-xs text-[#6B84A3] hover:text-[#E2EAF4] border border-[#1E2D45] transition-colors font-mono-val">
+        <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#2e333d]">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded text-xs text-[#8b919e] hover:text-[#e4e7ec] border border-[#2e333d] transition-colors font-mono-val">
             {t('common.cancel').toUpperCase()}
           </button>
           <button
             type="submit"
             disabled={updateMut.isPending}
-            className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 font-mono-val transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-[#5b8fd5]/25 disabled:opacity-50 font-mono-val transition-all"
           >
-            {updateMut.isPending && <span className="w-3 h-3 border border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />}
+            {updateMut.isPending && <span className="w-3 h-3 border border-[#5b8fd5]/30 border-t-[#5b8fd5] rounded-full animate-spin" />}
             <Save size={11} /> {t('common.save').toUpperCase()}
           </button>
         </div>
@@ -320,8 +320,8 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
           <Trash2 size={22} className="text-red-400" />
         </div>
         <div>
-          <p className="text-sm text-[#E2EAF4] font-medium">{asset.assetName}</p>
-          <p className="text-[11px] text-[#6B84A3] mt-1 font-mono-val">
+          <p className="text-sm text-[#e4e7ec] font-medium">{asset.assetName}</p>
+          <p className="text-[11px] text-[#8b919e] mt-1 font-mono-val">
             {t('assets.delete.confirm')}<br />
             {t('assets.delete.warning')}
           </p>
@@ -332,7 +332,7 @@ function DeleteModal({ asset, onClose }: { asset: Asset | null; onClose: () => v
           </div>
         )}
         <div className="flex items-center justify-center gap-3">
-          <button onClick={onClose} className="px-4 py-2 rounded text-xs text-[#6B84A3] hover:text-[#E2EAF4] border border-[#1E2D45] transition-colors font-mono-val">
+          <button onClick={onClose} className="px-4 py-2 rounded text-xs text-[#8b919e] hover:text-[#e4e7ec] border border-[#2e333d] transition-colors font-mono-val">
             {t('common.cancel').toUpperCase()}
           </button>
           <button
@@ -425,20 +425,20 @@ export function AssetList() {
       <div className="card p-3 flex flex-wrap items-center gap-2">
         <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 min-w-0 max-w-xs">
           <div className="relative flex-1">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#3D5275]" />
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#555d6e]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={t('assets.toolbar.search_placeholder')}
-              className="w-full bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] placeholder-[#3D5275] pl-7 pr-3 py-2 outline-none focus:border-amber-500/40"
+              className="w-full bg-[#22262e] border border-[#2e333d] rounded text-xs text-[#e4e7ec] placeholder-[#555d6e] pl-7 pr-3 py-2 outline-none focus:border-[#5b8fd5]/40"
             />
           </div>
-          <button type="submit" className="text-[10px] px-2.5 py-2 rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 font-mono-val">
+          <button type="submit" className="text-[10px] px-2.5 py-2 rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-[#5b8fd5]/20 font-mono-val">
             {t('common.search').includes('...') ? t('common.search').replace('...', '').toUpperCase() : t('common.search').toUpperCase()}
           </button>
         </form>
 
-        <div className="flex items-center gap-1.5"><Filter size={12} className="text-[#3D5275]" /></div>
+        <div className="flex items-center gap-1.5"><Filter size={12} className="text-[#555d6e]" /></div>
 
         {[
           {
@@ -465,7 +465,7 @@ export function AssetList() {
             key={i}
             value={sel.value}
             onChange={e => sel.onChange(e.target.value)}
-            className="bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] px-2 py-2 outline-none focus:border-amber-500/40"
+            className="bg-[#22262e] border border-[#2e333d] rounded text-xs text-[#e4e7ec] px-2 py-2 outline-none focus:border-[#5b8fd5]/40"
           >
             {sel.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -476,14 +476,14 @@ export function AssetList() {
         <select
           value={limit}
           onChange={e => sp({ limit: e.target.value, page: '' })}
-          className="bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#6B84A3] px-2 py-2 outline-none"
+          className="bg-[#22262e] border border-[#2e333d] rounded text-xs text-[#8b919e] px-2 py-2 outline-none"
         >
           {PAGE_SIZES.map(s => <option key={s} value={s}>{s} {t('assets.toolbar.rows')}</option>)}
         </select>
 
         <button
           onClick={handleExport}
-          className="flex items-center gap-1.5 text-[10px] px-2.5 py-2 rounded bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] transition-colors font-mono-val"
+          className="flex items-center gap-1.5 text-[10px] px-2.5 py-2 rounded bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] transition-colors font-mono-val"
         >
           <Download size={11} /> {t('assets.toolbar.export')}
         </button>
@@ -491,17 +491,17 @@ export function AssetList() {
 
       {/* Count */}
       <div className="flex items-center gap-2 px-1">
-        <span className="text-[11px] text-[#3D5275] font-mono-val">
+        <span className="text-[11px] text-[#555d6e] font-mono-val">
           {pagination.total.toLocaleString()} {t('assets.toolbar.found')}
         </span>
-        {isFetching && <span className="w-3 h-3 border border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />}
+        {isFetching && <span className="w-3 h-3 border border-[#5b8fd5]/30 border-t-[#5b8fd5] rounded-full animate-spin" />}
       </div>
 
       {/* Table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
-            <thead className="border-b border-[#1E2D45] bg-[#131C2E]">
+            <thead className="border-b border-[#2e333d] bg-[#22262e]">
               <tr>
                 <Th label="#" className="w-10" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
                 <Th label={t('common.dashboard').includes('Dashboard') ? 'Asset Name' : 'Varlık Adı'} col="AssetName" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort} />
@@ -520,74 +520,74 @@ export function AssetList() {
             <tbody>
               {isLoading
                 ? Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i} className="border-b border-[#1E2D45]">
+                  <tr key={i} className="border-b border-[#2e333d]">
                     {Array.from({ length: 12 }).map((_, j) => (
-                      <td key={j} className="py-3 px-3"><div className="h-3 bg-[#131C2E] rounded animate-pulse" /></td>
+                      <td key={j} className="py-3 px-3"><div className="h-3 bg-[#22262e] rounded animate-pulse" /></td>
                     ))}
                   </tr>
                 ))
                 : assets.map((asset, i) => (
                   <tr
                     key={asset.assetId}
-                    className="border-b border-[#1E2D45] hover:bg-[#131C2E]/60 transition-colors group cursor-pointer"
+                    className="border-b border-[#2e333d] hover:bg-[#22262e]/60 transition-colors group cursor-pointer"
                     onClick={() => setViewAsset(asset)}
                   >
-                    <td className="py-2.5 px-3 text-[10px] text-[#3D5275] font-mono-val">
+                    <td className="py-2.5 px-3 text-[10px] text-[#555d6e] font-mono-val">
                       {(page - 1) * limit + i + 1}
                     </td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
                         <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', asset.isOnline === false ? 'bg-red-400' : 'bg-green-400 pulse-dot')} />
-                        <span className="text-xs text-[#E2EAF4] font-medium">{asset.assetName}</span>
+                        <span className="text-xs text-[#e4e7ec] font-medium">{asset.assetName}</span>
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-[10px] text-[#6B84A3] font-mono-val whitespace-nowrap">{asset.assetCode ?? '-'}</td>
+                    <td className="py-2.5 px-3 text-[10px] text-[#8b919e] font-mono-val whitespace-nowrap">{asset.assetCode ?? '-'}</td>
                     <td className="py-2.5 px-3">
                       <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono-val whitespace-nowrap">
                         {assetTypeLabel(asset.assetType)}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3] whitespace-nowrap">{asset.model ?? '-'}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#8b919e] whitespace-nowrap">{asset.model ?? '-'}</td>
                     <td className="py-2.5 px-3">
-                      <p className="text-[10px] text-[#E2EAF4] truncate max-w-[140px]">{asset.channelName}</p>
-                      <p className="text-[10px] text-[#3D5275] font-mono-val truncate max-w-[140px]">{asset.groupName ?? '-'}</p>
+                      <p className="text-[10px] text-[#e4e7ec] truncate max-w-[140px]">{asset.channelName}</p>
+                      <p className="text-[10px] text-[#555d6e] font-mono-val truncate max-w-[140px]">{asset.groupName ?? '-'}</p>
                     </td>
                     <td className="py-2.5 px-3">
                       <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val whitespace-nowrap', statusBg(asset.status))}>
                         {statusLabel(asset.status)}
                       </span>
                     </td>
-                    <td className={cn('py-2.5 px-3 text-xs font-mono-val whitespace-nowrap', asset.lastTemperature ? tempColor(asset.lastTemperature) : 'text-[#3D5275]')}>
+                    <td className={cn('py-2.5 px-3 text-xs font-mono-val whitespace-nowrap', asset.lastTemperature ? tempColor(asset.lastTemperature) : 'text-[#555d6e]')}>
                       {asset.lastTemperature != null ? `${asset.lastTemperature}°C` : '-'}
                     </td>
-                    <td className="py-2.5 px-3 text-xs font-mono-val text-[#6B84A3] whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-xs font-mono-val text-[#8b919e] whitespace-nowrap">
                       {asset.lastPowerConsumption != null ? `${asset.lastPowerConsumption}W` : '-'}
                     </td>
-                    <td className="py-2.5 px-3 text-[10px] text-[#6B84A3] font-mono-val whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-[10px] text-[#8b919e] font-mono-val whitespace-nowrap">
                       {formatDate(asset.purchaseDate ?? undefined)}
                     </td>
-                    <td className="py-2.5 px-3 text-xs font-mono-val text-[#E2EAF4] whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-xs font-mono-val text-[#e4e7ec] whitespace-nowrap">
                       {formatCurrency(asset.purchaseCost ?? undefined)}
                     </td>
                     <td className="py-2.5 px-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => setViewAsset(asset)}
-                          className="p-1.5 rounded text-[#6B84A3] hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                          className="p-1.5 rounded text-[#8b919e] hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
                           title="Görüntüle"
                         >
                           <Eye size={12} />
                         </button>
                         <button
                           onClick={() => setEditAsset(asset)}
-                          className="p-1.5 rounded text-[#6B84A3] hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                          className="p-1.5 rounded text-[#8b919e] hover:text-[#5b8fd5] hover:bg-[#5b8fd5]/10 transition-colors"
                           title="Düzenle"
                         >
                           <Edit size={12} />
                         </button>
                         <button
                           onClick={() => setDeleteAsset(asset)}
-                          className="p-1.5 rounded text-[#6B84A3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="p-1.5 rounded text-[#8b919e] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                           title="Sil"
                         >
                           <Trash2 size={12} />
@@ -601,12 +601,12 @@ export function AssetList() {
               {!isLoading && assets.length === 0 && (
                 <tr>
                   <td colSpan={12} className="py-16 text-center">
-                    <Server size={32} className="text-[#1E2D45] mx-auto mb-3" />
-                    <p className="text-sm text-[#3D5275] font-mono-val">
+                    <Server size={32} className="text-[#2e333d] mx-auto mb-3" />
+                    <p className="text-sm text-[#555d6e] font-mono-val">
                       {i18n.language === 'tr' ? 'Varlık bulunamadı' : 'No assets found'}
                     </p>
                     {(searchQ || status || assetType || channelId) && (
-                      <p className="text-xs text-[#3D5275] font-mono-val mt-1 opacity-60">
+                      <p className="text-xs text-[#555d6e] font-mono-val mt-1 opacity-60">
                         {i18n.language === 'tr' ? 'Filtrelerinizi temizlemeyi deneyin' : 'Try clearing your filters'}
                       </p>
                     )}
@@ -619,15 +619,15 @@ export function AssetList() {
 
         {/* Pagination — always visible */}
         {(
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#1E2D45] bg-[#070B14]">
-            <span className="text-[10px] text-[#3D5275] font-mono-val">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#2e333d] bg-[#111318]">
+            <span className="text-[10px] text-[#555d6e] font-mono-val">
               {t('common.page')} {pagination.page} / {pagination.totalPages} · {pagination.total.toLocaleString()} {i18n.language === 'tr' ? 'kayıt' : 'records'}
             </span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => sp({ page: Math.max(1, page - 1) })}
                 disabled={page === 1}
-                className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ‹ {t('common.previous')}
               </button>
@@ -641,7 +641,7 @@ export function AssetList() {
                       'w-7 h-7 rounded text-[10px] font-mono-val border transition-colors',
                       p === page
                         ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                        : 'bg-[#131C2E] border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4]'
+                        : 'bg-[#22262e] border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec]'
                     )}
                   >
                     {p}
@@ -651,7 +651,7 @@ export function AssetList() {
               <button
                 onClick={() => sp({ page: Math.min(pagination.totalPages, page + 1) })}
                 disabled={page === pagination.totalPages}
-                className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1 rounded text-[10px] font-mono-val bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {t('common.next')} ›
               </button>

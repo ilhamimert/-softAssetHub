@@ -71,9 +71,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── HTTP logger (sadece development) ─────────────────────────────
-if (process.env.NODE_ENV !== 'test') {
+// ── HTTP logger — development'ta renkli, production'da minimal ───
+if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
+} else if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('tiny'));
 }
 
 // ── Sağlık kontrolü — rate limit öncesi ──────────────────────────

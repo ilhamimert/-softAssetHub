@@ -64,15 +64,15 @@ function ReportCard({
 
   return (
     <div className={cn(
-      'bg-[#0D1525] border rounded-lg p-4 hover:border-[#2D4060] transition-colors group',
-      isExpired ? 'border-red-500/20 opacity-60' : 'border-[#1E2D45]',
+      'bg-[#1a1d23] border rounded-lg p-4 hover:border-[#383e4a] transition-colors group',
+      isExpired ? 'border-red-500/20 opacity-60' : 'border-[#2e333d]',
     )}>
       <div className="flex items-start gap-3 mb-3">
         <div className={cn('w-9 h-9 rounded flex items-center justify-center flex-shrink-0 border', cfg.bg, cfg.border)}>
           <Icon size={15} className={cfg.color} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-display font-semibold text-[#E2EAF4] truncate">{report.reportName}</p>
+          <p className="text-sm font-display font-semibold text-[#e4e7ec] truncate">{report.reportName}</p>
           <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val', cfg.bg, cfg.color, cfg.border)}>
             {cfg.label}
           </span>
@@ -81,20 +81,20 @@ function ReportCard({
 
       <div className="space-y-1.5 mb-3">
         {report.channelName && (
-          <div className="flex items-center gap-1.5 text-[10px] text-[#6B84A3]">
+          <div className="flex items-center gap-1.5 text-[10px] text-[#8b919e]">
             <Filter size={9} /> {report.channelName}
           </div>
         )}
         {(report.dateRangeFrom || report.dateRangeTo) && (
-          <div className="flex items-center gap-1.5 text-[10px] text-[#6B84A3]">
+          <div className="flex items-center gap-1.5 text-[10px] text-[#8b919e]">
             <Calendar size={9} />
             {formatDate(report.dateRangeFrom ?? undefined)} — {formatDate(report.dateRangeTo ?? undefined)}
           </div>
         )}
-        <div className="flex items-center gap-1.5 text-[10px] text-[#6B84A3]">
+        <div className="flex items-center gap-1.5 text-[10px] text-[#8b919e]">
           <User size={9} /> {report.generatedByName ?? '-'}
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-[#6B84A3]">
+        <div className="flex items-center gap-1.5 text-[10px] text-[#8b919e]">
           <Calendar size={9} /> Oluşturulma: {formatDateTime(report.generatedDate)}
         </div>
         {isExpired && (
@@ -102,11 +102,11 @@ function ReportCard({
         )}
       </div>
 
-      <div className="flex items-center gap-2 pt-2 border-t border-[#1E2D45]">
+      <div className="flex items-center gap-2 pt-2 border-t border-[#2e333d]">
         {report.reportData && (
           <button
             onClick={() => onView(report)}
-            className="flex items-center gap-1 text-[10px] text-[#6B84A3] hover:text-cyan-400 transition-colors"
+            className="flex items-center gap-1 text-[10px] text-[#8b919e] hover:text-cyan-400 transition-colors"
           >
             <Eye size={11} /> Görüntüle
           </button>
@@ -116,7 +116,7 @@ function ReportCard({
             href={report.fileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[10px] text-[#6B84A3] hover:text-green-400 transition-colors"
+            className="flex items-center gap-1 text-[10px] text-[#8b919e] hover:text-green-400 transition-colors"
           >
             <Download size={11} /> İndir
           </a>
@@ -124,7 +124,7 @@ function ReportCard({
         <div className="flex-1" />
         <button
           onClick={() => onDelete(report)}
-          className="opacity-0 group-hover:opacity-100 p-1 text-[#6B84A3] hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
+          className="opacity-0 group-hover:opacity-100 p-1 text-[#8b919e] hover:text-red-400 hover:bg-red-400/10 rounded transition-all"
         >
           <Trash2 size={11} />
         </button>
@@ -139,13 +139,13 @@ function ReportViewModal({ report, onClose }: { report: Report | null; onClose: 
   return (
     <Modal open={!!report} onClose={onClose} title={report.reportName}>
       <div className="space-y-3">
-        <div className="bg-[#070B14] border border-[#1E2D45] rounded p-3 max-h-64 overflow-y-auto">
-          <pre className="text-[11px] text-[#E2EAF4] font-mono-val whitespace-pre-wrap break-words">
+        <div className="bg-[#111318] border border-[#2e333d] rounded p-3 max-h-64 overflow-y-auto">
+          <pre className="text-[11px] text-[#e4e7ec] font-mono-val whitespace-pre-wrap break-words">
             {report.reportData ?? 'İçerik yok'}
           </pre>
         </div>
         <button onClick={onClose}
-          className="w-full py-2 text-xs font-mono-val rounded border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] hover:bg-[#131C2E] transition-all">
+          className="w-full py-2 text-xs font-mono-val rounded border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] hover:bg-[#22262e] transition-all">
           Kapat
         </button>
       </div>
@@ -217,15 +217,15 @@ export function Reports() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-display font-bold text-[#E2EAF4] flex items-center gap-2">
+          <h1 className="text-lg font-display font-bold text-[#e4e7ec] flex items-center gap-2">
             <FileText size={18} className="text-amber-400" />
             Raporlar
           </h1>
-          <p className="text-[11px] text-[#6B84A3] mt-0.5">Sistem raporları ve analiz kayıtları</p>
+          <p className="text-[11px] text-[#8b919e] mt-0.5">Sistem raporları ve analiz kayıtları</p>
         </div>
         <button
           onClick={() => { setForm(EMPTY_FORM); setFormError(''); setShowForm(true); }}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono-val rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all"
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono-val rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-[#5b8fd5]/20 transition-all"
         >
           <Plus size={13} /> Rapor Oluştur
         </button>
@@ -233,14 +233,14 @@ export function Reports() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="bg-[#0D1525] border border-[#1E2D45] rounded-lg px-4 py-3">
-          <p className="text-xl font-display font-bold text-[#E2EAF4]">{reports.length}</p>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-wider">Toplam Rapor</p>
+        <div className="bg-[#1a1d23] border border-[#2e333d] rounded-lg px-4 py-3">
+          <p className="text-xl font-display font-bold text-[#e4e7ec]">{reports.length}</p>
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-wider">Toplam Rapor</p>
         </div>
         {REPORT_TYPES.slice(0, 3).map(t => (
-          <div key={t.value} className="bg-[#0D1525] border border-[#1E2D45] rounded-lg px-4 py-3">
+          <div key={t.value} className="bg-[#1a1d23] border border-[#2e333d] rounded-lg px-4 py-3">
             <p className={cn('text-xl font-display font-bold', t.color)}>{typeCounts[t.value] ?? 0}</p>
-            <p className="text-[10px] text-[#6B84A3] uppercase tracking-wider truncate">{t.label}</p>
+            <p className="text-[10px] text-[#8b919e] uppercase tracking-wider truncate">{t.label}</p>
           </div>
         ))}
       </div>
@@ -250,7 +250,7 @@ export function Reports() {
         <button
           onClick={() => setTypeFilter('')}
           className={cn('px-3 py-1 text-[10px] rounded border font-mono-val transition-colors',
-            !typeFilter ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-[#0D1525] text-[#6B84A3] border-[#1E2D45] hover:border-[#2D4060]')}
+            !typeFilter ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-[#1a1d23] text-[#8b919e] border-[#2e333d] hover:border-[#383e4a]')}
         >
           Tümü ({reports.length})
         </button>
@@ -259,7 +259,7 @@ export function Reports() {
             key={t.value}
             onClick={() => setTypeFilter(t.value === typeFilter ? '' : t.value)}
             className={cn('px-3 py-1 text-[10px] rounded border font-mono-val transition-colors',
-              typeFilter === t.value ? cn(t.bg, t.color, t.border) : 'bg-[#0D1525] text-[#6B84A3] border-[#1E2D45] hover:border-[#2D4060]')}
+              typeFilter === t.value ? cn(t.bg, t.color, t.border) : 'bg-[#1a1d23] text-[#8b919e] border-[#2e333d] hover:border-[#383e4a]')}
           >
             {t.label} ({typeCounts[t.value] ?? 0})
           </button>
@@ -271,7 +271,7 @@ export function Reports() {
         <select
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value)}
-          className="text-xs bg-[#0D1525] border border-[#1E2D45] rounded px-3 py-1.5 text-[#E2EAF4] focus:outline-none focus:border-amber-500/50"
+          className="text-xs bg-[#1a1d23] border border-[#2e333d] rounded px-3 py-1.5 text-[#e4e7ec] focus:outline-none focus:border-[#5b8fd5]/40"
         >
           <option value="">Tüm Kanallar</option>
           {channels.map(c => <option key={c.channelId} value={String(c.channelId)}>{c.channelName}</option>)}
@@ -280,11 +280,11 @@ export function Reports() {
 
       {/* Grid */}
       {isLoading ? (
-        <p className="text-xs text-[#6B84A3]">Yükleniyor...</p>
+        <p className="text-xs text-[#8b919e]">Yükleniyor...</p>
       ) : reports.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <FileText size={32} className="text-[#1E2D45] mb-3" />
-          <p className="text-sm text-[#6B84A3]">Henüz rapor yok</p>
+          <FileText size={32} className="text-[#2e333d] mb-3" />
+          <p className="text-sm text-[#8b919e]">Henüz rapor yok</p>
           <button
             onClick={() => { setForm(EMPTY_FORM); setFormError(''); setShowForm(true); }}
             className="mt-3 text-xs text-amber-400 hover:underline"
@@ -350,11 +350,11 @@ export function Reports() {
           {formError && <p className="text-xs text-red-400">{formError}</p>}
           <div className="flex gap-2 pt-1">
             <button onClick={submit} disabled={createReport.isPending}
-              className="flex-1 py-2 text-xs font-mono-val rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 transition-all disabled:opacity-50">
+              className="flex-1 py-2 text-xs font-mono-val rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-[#5b8fd5]/20 transition-all disabled:opacity-50">
               {createReport.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
             </button>
             <button onClick={() => setShowForm(false)}
-              className="px-4 py-2 text-xs font-mono-val rounded border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] hover:bg-[#131C2E] transition-all">
+              className="px-4 py-2 text-xs font-mono-val rounded border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] hover:bg-[#22262e] transition-all">
               İptal
             </button>
           </div>

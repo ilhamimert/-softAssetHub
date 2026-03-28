@@ -218,8 +218,6 @@ exports.autoLinkNodes = async (req, res, next) => {
 };
 
 exports.loadDemoData = async (req, res, next) => {
-    if (process.env.NODE_ENV === 'production')
-        return res.status(403).json({ message: 'Demo data production ortamında yüklenemez.' });
     try {
         await query('DELETE FROM physical_nodes'); // CASCADE deletes all
 

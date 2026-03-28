@@ -25,11 +25,11 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] p-8 text-center">
         <AlertTriangle size={40} className="text-red-400 mb-4" />
-        <p className="text-sm font-display font-semibold text-[#E2EAF4] mb-1">Sayfa Yüklenemedi</p>
-        <p className="text-xs text-[#6B84A3] font-mono-val mb-5 max-w-md">{this.state.message}</p>
+        <p className="text-sm font-display font-semibold text-[#e4e7ec] mb-1">Sayfa Yüklenemedi</p>
+        <p className="text-xs text-[#8b919e] font-mono-val mb-5 max-w-md">{this.state.message}</p>
         <button
           onClick={() => this.setState({ hasError: false, message: '' })}
-          className="px-4 py-2 text-xs rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 transition-colors"
+          className="px-4 py-2 text-xs rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-[#5b8fd5]/20 transition-colors"
         >
           Tekrar Dene
         </button>

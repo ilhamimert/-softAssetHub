@@ -1,27 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @import "tailwindcss";
 
 @theme {
-  --color-bg:       #070B14;
-  --color-surface:  #0D1421;
-  --color-surface2: #131C2E;
-  --color-border:   #1E2D45;
-  --color-border2:  #253550;
-  --color-muted:    #3D5275;
-  --color-text:     #E2EAF4;
-  --color-textmuted:#6B84A3;
-  --color-amber:    #F59E0B;
-  --color-amberdim: #B45309;
-  --color-cyan:     #22D3EE;
-  --color-cyandim:  #0891B2;
-  --color-green:    #10B981;
-  --color-red:      #EF4444;
-  --color-yellow:   #FBBF24;
-  --color-orange:   #F97316;
+  --color-bg:       #111318;
+  --color-surface:  #1a1d23;
+  --color-surface2: #22262e;
+  --color-border:   #2e333d;
+  --color-border2:  #383e4a;
+  --color-muted:    #555d6e;
+  --color-text:     #e4e7ec;
+  --color-textmuted:#8b919e;
+  --color-amber:    #e09f3e;
+  --color-amberdim: #a67525;
+  --color-amber-300: #e8b96a;
+  --color-amber-400: #e09f3e;
+  --color-amber-500: #c98a2e;
+  --color-amber-600: #a67525;
+  --color-cyan:     #5b9bd5;
+  --color-cyandim:  #3d7ab8;
+  --color-cyan-300: #7db3e0;
+  --color-cyan-400: #5b9bd5;
+  --color-cyan-500: #3d7ab8;
+  --color-green:    #4caf82;
+  --color-green-300: #6ec49e;
+  --color-green-400: #4caf82;
+  --color-green-500: #3a9069;
+  --color-green-600: #2d7353;
+  --color-red:      #d9534f;
+  --color-red-300:  #e27c79;
+  --color-red-400:  #d9534f;
+  --color-red-500:  #c0403c;
+  --color-red-600:  #a33230;
+  --color-yellow:   #e0b53e;
+  --color-yellow-300: #e8c96a;
+  --color-yellow-400: #e0b53e;
+  --color-yellow-500: #c99e2e;
+  --color-orange:   #d97a3e;
+  --color-orange-300: #e39a6a;
+  --color-orange-400: #d97a3e;
+  --color-orange-500: #b8632e;
+  --color-blue-400: #5b8fd5;
+  --color-blue-500: #4a7abc;
+  --color-blue-600: #3a65a3;
+  --color-purple-400: #8b7dc5;
+  --color-purple-500: #7568ad;
+  --color-emerald-400: #4caf82;
+  --color-emerald-500: #3a9069;
 
-  --font-display: 'Barlow Condensed', sans-serif;
-  --font-body:    'DM Sans', sans-serif;
+  --font-display: 'Inter', sans-serif;
+  --font-body:    'Inter', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 }
 
@@ -30,55 +58,42 @@
 html, body, #root {
   height: 100%;
   margin: 0;
-  background-color: #070B14;
-  color: #E2EAF4;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #111318;
+  color: #e4e7ec;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Recharts — tüm SVG wrapper'ları şeffaf (beyaz arka plan önleme) */
+/* Recharts */
 .recharts-wrapper,
 .recharts-surface { background: transparent !important; }
-.recharts-tooltip-wrapper .recharts-default-tooltip { background: #0D1421 !important; }
+.recharts-tooltip-wrapper .recharts-default-tooltip { background: #1a1d23 !important; }
 
 /* Scrollbar */
 ::-webkit-scrollbar        { width: 4px; height: 4px; }
-::-webkit-scrollbar-track  { background: #0D1421; }
-::-webkit-scrollbar-thumb  { background: #1E2D45; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #253550; }
+::-webkit-scrollbar-track  { background: #1a1d23; }
+::-webkit-scrollbar-thumb  { background: #2e333d; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #383e4a; }
 
-/* Broadcast scan-line feel */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px
-  );
-  pointer-events: none;
-  z-index: 9999;
-}
-
-/* Glow utilities */
-.glow-amber { box-shadow: 0 0 14px rgba(245,158,11,0.3); }
-.glow-cyan  { box-shadow: 0 0 14px rgba(34,211,238,0.3); }
-.glow-green { box-shadow: 0 0 14px rgba(16,185,129,0.3); }
-.glow-red   { box-shadow: 0 0 14px rgba(239,68,68,0.3);  }
+/* Glow utilities — subtle */
+.glow-amber { box-shadow: 0 1px 3px rgba(224,159,62,0.15); }
+.glow-cyan  { box-shadow: 0 1px 3px rgba(91,155,213,0.15); }
+.glow-green { box-shadow: 0 1px 3px rgba(76,175,130,0.15); }
+.glow-red   { box-shadow: 0 1px 3px rgba(217,83,79,0.15);  }
 
 /* Live pulse dot */
 @keyframes pulse-dot {
   0%,100% { opacity:1; transform:scale(1); }
-  50%     { opacity:0.4; transform:scale(1.5); }
+  50%     { opacity:0.5; transform:scale(1.3); }
 }
-.pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
 
 /* Entry animations */
 @keyframes fadeInUp {
-  from { opacity:0; transform:translateY(14px); }
+  from { opacity:0; transform:translateY(10px); }
   to   { opacity:1; transform:translateY(0); }
 }
-.fade-in-up           { animation: fadeInUp 0.35s ease both; }
+.fade-in-up           { animation: fadeInUp 0.3s ease both; }
 .fade-in-up.delay-100 { animation-delay: 0.10s; }
 .fade-in-up.delay-200 { animation-delay: 0.20s; }
 .fade-in-up.delay-300 { animation-delay: 0.30s; }
@@ -86,19 +101,19 @@ body::after {
 .fade-in-up.delay-500 { animation-delay: 0.50s; }
 
 /* Typography helpers */
-.font-display  { font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.01em; }
+.font-display  { font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; }
 .font-mono-val { font-family: 'JetBrains Mono', monospace; }
 
 /* Card base */
 .card {
-  background: #0D1421;
-  border: 1px solid #1E2D45;
-  border-radius: 8px;
+  background: #1a1d23;
+  border: 1px solid #2e333d;
+  border-radius: 10px;
 }
 
 /* Status badge colors */
-.status-active      { color:#10B981; background:rgba(16,185,129,0.12); }
-.status-inactive    { color:#6B84A3; background:rgba(107,132,163,0.12); }
-.status-maintenance { color:#F59E0B; background:rgba(245,158,11,0.12); }
-.status-faulty      { color:#EF4444; background:rgba(239,68,68,0.12); }
-.status-retired     { color:#3D5275; background:rgba(61,82,117,0.12); }
+.status-active      { color:#4caf82; background:rgba(76,175,130,0.10); }
+.status-inactive    { color:#8b919e; background:rgba(139,145,158,0.10); }
+.status-maintenance { color:#e09f3e; background:rgba(224,159,62,0.10); }
+.status-faulty      { color:#d9534f; background:rgba(217,83,79,0.10); }
+.status-retired     { color:#555d6e; background:rgba(85,93,110,0.10); }

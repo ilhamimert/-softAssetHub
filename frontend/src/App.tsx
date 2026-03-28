@@ -23,8 +23,8 @@ const Reports        = lazy(() => import('@/pages/Reports').then(m => ({ default
 
 // ── Fallback ────────────────────────────────────────────────────
 const PageLoader = () => (
-  <div className="flex h-screen items-center justify-center bg-[#070B14]">
-    <span className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+  <div className="flex h-screen items-center justify-center bg-[#111318]">
+    <span className="w-5 h-5 border-2 border-[#5b8fd5]/30 border-t-[#5b8fd5] rounded-full animate-spin" />
   </div>
 );
 
@@ -32,7 +32,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 30000,
+      staleTime: 60 * 1000,        // 1 dk: eski veri yerine cache'i kullan
+      gcTime: 5 * 60 * 1000,       // 5 dk: kullanılmayan cache'i bellekten temizle
+      refetchOnWindowFocus: false, // sekme değişince gereksiz istek gönderme
     },
   },
 });

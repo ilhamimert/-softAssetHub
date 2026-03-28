@@ -5,6 +5,7 @@ const BASE_URL = '/api/v1';
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 30000, // 30s — backend timeout ile eşleştirildi
 });
 
 // Request interceptor — JWT token ekle

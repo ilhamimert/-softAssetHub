@@ -63,24 +63,24 @@ function GroupCard({
   const faulty = group.faultyCount ?? 0;
 
   return (
-    <div className="bg-[#0D1525] border border-[#1E2D45] rounded-lg p-4 hover:border-[#2D4060] transition-colors group">
+    <div className="bg-[#1a1d23] border border-[#2e333d] rounded-lg p-4 hover:border-[#383e4a] transition-colors group">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className={cn('w-8 h-8 rounded flex items-center justify-center flex-shrink-0', cfg.bg, cfg.border, 'border')}>
             <Icon size={14} className={cfg.color} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-display font-semibold text-[#E2EAF4] truncate">{group.groupName}</p>
-            <p className="text-[10px] text-[#6B84A3] truncate">{group.channelName}</p>
+            <p className="text-sm font-display font-semibold text-[#e4e7ec] truncate">{group.groupName}</p>
+            <p className="text-[10px] text-[#8b919e] truncate">{group.channelName}</p>
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
           <button onClick={() => onEdit(group)}
-            className="p-1.5 text-[#6B84A3] hover:text-amber-400 hover:bg-amber-400/10 rounded transition-colors">
+            className="p-1.5 text-[#8b919e] hover:text-[#5b8fd5] hover:bg-amber-400/10 rounded transition-colors">
             <Edit size={12} />
           </button>
           <button onClick={() => onDelete(group)}
-            className="p-1.5 text-[#6B84A3] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors">
+            className="p-1.5 text-[#8b919e] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors">
             <Trash2 size={12} />
           </button>
         </div>
@@ -93,11 +93,11 @@ function GroupCard({
       </div>
 
       {group.description && (
-        <p className="text-[11px] text-[#6B84A3] mb-3 line-clamp-2">{group.description}</p>
+        <p className="text-[11px] text-[#8b919e] mb-3 line-clamp-2">{group.description}</p>
       )}
 
-      <div className="flex items-center gap-3 pt-2 border-t border-[#1E2D45]">
-        <span className="text-[10px] text-[#6B84A3] font-mono-val">{group.assetCount} varlık</span>
+      <div className="flex items-center gap-3 pt-2 border-t border-[#2e333d]">
+        <span className="text-[10px] text-[#8b919e] font-mono-val">{group.assetCount} varlık</span>
         {active > 0 && (
           <span className="flex items-center gap-1 text-[10px] text-green-400">
             <CheckCircle size={9} /> {active}
@@ -199,15 +199,15 @@ export function AssetGroups() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-display font-bold text-[#E2EAF4] flex items-center gap-2">
+          <h1 className="text-lg font-display font-bold text-[#e4e7ec] flex items-center gap-2">
             <Layers size={18} className="text-amber-400" />
             Varlık Grupları
           </h1>
-          <p className="text-[11px] text-[#6B84A3] mt-0.5">Kanal bazlı grup yönetimi</p>
+          <p className="text-[11px] text-[#8b919e] mt-0.5">Kanal bazlı grup yönetimi</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono-val rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all"
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono-val rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-[#5b8fd5]/20 transition-all"
         >
           <Plus size={13} /> Grup Ekle
         </button>
@@ -215,21 +215,21 @@ export function AssetGroups() {
 
       {/* Stats strip */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="bg-[#0D1525] border border-[#1E2D45] rounded-lg px-4 py-3">
-          <p className="text-xl font-display font-bold text-[#E2EAF4]">{groups.length}</p>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-wider">Toplam Grup</p>
+        <div className="bg-[#1a1d23] border border-[#2e333d] rounded-lg px-4 py-3">
+          <p className="text-xl font-display font-bold text-[#e4e7ec]">{groups.length}</p>
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-wider">Toplam Grup</p>
         </div>
-        <div className="bg-[#0D1525] border border-[#1E2D45] rounded-lg px-4 py-3">
-          <p className="text-xl font-display font-bold text-[#E2EAF4]">{totalAssets}</p>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-wider">Toplam Varlık</p>
+        <div className="bg-[#1a1d23] border border-[#2e333d] rounded-lg px-4 py-3">
+          <p className="text-xl font-display font-bold text-[#e4e7ec]">{totalAssets}</p>
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-wider">Toplam Varlık</p>
         </div>
-        <div className="bg-[#0D1525] border border-[#1E2D45] rounded-lg px-4 py-3">
-          <p className="text-xl font-display font-bold text-[#E2EAF4]">{channels.length}</p>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-wider">Kanal</p>
+        <div className="bg-[#1a1d23] border border-[#2e333d] rounded-lg px-4 py-3">
+          <p className="text-xl font-display font-bold text-[#e4e7ec]">{channels.length}</p>
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-wider">Kanal</p>
         </div>
-        <div className="bg-[#0D1525] border border-[#1E2D45] rounded-lg px-4 py-3">
-          <p className="text-xl font-display font-bold text-[#E2EAF4]">{GROUP_TYPES.filter(t => typeCounts[t] > 0).length}</p>
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-wider">Aktif Tip</p>
+        <div className="bg-[#1a1d23] border border-[#2e333d] rounded-lg px-4 py-3">
+          <p className="text-xl font-display font-bold text-[#e4e7ec]">{GROUP_TYPES.filter(t => typeCounts[t] > 0).length}</p>
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-wider">Aktif Tip</p>
         </div>
       </div>
 
@@ -238,7 +238,7 @@ export function AssetGroups() {
         <button
           onClick={() => setTypeFilter('')}
           className={cn('px-3 py-1 text-[10px] rounded border font-mono-val transition-colors',
-            !typeFilter ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-[#0D1525] text-[#6B84A3] border-[#1E2D45] hover:border-[#2D4060]')}
+            !typeFilter ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-[#1a1d23] text-[#8b919e] border-[#2e333d] hover:border-[#383e4a]')}
         >
           Tümü ({groups.length})
         </button>
@@ -249,7 +249,7 @@ export function AssetGroups() {
               key={t}
               onClick={() => setTypeFilter(t === typeFilter ? '' : t)}
               className={cn('px-3 py-1 text-[10px] rounded border font-mono-val transition-colors',
-                typeFilter === t ? cn(cfg.bg, cfg.color, cfg.border) : 'bg-[#0D1525] text-[#6B84A3] border-[#1E2D45] hover:border-[#2D4060]')}
+                typeFilter === t ? cn(cfg.bg, cfg.color, cfg.border) : 'bg-[#1a1d23] text-[#8b919e] border-[#2e333d] hover:border-[#383e4a]')}
             >
               {GROUP_TYPE_LABELS[t]} ({typeCounts[t]})
             </button>
@@ -262,7 +262,7 @@ export function AssetGroups() {
         <select
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value)}
-          className="text-xs bg-[#0D1525] border border-[#1E2D45] rounded px-3 py-1.5 text-[#E2EAF4] focus:outline-none focus:border-amber-500/50"
+          className="text-xs bg-[#1a1d23] border border-[#2e333d] rounded px-3 py-1.5 text-[#e4e7ec] focus:outline-none focus:border-[#5b8fd5]/40"
         >
           <option value="">Tüm Kanallar</option>
           {channels.map(c => <option key={c.channelId} value={String(c.channelId)}>{c.channelName}</option>)}
@@ -271,11 +271,11 @@ export function AssetGroups() {
 
       {/* Grid */}
       {isLoading ? (
-        <p className="text-xs text-[#6B84A3]">Yükleniyor...</p>
+        <p className="text-xs text-[#8b919e]">Yükleniyor...</p>
       ) : groups.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Layers size={32} className="text-[#1E2D45] mb-3" />
-          <p className="text-sm text-[#6B84A3]">Henüz grup yok</p>
+          <Layers size={32} className="text-[#2e333d] mb-3" />
+          <p className="text-sm text-[#8b919e]">Henüz grup yok</p>
           <button onClick={openAdd} className="mt-3 text-xs text-amber-400 hover:underline">+ Grup ekle</button>
         </div>
       ) : (
@@ -328,11 +328,11 @@ export function AssetGroups() {
           {formError && <p className="text-xs text-red-400">{formError}</p>}
           <div className="flex gap-2 pt-1">
             <button onClick={submit} disabled={saveGroup.isPending}
-              className="flex-1 py-2 text-xs font-mono-val rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 transition-all disabled:opacity-50">
+              className="flex-1 py-2 text-xs font-mono-val rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-[#5b8fd5]/20 transition-all disabled:opacity-50">
               {saveGroup.isPending ? 'Kaydediliyor...' : 'Kaydet'}
             </button>
             <button onClick={() => { setShowForm(false); setEditGroup(null); }}
-              className="px-4 py-2 text-xs font-mono-val rounded border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] hover:bg-[#131C2E] transition-all">
+              className="px-4 py-2 text-xs font-mono-val rounded border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] hover:bg-[#22262e] transition-all">
               İptal
             </button>
           </div>

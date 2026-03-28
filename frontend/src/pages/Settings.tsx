@@ -26,7 +26,7 @@ function PasswordInput({ value, onChange, placeholder }: { value: string; onChan
       <button
         type="button"
         onClick={() => setShow(s => !s)}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#3D5275] hover:text-[#6B84A3] transition-colors"
+        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#555d6e] hover:text-[#8b919e] transition-colors"
       >
         {show ? <EyeOff size={12} /> : <Eye size={12} />}
       </button>
@@ -39,7 +39,7 @@ const roleColor: Record<string, string> = {
   Admin: 'text-red-400 bg-red-400/10 border-red-400/20',
   Manager: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
   Technician: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20',
-  Viewer: 'text-[#6B84A3] bg-[#6B84A3]/10 border-[#6B84A3]/20',
+  Viewer: 'text-[#8b919e] bg-[#8b919e]/10 border-[#8b919e]/20',
 };
 
 // ─── User Form Modal (Create / Edit) ─────────────────────────
@@ -173,7 +173,7 @@ function UserFormModal({
                 onClick={() => setField('isActive', !form.isActive)}
                 className={cn(
                   'w-9 h-5 rounded-full transition-all cursor-pointer relative',
-                  form.isActive ? 'bg-green-500' : 'bg-[#1E2D45]'
+                  form.isActive ? 'bg-green-500' : 'bg-[#2e333d]'
                 )}
               >
                 <span className={cn(
@@ -181,7 +181,7 @@ function UserFormModal({
                   form.isActive ? 'left-[18px]' : 'left-0.5'
                 )} />
               </div>
-              <span className="text-xs text-[#E2EAF4] font-mono-val">{form.isActive ? 'Aktif' : 'Pasif'}</span>
+              <span className="text-xs text-[#e4e7ec] font-mono-val">{form.isActive ? 'Aktif' : 'Pasif'}</span>
             </label>
           </div>
         )}
@@ -190,16 +190,16 @@ function UserFormModal({
           <div className="bg-red-500/10 border border-red-500/25 rounded px-3 py-2 text-xs text-red-400 font-mono-val">{error}</div>
         )}
 
-        <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#1E2D45]">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded text-xs text-[#6B84A3] hover:text-[#E2EAF4] border border-[#1E2D45] transition-colors font-mono-val">
+        <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#2e333d]">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded text-xs text-[#8b919e] hover:text-[#e4e7ec] border border-[#2e333d] transition-colors font-mono-val">
             İPTAL
           </button>
           <button
             type="submit"
             disabled={isPending}
-            className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 font-mono-val transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-[#5b8fd5]/25 disabled:opacity-50 font-mono-val transition-all"
           >
-            {isPending && <span className="w-3 h-3 border border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />}
+            {isPending && <span className="w-3 h-3 border border-[#5b8fd5]/30 border-t-[#5b8fd5] rounded-full animate-spin" />}
             <Save size={11} /> {isEdit ? 'GÜNCELLE' : 'OLUŞTUR'}
           </button>
         </div>
@@ -248,7 +248,7 @@ function ChangePasswordModal({ userId, onClose }: { userId: number; onClose: () 
           <p className="text-sm text-green-400 font-mono-val">Şifre başarıyla değiştirildi!</p>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded text-xs bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] font-mono-val transition-colors"
+            className="px-4 py-2 rounded text-xs bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] font-mono-val transition-colors"
           >
             KAPAT
           </button>
@@ -274,8 +274,8 @@ function ChangePasswordModal({ userId, onClose }: { userId: number; onClose: () 
                 [pwRules.lower,   'Küçük harf (a-z)'],
                 [pwRules.special, 'Rakam veya özel karakter'],
               ] as [boolean, string][]).map(([ok, label]) => (
-                <div key={label} className={cn('flex items-center gap-1.5 text-[10px] font-mono-val transition-colors', ok ? 'text-green-400' : 'text-[#3D5275]')}>
-                  <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', ok ? 'bg-green-400' : 'bg-[#1E2D45]')} />
+                <div key={label} className={cn('flex items-center gap-1.5 text-[10px] font-mono-val transition-colors', ok ? 'text-green-400' : 'text-[#555d6e]')}>
+                  <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', ok ? 'bg-green-400' : 'bg-[#2e333d]')} />
                   {label}
                 </div>
               ))}
@@ -286,16 +286,16 @@ function ChangePasswordModal({ userId, onClose }: { userId: number; onClose: () 
             <div className="bg-red-500/10 border border-red-500/25 rounded px-3 py-2 text-xs text-red-400 font-mono-val">{error}</div>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#1E2D45]">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded text-xs text-[#6B84A3] hover:text-[#E2EAF4] border border-[#1E2D45] transition-colors font-mono-val">
+          <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#2e333d]">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded text-xs text-[#8b919e] hover:text-[#e4e7ec] border border-[#2e333d] transition-colors font-mono-val">
               İPTAL
             </button>
             <button
               type="submit"
               disabled={pwMut.isPending}
-              className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 font-mono-val transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded text-xs bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-[#5b8fd5]/25 disabled:opacity-50 font-mono-val transition-all"
             >
-              {pwMut.isPending && <span className="w-3 h-3 border border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />}
+              {pwMut.isPending && <span className="w-3 h-3 border border-[#5b8fd5]/30 border-t-[#5b8fd5] rounded-full animate-spin" />}
               <Key size={11} /> DEĞİŞTİR
             </button>
           </div>
@@ -349,12 +349,12 @@ export function Settings() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <User size={14} className="text-amber-400" />
-            <p className="text-[11px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Profil Bilgileri</p>
+            <p className="text-[11px] text-[#8b919e] uppercase tracking-widest font-mono-val">Profil Bilgileri</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowChangePw(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] bg-[#131C2E] border border-[#1E2D45] text-[#6B84A3] hover:text-amber-400 hover:border-amber-500/30 transition-all font-mono-val"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] bg-[#22262e] border border-[#2e333d] text-[#8b919e] hover:text-[#5b8fd5] hover:border-[#5b8fd5]/30 transition-all font-mono-val"
             >
               <Key size={10} /> ŞİFRE DEĞİŞTİR
             </button>
@@ -375,9 +375,9 @@ export function Settings() {
               { label: 'E-posta', value: user?.email },
               { label: 'Rol', value: user?.role ? roleLabel(user.role) : undefined },
             ].map(({ label, value }) => (
-              <div key={label} className="flex items-center gap-3 py-2 border-b border-[#131C2E]">
-                <span className="text-[10px] text-[#6B84A3] uppercase font-mono-val w-24">{label}</span>
-                <span className="text-xs text-[#E2EAF4]">{value ?? '-'}</span>
+              <div key={label} className="flex items-center gap-3 py-2 border-b border-[#22262e]">
+                <span className="text-[10px] text-[#8b919e] uppercase font-mono-val w-24">{label}</span>
+                <span className="text-xs text-[#e4e7ec]">{value ?? '-'}</span>
               </div>
             ))}
           </div>
@@ -387,16 +387,16 @@ export function Settings() {
       {/* User Management (Admin/Manager only) */}
       {isAdminOrManager && (
         <div className="card overflow-hidden">
-          <div className="p-3 border-b border-[#1E2D45] bg-[#131C2E] flex items-center justify-between">
+          <div className="p-3 border-b border-[#2e333d] bg-[#22262e] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield size={13} className="text-amber-400" />
-              <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">
+              <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">
                 Kullanıcı Yönetimi — {users.length} kullanıcı
               </p>
             </div>
             <button
               onClick={() => { setEditUser(null); setShowUserForm(true); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 font-mono-val transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-[#5b8fd5]/20 font-mono-val transition-all"
             >
               <Plus size={11} /> YENİ KULLANICI
             </button>
@@ -404,33 +404,33 @@ export function Settings() {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[700px]">
-              <thead className="border-b border-[#1E2D45]">
+              <thead className="border-b border-[#2e333d]">
                 <tr>
                   {['Ad Soyad', 'Kullanıcı Adı', 'E-posta', 'Rol', 'Kanal', 'Son Giriş', 'Durum', ''].map(h => (
-                    <th key={h} className="py-2 px-3 text-left text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">{h}</th>
+                    <th key={h} className="py-2 px-3 text-left text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {paginatedUsers.map(u => (
-                  <tr key={u.userId} className="border-b border-[#1E2D45] hover:bg-[#131C2E] transition-colors group">
+                  <tr key={u.userId} className="border-b border-[#2e333d] hover:bg-[#22262e] transition-colors group">
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded bg-[#1E2D45] flex items-center justify-center flex-shrink-0">
-                          <span className="text-[9px] font-bold text-[#6B84A3]">{u.fullName?.charAt(0)}</span>
+                        <div className="w-6 h-6 rounded bg-[#2e333d] flex items-center justify-center flex-shrink-0">
+                          <span className="text-[9px] font-bold text-[#8b919e]">{u.fullName?.charAt(0)}</span>
                         </div>
-                        <span className="text-xs text-[#E2EAF4]">{u.fullName}</span>
+                        <span className="text-xs text-[#e4e7ec]">{u.fullName}</span>
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3] font-mono-val">{u.username}</td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{u.email}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#8b919e] font-mono-val">{u.username}</td>
+                    <td className="py-2.5 px-3 text-xs text-[#8b919e]">{u.email}</td>
                     <td className="py-2.5 px-3">
-                      <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val', roleColor[u.role] ?? 'text-[#6B84A3]')}>
+                      <span className={cn('text-[10px] px-2 py-0.5 rounded border font-mono-val', roleColor[u.role] ?? 'text-[#8b919e]')}>
                         {roleLabel(u.role)}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-xs text-[#6B84A3]">{u.channelName ?? 'Tümü'}</td>
-                    <td className="py-2.5 px-3 text-[10px] text-[#3D5275] font-mono-val">
+                    <td className="py-2.5 px-3 text-xs text-[#8b919e]">{u.channelName ?? 'Tümü'}</td>
+                    <td className="py-2.5 px-3 text-[10px] text-[#555d6e] font-mono-val">
                       {u.lastLogin ? formatDateTime(u.lastLogin) : '-'}
                     </td>
                     <td className="py-2.5 px-3">
@@ -446,7 +446,7 @@ export function Settings() {
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => { setEditUser(u); setShowUserForm(true); }}
-                          className="p-1.5 rounded text-[#6B84A3] hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                          className="p-1.5 rounded text-[#8b919e] hover:text-[#5b8fd5] hover:bg-[#5b8fd5]/10 transition-colors"
                           title="Düzenle"
                         >
                           <Edit size={12} />
@@ -454,7 +454,7 @@ export function Settings() {
                         {u.userId !== user?.userId && (
                           <button
                             onClick={() => setDeleteTarget(u)}
-                            className="p-1.5 rounded text-[#6B84A3] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="p-1.5 rounded text-[#8b919e] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                             title="Devre Dışı Bırak"
                           >
                             <Trash2 size={12} />
@@ -469,15 +469,15 @@ export function Settings() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between p-3 border-t border-[#1E2D45] bg-[#131C2E] rounded-b-lg">
-              <span className="text-[10px] text-[#3D5275] font-mono-val">
+            <div className="flex items-center justify-between p-3 border-t border-[#2e333d] bg-[#22262e] rounded-b-lg">
+              <span className="text-[10px] text-[#555d6e] font-mono-val">
                 Sayfa {page} / {totalPages}
               </span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-2.5 py-1 text-[10px] font-mono-val bg-[#0D1421] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 rounded transition-colors"
+                  className="px-2.5 py-1 text-[10px] font-mono-val bg-[#1a1d23] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] disabled:opacity-40 rounded transition-colors"
                 >
                   ‹ Önceki
                 </button>
@@ -492,7 +492,7 @@ export function Settings() {
                         'w-7 h-7 rounded text-[10px] font-mono-val border transition-colors',
                         p === page
                           ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                          : 'bg-[#0D1421] border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4]'
+                          : 'bg-[#1a1d23] border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec]'
                       )}
                     >
                       {p}
@@ -502,7 +502,7 @@ export function Settings() {
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-2.5 py-1 text-[10px] font-mono-val bg-[#0D1421] border border-[#1E2D45] text-[#6B84A3] hover:text-[#E2EAF4] disabled:opacity-40 rounded transition-colors"
+                  className="px-2.5 py-1 text-[10px] font-mono-val bg-[#1a1d23] border border-[#2e333d] text-[#8b919e] hover:text-[#e4e7ec] disabled:opacity-40 rounded transition-colors"
                 >
                   Sonraki ›
                 </button>
@@ -517,7 +517,7 @@ export function Settings() {
       <div className="card p-4">
         <div className="flex items-center gap-2 mb-4">
           <Database size={13} className="text-cyan-400" />
-          <p className="text-[10px] text-[#6B84A3] uppercase tracking-widest font-mono-val">Sistem Bilgisi</p>
+          <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val">Sistem Bilgisi</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-1">
           {[
@@ -528,8 +528,8 @@ export function Settings() {
             { label: 'Frontend', value: 'Vite + React 18 + TypeScript' },
             { label: 'Backend', value: 'Node.js + Express.js' },
           ].map(({ label, value }) => (
-            <div key={label} className="flex items-center gap-3 py-2 border-b border-[#131C2E]">
-              <span className="text-[10px] text-[#6B84A3] uppercase font-mono-val w-24">{label}</span>
+            <div key={label} className="flex items-center gap-3 py-2 border-b border-[#22262e]">
+              <span className="text-[10px] text-[#8b919e] uppercase font-mono-val w-24">{label}</span>
               <span className="text-[10px] text-cyan-400 font-mono-val truncate">{value}</span>
             </div>
           ))}
@@ -560,13 +560,13 @@ export function Settings() {
               <AlertTriangle size={22} className="text-red-400" />
             </div>
             <div>
-              <p className="text-sm text-[#E2EAF4] font-medium">{deleteTarget.fullName}</p>
-              <p className="text-[11px] text-[#6B84A3] mt-1 font-mono-val">
+              <p className="text-sm text-[#e4e7ec] font-medium">{deleteTarget.fullName}</p>
+              <p className="text-[11px] text-[#8b919e] mt-1 font-mono-val">
                 Bu kullanıcıyı devre dışı bırakmak istediğinize emin misiniz?
               </p>
             </div>
             <div className="flex items-center justify-center gap-3">
-              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 rounded text-xs text-[#6B84A3] hover:text-[#E2EAF4] border border-[#1E2D45] transition-colors font-mono-val">
+              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 rounded text-xs text-[#8b919e] hover:text-[#e4e7ec] border border-[#2e333d] transition-colors font-mono-val">
                 VAZGEÇ
               </button>
               <button

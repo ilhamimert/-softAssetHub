@@ -36,7 +36,7 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#070B14]">
+    <div className="flex h-screen overflow-hidden bg-[#111318]">
       <Sidebar collapsed={collapsed} mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onToggleSidebar={handleToggle} title={title} />

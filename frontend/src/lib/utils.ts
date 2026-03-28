@@ -211,13 +211,13 @@ export function aggregatePowerData(
 }
 
 /** Shared form input className */
-export const inputCls = 'w-full bg-[#131C2E] border border-[#1E2D45] rounded text-xs text-[#E2EAF4] placeholder-[#3D5275] px-3 py-2 outline-none focus:border-amber-500/50 transition-colors';
+export const inputCls = 'w-full bg-[#22262e] border border-[#2e333d] rounded text-xs text-[#e4e7ec] placeholder-[#555d6e] px-3 py-2 outline-none focus:border-[#5b8fd5]/40 transition-colors';
 
 /** Shared Recharts tooltip content style */
 export const CHART_TOOLTIP_STYLE = {
-  contentStyle: { background: '#0D1421', border: '1px solid #1E2D45', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' },
-  labelStyle: { color: '#6B84A3' },
-  itemStyle: { color: '#F59E0B' },
+  contentStyle: { background: '#1a1d23', border: '1px solid #2e333d', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' },
+  labelStyle: { color: '#8b919e' },
+  itemStyle: { color: '#e09f3e' },
 } as const;
 
 /** Refetch intervals (ms) */
