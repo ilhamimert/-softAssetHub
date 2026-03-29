@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, LineChart, Line, XAxis, YAxis,
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { Zap, TrendingUp, DollarSign, Wrench } from 'lucide-react';
@@ -110,7 +110,6 @@ export function Analytics() {
         {power.length > 0 ? (
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={power} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
               <XAxis
                 dataKey="label"
                 tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }}
@@ -157,7 +156,6 @@ export function Analytics() {
                 }, [])}
                 margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" vertical={false} />
                 <XAxis dataKey="channel" tick={{ fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} />
@@ -191,7 +189,6 @@ export function Analytics() {
                 }, [])}
                 margin={{ top: 4, right: 4, left: -10, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" vertical={false} />
                 <XAxis dataKey="channel" tick={{ fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false}
                   tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
