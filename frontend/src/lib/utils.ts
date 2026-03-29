@@ -215,7 +215,8 @@ export const inputCls = 'w-full bg-[#22262e] border border-[#2e333d] rounded tex
 
 /** Shared Recharts tooltip content style */
 export const CHART_TOOLTIP_STYLE = {
-  contentStyle: { background: '#1a1d23', border: '1px solid #2e333d', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono' },
+  contentStyle: { background: '#1a1d23', border: '1px solid #2e333d', borderRadius: 6, fontSize: 11, fontFamily: 'JetBrains Mono', color: '#e4e7ec' },
+  wrapperStyle: { background: '#1a1d23', border: '1px solid #2e333d', borderRadius: 6, outline: 'none' },
   labelStyle: { color: '#8b919e' },
   itemStyle: { color: '#e09f3e' },
 } as const;

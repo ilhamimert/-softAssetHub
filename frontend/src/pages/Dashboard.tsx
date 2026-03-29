@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, Tooltip, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import {
   TrendingUp, CheckCircle, AlertCircle, Info,
@@ -244,6 +244,7 @@ export function Dashboard() {
                     <stop offset="95%" stopColor="#e09f3e" stopOpacity={0} />
                   </linearGradient>
                 </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
                 <XAxis dataKey="date" tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
                 <Tooltip {...CHART_TOOLTIP_STYLE} />
@@ -396,6 +397,7 @@ export function Dashboard() {
               }, [])}
               margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
             >
+              <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" vertical={false} />
               <XAxis dataKey="channel" tick={{ fill: '#555d6e', fontSize: 9, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fill: '#555d6e', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickLine={false} axisLine={false} />
               <Tooltip cursor={{ fill: 'rgba(30,45,69,0.45)' }} {...CHART_TOOLTIP_STYLE} />

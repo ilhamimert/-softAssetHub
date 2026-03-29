@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import {
   ArrowLeft, Server, Activity, Wrench, AlertCircle, AlertTriangle, Info,
@@ -406,6 +406,7 @@ export function AssetDetail() {
                 </p>
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
                     <XAxis dataKey="monitoringTime"
                       tickFormatter={(v) => new Date(v).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                       tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
@@ -423,6 +424,7 @@ export function AssetDetail() {
                   <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">Sıcaklık (°C)</p>
                   <ResponsiveContainer width="100%" height={140}>
                     <LineChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
                       <XAxis dataKey="monitoringTime"
                         tickFormatter={(v) => new Date(v).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                         tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
@@ -438,6 +440,7 @@ export function AssetDetail() {
                   <p className="text-[10px] text-[#8b919e] uppercase tracking-widest font-mono-val mb-3">Güç Tüketimi (W)</p>
                   <ResponsiveContainer width="100%" height={140}>
                     <LineChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2e333d" />
                       <XAxis dataKey="monitoringTime"
                         tickFormatter={(v) => new Date(v).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                         tick={CHART_STYLE.tickStyle} tickLine={false} axisLine={false} />
