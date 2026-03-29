@@ -216,11 +216,15 @@ async function checkAndCreateAlerts(assetId, data) {
     alerts.push({ type: 'Critical', category: 'Offline', msg: 'Cihaz bağlantısı kesildi - OFFLINE', severity: 5, threshold: null, current: null });
   }
 
-  for (const alert of alerts) {
+  if (alerts.length > 0) {
+    const values = alerts.map((_a, i) => {
+      const base = i * 7;
+      return `($${base+1},$${base+2},$${base+3},$${base+4},$${base+5},$${base+6},$${base+7})`;
+    }).join(',');
+    const params = alerts.flatMap(a => [assetId, a.type, a.category, a.msg, a.severity, a.threshold, a.current]);
     await query(
-      `INSERT INTO alerts (asset_id, alert_type, alert_category, alert_message, alert_severity, threshold_value, current_value)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [assetId, alert.type, alert.category, alert.msg, alert.severity, alert.threshold, alert.current]
+      `INSERT INTO alerts (asset_id, alert_type, alert_category, alert_message, alert_severity, threshold_value, current_value) VALUES ${values}`,
+      params
     ).catch((err) => console.warn('[Alert] Oluşturulamadı:', err.message));
   }
 }

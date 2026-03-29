@@ -100,6 +100,15 @@ html, body, #root {
 .fade-in-up.delay-400 { animation-delay: 0.40s; }
 .fade-in-up.delay-500 { animation-delay: 0.50s; }
 
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Typography helpers */
 .font-display  { font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; }
 .font-mono-val { font-family: 'JetBrains Mono', monospace; }
