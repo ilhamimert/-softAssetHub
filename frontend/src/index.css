@@ -68,6 +68,7 @@ html, body, #root {
 .recharts-wrapper,
 .recharts-surface { background: transparent !important; }
 .recharts-tooltip-wrapper .recharts-default-tooltip { background: #1a1d23 !important; }
+.recharts-cartesian-grid line { stroke: #2e333d !important; }
 
 /* Scrollbar */
 ::-webkit-scrollbar        { width: 4px; height: 4px; }
