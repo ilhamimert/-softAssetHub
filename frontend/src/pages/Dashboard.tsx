@@ -6,66 +6,12 @@ import {
 } from 'recharts';
 import {
   TrendingUp, CheckCircle, AlertCircle, Info,
-  Server, Zap, AlertTriangle, Activity, Sparkles, Loader2,
+  Server, Zap, AlertTriangle, Activity
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { api, analyticsApi, alertApi, monitoringApi } from '@/api/client';
+import { analyticsApi, alertApi, monitoringApi } from '@/api/client';
 import { cn, alertBg, timeAgo, getLocalSlots, aggregatePowerData, CHART_TOOLTIP_STYLE, REFETCH } from '@/lib/utils';
 import type { Alert, DashboardKPI, HeatmapAsset, HealthRecord } from '@/types';
-
-// ─── AI Insight Panel ────────────────────────────────────────
-function AIInsightPanel() {
-  const [loading, setLoading] = useState(false);
-  const [analysis, setAnalysis] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleAnalyze() {
-    setLoading(true);
-    setError(null);
-    setAnalysis(null);
-    try {
-      const res = await api.post('/ai/analyze-alerts');
-      setAnalysis(res.data.data.analysis);
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      setError(msg || 'AI analizi başarısız oldu.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="card p-4 fade-in-up delay-500 lg:col-span-2">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-[#5b8fd5]" />
-          <p className="text-[11px] text-[#8b919e] uppercase tracking-widest font-mono-val">AI Alert Analizi</p>
-        </div>
-        <button
-          onClick={handleAnalyze}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono-val bg-[#5b8fd5]/10 text-[#5b8fd5] border border-[#5b8fd5]/20 hover:bg-[#5b8fd5]/20 transition-colors disabled:opacity-50 cursor-pointer"
-        >
-          {loading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-          {loading ? 'Analiz ediliyor...' : 'Analiz Et'}
-        </button>
-      </div>
-      {error && (
-        <p className="text-xs text-red-400 font-mono-val bg-red-500/10 rounded px-3 py-2">{error}</p>
-      )}
-      {analysis && (
-        <pre className="text-xs text-[#e4e7ec] font-mono-val whitespace-pre-wrap leading-relaxed bg-[#22262e] rounded p-3 max-h-64 overflow-y-auto">
-          {analysis}
-        </pre>
-      )}
-      {!analysis && !error && !loading && (
-        <p className="text-xs text-[#555d6e] font-mono-val">
-          Son 24 saatin çözülmemiş alertlarını AI ile analiz et, kök neden ve öneri al.
-        </p>
-      )}
-    </div>
-  );
-}
 
 // ─── KPI Card ────────────────────────────────────────────────
 interface KPICardProps {
@@ -462,9 +408,6 @@ export function Dashboard() {
           </ResponsiveContainer>
         </div>
       )}
-
-      {/* AI Insight Panel */}
-      <AIInsightPanel />
     </div>
   );
 }
