@@ -19,6 +19,7 @@ const userCtrl = require('../controllers/userController');
 const licenseCtrl = require('../controllers/licenseController');
 const qrCtrl      = require('../controllers/qrController');
 const reportCtrl  = require('../controllers/reportController');
+const aiCtrl      = require('../controllers/aiController');
 
 const hierarchyRoutes = require('./hierarchyRoutes');
 
@@ -142,6 +143,9 @@ router.get('/reports', authenticate, reportCtrl.getAll);
 router.get('/reports/:id', authenticate, reportCtrl.getById);
 router.post('/reports', authenticate, requireRole('Manager'), reportCtrl.create);
 router.delete('/reports/:id', authenticate, requireAdmin, reportCtrl.remove);
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+router.post('/ai/analyze-alerts', authenticate, aiCtrl.analyzeAlerts);
 
 // ── Logs ──────────────────────────────────────────────────────────────────────
 router.get('/logs/activity', authenticate, requireAdmin, userCtrl.getActivityLog);
