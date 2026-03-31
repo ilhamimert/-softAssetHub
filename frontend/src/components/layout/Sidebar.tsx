@@ -62,7 +62,9 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
         {collapsed ? (
           <img src="/logo.svg" alt="isoft" className="w-8 h-8 rounded object-cover object-left" />
         ) : (
-          <img src="/logo.svg" alt="isoft" className="w-full h-auto rounded" />
+          <div className="w-full h-12 overflow-hidden rounded">
+            <img src="/logo.svg" alt="isoft" className="w-full h-full object-cover" />
+          </div>
         )}
       </div>
 
