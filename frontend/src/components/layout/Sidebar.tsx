@@ -56,7 +56,7 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
     >
       {/* Logo */}
       <div className={cn(
-        'flex items-center justify-center border-b border-[#2e333d]',
+        'flex items-center justify-center border-b border-[#2e333d] py-3 px-4',
         collapsed && 'px-2 py-3'
       )}>
         {collapsed ? (
