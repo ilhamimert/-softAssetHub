@@ -56,14 +56,20 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
     >
       {/* Logo */}
       <div className={cn(
-        'flex items-center justify-center border-b border-[#2e333d]',
-        collapsed ? 'px-2 py-3' : 'px-3 py-2'
+        'flex items-center gap-3 px-3 py-4 border-b border-[#2e333d]',
+        collapsed && 'justify-center px-0'
       )}>
-        {collapsed ? (
-          <img src="/logo.svg" alt="isoft" className="w-8 h-8 rounded object-cover object-left" />
-        ) : (
-          <div className="w-full h-12 overflow-hidden rounded">
-            <img src="/logo.svg" alt="isoft" className="w-full h-full object-cover" />
+        <div className="flex-shrink-0 w-8 h-8 rounded bg-[#22262e] border border-[#2e333d] flex items-center justify-center">
+          <span className="text-[#5b8fd5] font-display font-bold text-sm">BC</span>
+        </div>
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="font-display font-semibold text-sm text-[#e4e7ec] leading-tight tracking-wide truncate">
+              BROADCAST
+            </p>
+            <p className="text-[10px] text-[#8b919e] tracking-widest uppercase leading-tight truncate">
+              Asset Management
+            </p>
           </div>
         )}
       </div>
