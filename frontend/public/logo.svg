@@ -1,25 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 206">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 105">
   <defs>
     <clipPath id="clip">
-      <rect width="400" height="206" rx="12"/>
+      <rect width="200" height="105" rx="8"/>
     </clipPath>
   </defs>
   <g clip-path="url(#clip)">
-    <!-- Light blue/periwinkle background -->
-    <rect width="400" height="206" fill="#c9d8ed"/>
+    <!-- Light blue background -->
+    <rect width="200" height="105" fill="#ccd9eb"/>
     <!-- Black left panel ~28% -->
-    <rect width="112" height="206" fill="#000"/>
-    <!-- Chevron > -->
-    <path d="M28 55 L78 103 L28 151" stroke="#c9d8ed" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    <!-- "i" stem -->
-    <rect x="128" y="70" width="20" height="90" rx="3" fill="#111"/>
-    <!-- "i" cursor square (replaces dot) -->
-    <rect x="128" y="38" width="20" height="22" rx="3" fill="#111"/>
-    <!-- "soft" -->
-    <text x="156" y="160" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-size="120" font-weight="900" fill="#111" letter-spacing="-3">soft</text>
-    <!-- sparkle -->
-    <g transform="translate(387,194)" fill="white" opacity="0.8">
-      <polygon points="0,-6 1.5,-1.5 6,0 1.5,1.5 0,6 -1.5,1.5 -6,0 -1.5,-1.5"/>
-    </g>
+    <rect width="56" height="105" fill="#000"/>
+    <!-- Play button triangle (filled white) -->
+    <polygon points="18,32 18,73 48,52.5" fill="white"/>
+    <!-- "isoft" text -->
+    <text x="66" y="80" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-size="60" font-weight="900" fill="#111" letter-spacing="-2">isoft</text>
   </g>
 </svg>
