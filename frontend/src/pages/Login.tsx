@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
-import { Lock, User, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export function Login() {
   const { t } = useTranslation();
@@ -36,12 +36,9 @@ export function Login() {
 
       <div className="w-full max-w-md animate-fade-in relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#22262e] border border-[#2e333d] mb-4">
-            <ShieldCheck className="text-[#5b8fd5] w-8 h-8" />
+          <div className="flex items-center justify-center mb-5">
+            <img src="/logo.svg" alt="isoft" className="h-14 w-auto rounded-xl" />
           </div>
-          <h1 className="text-2xl font-display font-bold text-[#e4e7ec] tracking-tight mb-2">
-            İSOFT VARLIK <span className="text-[#5b8fd5]">MERKEZİ</span>
-          </h1>
           <p className="text-[#8b919e] text-sm font-medium">{t('login.subtitle')}</p>
         </div>
 

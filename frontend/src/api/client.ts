@@ -51,6 +51,11 @@ api.interceptors.response.use(
       const { accessToken, refreshToken: newRefresh } = data.data;
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', newRefresh);
+      // Zustand store'u da güncelle
+      try {
+        const mod = await import('@/store/authStore');
+        mod.useAuthStore.getState().setTokens(accessToken, newRefresh);
+      } catch { /* store update optional */ }
       api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       original.headers.Authorization = `Bearer ${accessToken}`;
       processQueue(null, accessToken);

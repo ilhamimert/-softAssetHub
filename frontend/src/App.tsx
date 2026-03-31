@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '@/components/layout/Layout';
@@ -34,7 +34,7 @@ const queryClient = new QueryClient({
       retry: 1,
       staleTime: 60 * 1000,        // 1 dk: eski veri yerine cache'i kullan
       gcTime: 5 * 60 * 1000,       // 5 dk: kullanılmayan cache'i bellekten temizle
-      refetchOnWindowFocus: false, // sekme değişince gereksiz istek gönderme
+      refetchOnWindowFocus: true,  // sekme değişince verileri yenile
     },
   },
 });
@@ -51,7 +51,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, refreshUser, user } = useAuthStore();
+
+  // Startup: token varsa user'ı yükle (enabled: user?.role koşulları için şart)
+  useEffect(() => {
+    if (isAuthenticated && !user) refreshUser();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <QueryClientProvider client={queryClient}>
