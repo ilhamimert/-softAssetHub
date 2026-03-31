@@ -8,6 +8,6 @@
     <rect width="240" height="105" fill="#ccd9eb"/>
     <rect width="56" height="105" fill="#000"/>
     <polygon points="18,32 18,73 48,52.5" fill="white"/>
-    <text x="66" y="80" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-size="60" font-weight="900" fill="#111" letter-spacing="-2">isoft</text>
+    <text x="66" y="80" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-size="60" font-weight="900" fill="#111">isoft</text>
   </g>
 </svg>
