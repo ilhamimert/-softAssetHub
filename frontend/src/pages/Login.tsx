@@ -37,7 +37,7 @@ export function Login() {
       <div className="w-full max-w-md animate-fade-in relative z-10">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-5">
-            <img src="/logo.svg" alt="isoft" className="h-14 w-auto rounded-xl" />
+            <img src="/logo.svg" alt="isoft" className="h-20 w-auto rounded-xl" />
           </div>
           <p className="text-[#8b919e] text-sm font-medium">{t('login.subtitle')}</p>
         </div>
