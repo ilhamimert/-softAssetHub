@@ -1,3 +1,6 @@
+# Deploy script (SSH credentials — local only)
+_deploy_ssh.py
+
 # Dependencies
 node_modules/
 backend/node_modules/
