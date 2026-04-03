@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    assetsDir: 'static',
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
@@ -46,6 +47,7 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
   },
   worker: {
+
     format: 'es',
   },
   esbuild: {
