@@ -196,17 +196,27 @@ exports.autoLinkNodes = async (req, res, next) => {
                     name      AS kanal_name
                 FROM node_ancestors
                 WHERE node_type = 'kanal'
+            ),
+            bilgisayarlar AS (
+                SELECT node_id, name
+                FROM physical_nodes
+                WHERE node_type = 'bilgisayar'
+                  AND linked_asset_id IS NULL
+            ),
+            matches AS (
+                SELECT b.node_id AS bilgisayar_id, a.asset_id, b.name AS node_name, a.asset_name
+                FROM bilgisayarlar b
+                JOIN kanal_of_bilgisayar kb ON kb.bilgisayar_id = b.node_id
+                JOIN channels ch ON LOWER(ch.channel_name) = LOWER(kb.kanal_name)
+                JOIN asset_groups ag ON ag.channel_id = ch.channel_id
+                JOIN assets a ON a.asset_group_id = ag.asset_group_id
+                             AND LOWER(a.asset_name) = LOWER(b.name)
             )
             UPDATE physical_nodes
-            SET linked_asset_id = a.asset_id
-            FROM kanal_of_bilgisayar kb
-            JOIN channels ch ON LOWER(ch.channel_name) = LOWER(kb.kanal_name)
-            JOIN asset_groups ag ON ag.channel_id = ch.channel_id
-            JOIN assets a ON a.asset_group_id = ag.asset_group_id
-                         AND LOWER(a.asset_name) = LOWER(physical_nodes.name)
-            WHERE physical_nodes.node_id = kb.bilgisayar_id
-              AND physical_nodes.linked_asset_id IS NULL
-            RETURNING physical_nodes.node_id, physical_nodes.name, a.asset_id, a.asset_name
+            SET linked_asset_id = m.asset_id
+            FROM matches m
+            WHERE physical_nodes.node_id = m.bilgisayar_id
+            RETURNING physical_nodes.node_id, m.node_name AS name, m.asset_id, m.asset_name
         `);
 
         for (const m of matched) {
