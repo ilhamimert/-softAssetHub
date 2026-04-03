@@ -177,32 +177,39 @@ exports.getAuditLog = async (req, res, next) => {
 // Demo Data Loader API
 exports.autoLinkNodes = async (req, res, next) => {
     try {
-        // 1. Exact name match (case-insensitive)
-        const { recordset: exact } = await query(`
+        // Kanal-bilinçli eşleştirme:
+        // Her bilgisayarın ata kanal node'unu recursive CTE ile bulur,
+        // yalnızca o kanala ait asset_group'lardan isim eşleşmesi yapar.
+        const { recordset: matched } = await query(`
+            WITH RECURSIVE ancestors AS (
+                SELECT node_id, parent_id, name, node_type
+                FROM physical_nodes
+                UNION ALL
+                SELECT p.node_id, p.parent_id, p.name, p.node_type
+                FROM physical_nodes p
+                JOIN ancestors anc ON p.node_id = anc.parent_id
+            ),
+            kanal_of_node AS (
+                SELECT DISTINCT ON (pc.node_id)
+                    pc.node_id AS bilgisayar_id,
+                    anc.name   AS kanal_name
+                FROM physical_nodes pc
+                JOIN ancestors anc ON anc.node_id = pc.node_id
+                WHERE pc.node_type  = 'bilgisayar'
+                  AND anc.node_type = 'kanal'
+            )
             UPDATE physical_nodes pn
             SET linked_asset_id = a.asset_id
-            FROM assets a
-            WHERE pn.node_type = 'bilgisayar'
+            FROM kanal_of_node kon
+            JOIN channels ch  ON LOWER(ch.channel_name) = LOWER(kon.kanal_name)
+            JOIN asset_groups ag ON ag.channel_id = ch.channel_id
+            JOIN assets a  ON a.asset_group_id = ag.asset_group_id
+                          AND LOWER(a.asset_name) = LOWER(pn.name)
+            WHERE pn.node_id = kon.bilgisayar_id
               AND pn.linked_asset_id IS NULL
-              AND LOWER(pn.name) = LOWER(a.asset_name)
             RETURNING pn.node_id, pn.name, a.asset_id, a.asset_name
         `);
 
-        // 2. Partial match: asset_name contains or is contained in node name
-        const { recordset: partial } = await query(`
-            UPDATE physical_nodes pn
-            SET linked_asset_id = a.asset_id
-            FROM assets a
-            WHERE pn.node_type = 'bilgisayar'
-              AND pn.linked_asset_id IS NULL
-              AND (
-                LOWER(a.asset_name) LIKE '%' || LOWER(pn.name) || '%'
-                OR LOWER(pn.name) LIKE '%' || LOWER(a.asset_name) || '%'
-              )
-            RETURNING pn.node_id, pn.name, a.asset_id, a.asset_name
-        `);
-
-        const matched = [...exact, ...partial];
         for (const m of matched) {
             await addAudit('link', 'bilgisayar', m.name);
         }
