@@ -24,7 +24,7 @@ const buildTree = (nodes, parentId = null) => {
                 name: node.name,
                 path: node.nodeId, // Geri uyumluluk icin guid tutalim
                 parentId: node.parentId || undefined,
-                linkedAssetId: node.linkedAssetId,
+                linkedAssetId: node.assetId,
                 payload: node.payload,
                 children: children
             };
@@ -131,7 +131,7 @@ exports.linkNode = async (req, res, next) => {
 
     try {
         const result = await withTransaction(async (txQuery) => {
-            const { recordset } = await txQuery('UPDATE physical_nodes SET linked_asset_id = $1 WHERE node_id = $2 RETURNING *', [AssetId || null, id]);
+            const { recordset } = await txQuery('UPDATE physical_nodes SET asset_id = $1 WHERE node_id = $2 RETURNING *', [AssetId || null, id]);
             if (recordset.length === 0) return null;
             await txQuery(
                 'INSERT INTO physical_audits (action_type, node_type, node_name) VALUES ($1, $2, $3)',
@@ -201,7 +201,7 @@ exports.autoLinkNodes = async (req, res, next) => {
                 SELECT node_id, name
                 FROM physical_nodes
                 WHERE node_type = 'bilgisayar'
-                  AND linked_asset_id IS NULL
+                  AND asset_id IS NULL
             ),
             matches AS (
                 SELECT b.node_id AS bilgisayar_id, a.asset_id, b.name AS node_name, a.asset_name
@@ -213,7 +213,7 @@ exports.autoLinkNodes = async (req, res, next) => {
                              AND LOWER(a.asset_name) = LOWER(b.name)
             )
             UPDATE physical_nodes
-            SET linked_asset_id = m.asset_id
+            SET asset_id = m.asset_id
             FROM matches m
             WHERE physical_nodes.node_id = m.bilgisayar_id
             RETURNING physical_nodes.node_id, m.node_name AS name, m.asset_id, m.asset_name
