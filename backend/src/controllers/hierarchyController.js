@@ -178,36 +178,35 @@ exports.getAuditLog = async (req, res, next) => {
 exports.autoLinkNodes = async (req, res, next) => {
     try {
         // Kanal-bilinçli eşleştirme:
-        // Her bilgisayarın ata kanal node'unu recursive CTE ile bulur,
+        // Bilgisayar node'unun ata kanalını recursive CTE ile bulur,
         // yalnızca o kanala ait asset_group'lardan isim eşleşmesi yapar.
         const { recordset: matched } = await query(`
-            WITH RECURSIVE ancestors AS (
-                SELECT node_id, parent_id, name, node_type
+            WITH RECURSIVE node_ancestors AS (
+                SELECT node_id, parent_id, name, node_type, node_id AS origin_id
                 FROM physical_nodes
+                WHERE node_type = 'bilgisayar'
                 UNION ALL
-                SELECT p.node_id, p.parent_id, p.name, p.node_type
+                SELECT p.node_id, p.parent_id, p.name, p.node_type, na.origin_id
                 FROM physical_nodes p
-                JOIN ancestors anc ON p.node_id = anc.parent_id
+                JOIN node_ancestors na ON p.node_id = na.parent_id
             ),
-            kanal_of_node AS (
-                SELECT DISTINCT ON (pc.node_id)
-                    pc.node_id AS bilgisayar_id,
-                    anc.name   AS kanal_name
-                FROM physical_nodes pc
-                JOIN ancestors anc ON anc.node_id = pc.node_id
-                WHERE pc.node_type  = 'bilgisayar'
-                  AND anc.node_type = 'kanal'
+            kanal_of_bilgisayar AS (
+                SELECT DISTINCT ON (origin_id)
+                    origin_id AS bilgisayar_id,
+                    name      AS kanal_name
+                FROM node_ancestors
+                WHERE node_type = 'kanal'
             )
-            UPDATE physical_nodes pn
+            UPDATE physical_nodes
             SET linked_asset_id = a.asset_id
-            FROM kanal_of_node kon
-            JOIN channels ch  ON LOWER(ch.channel_name) = LOWER(kon.kanal_name)
+            FROM kanal_of_bilgisayar kb
+            JOIN channels ch ON LOWER(ch.channel_name) = LOWER(kb.kanal_name)
             JOIN asset_groups ag ON ag.channel_id = ch.channel_id
-            JOIN assets a  ON a.asset_group_id = ag.asset_group_id
-                          AND LOWER(a.asset_name) = LOWER(pn.name)
-            WHERE pn.node_id = kon.bilgisayar_id
-              AND pn.linked_asset_id IS NULL
-            RETURNING pn.node_id, pn.name, a.asset_id, a.asset_name
+            JOIN assets a ON a.asset_group_id = ag.asset_group_id
+                         AND LOWER(a.asset_name) = LOWER(physical_nodes.name)
+            WHERE physical_nodes.node_id = kb.bilgisayar_id
+              AND physical_nodes.linked_asset_id IS NULL
+            RETURNING physical_nodes.node_id, physical_nodes.name, a.asset_id, a.asset_name
         `);
 
         for (const m of matched) {
