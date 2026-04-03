@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
-const { query } = require('./src/config/database');
+const { query } = require('../../src/config/database');
 
 async function createUser() {
     const username = 'özkankurt';
