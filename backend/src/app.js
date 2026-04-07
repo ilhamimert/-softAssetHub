@@ -80,8 +80,8 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('tiny'));
 }
 
-// ── API Dokümantasyonu — /api/docs ────────────────────────────────
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+// ── API Dokümantasyonu — /api/v1/docs ────────────────────────────
+app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'İSOFT AssetHub API',
   swaggerOptions: { persistAuthorization: true },
 }));
