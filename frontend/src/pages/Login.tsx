@@ -37,7 +37,7 @@ export function Login() {
       <div className="w-full max-w-md animate-fade-in relative z-10">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-5">
-            <img src="/logo.svg" alt="isoft" className="h-20 w-auto rounded-xl" />
+            <img src="/logo.svg" alt="isoft" width="80" height="80" className="h-20 w-auto rounded-xl" />
           </div>
           <p className="text-[#8b919e] text-sm font-medium">{t('login.subtitle')}</p>
         </div>
@@ -82,6 +82,7 @@ export function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#555d6e] hover:text-[#e4e7ec] transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -99,7 +100,7 @@ export function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#5b8fd5] hover:bg-[#4a7ec4] text-white font-semibold py-3.5 rounded-lg focus:ring-2 focus:ring-[#5b8fd5]/50 ring-offset-2 ring-offset-[#111318] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold py-3.5 rounded-lg focus:ring-2 focus:ring-[#2563eb]/50 ring-offset-2 ring-offset-[#111318] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -114,7 +115,7 @@ export function Login() {
                 <div className="w-2 h-2 rounded-full bg-[#4caf82]" />
                 <span className="text-[10px] text-[#8b919e] font-mono-val uppercase tracking-tighter">{t('login.server_active')}</span>
              </div>
-             <span className="text-[10px] text-[#555d6e] font-mono-val">v1.2.4-kararlı</span>
+             <span className="text-[10px] text-[#8b919e] font-mono-val">v1.2.4-kararlı</span>
           </div>
         </div>
       </div>
