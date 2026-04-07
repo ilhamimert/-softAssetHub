@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/authMiddleware');
+const { authenticate, authenticateAgent } = require('../middleware/authMiddleware');
 const { requireAdmin, requireRole, requireChannelAccess } = require('../middleware/roleMiddleware');
 
 const authCtrl = require('../controllers/authController');
@@ -17,6 +17,7 @@ const alertCtrl = require('../controllers/alertController');
 const analyticsCtrl = require('../controllers/analyticsController');
 const userCtrl = require('../controllers/userController');
 const licenseCtrl = require('../controllers/licenseController');
+const licReqCtrl  = require('../controllers/licenseRequestController');
 const qrCtrl      = require('../controllers/qrController');
 const reportCtrl  = require('../controllers/reportController');
 
@@ -93,7 +94,7 @@ router.get('/assets/:assetId/maintenance', authenticate, maintCtrl.getByAsset);
 // ── Monitoring ────────────────────────────────────────────────────────────────
 router.get('/monitoring/:assetId/current', authenticate, monitorCtrl.getCurrent);
 router.get('/monitoring/:assetId/history', authenticate, monitorCtrl.getHistory);
-router.post('/monitoring/:assetId', authenticate, requireRole('Technician'), monitorCtrl.pushData);
+router.post('/monitoring/:assetId', authenticateAgent, monitorCtrl.pushData);
 router.get('/monitoring/stats/channel/:channelId', authenticate, requireChannelAccess('channelId'), monitorCtrl.getChannelStats);
 router.get('/monitoring/heatmap', authenticate, monitorCtrl.getHeatmap);
 
@@ -127,7 +128,13 @@ router.get('/users/:id', authenticate, userCtrl.getById);
 router.post('/users', authenticate, requireAdmin, userCtrl.create);
 router.put('/users/:id', authenticate, userCtrl.update);
 router.put('/users/:id/password', authenticate, userCtrl.changePassword);
+router.post('/users/:id/reset-password', authenticate, requireAdmin, userCtrl.resetPassword);
 router.delete('/users/:id', authenticate, requireAdmin, userCtrl.remove);
+
+// ── License Requests ──────────────────────────────────────────────────────────
+router.get('/license-requests', authenticate, licReqCtrl.getAll);
+router.post('/license-requests', authenticate, licReqCtrl.create);
+router.patch('/license-requests/:id/review', authenticate, requireRole('Manager'), licReqCtrl.review);
 
 // ── Licenses ──────────────────────────────────────────────────────────────────
 router.get('/licenses', authenticate, licenseCtrl.getAll);

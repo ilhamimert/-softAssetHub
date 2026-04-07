@@ -34,4 +34,15 @@ const optionalAuth = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticate, optionalAuth };
+// Monitoring agent'ları için API key auth (X-Agent-Key header)
+const authenticateAgent = (req, res, next) => {
+  const agentKey = req.headers['x-agent-key'];
+  if (agentKey && agentKey === process.env.AGENT_SECRET) {
+    req.user = { userId: 0, role: 'Agent', isAgent: true };
+    return next();
+  }
+  // API key yoksa JWT'ye düş
+  authenticate(req, res, next);
+};
+
+module.exports = { authenticate, optionalAuth, authenticateAgent };

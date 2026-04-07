@@ -448,3 +448,21 @@ export interface LoginResponse {
   refreshToken: string;
   user: AuthUser;
 }
+
+export interface LicenseRequest {
+  requestId: number;
+  assetId: number;
+  assetName?: string;
+  requestedBy: number;
+  requesterName?: string;
+  licenseType: string;
+  quantity: number;
+  reason?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewedBy?: number;
+  reviewerName?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}

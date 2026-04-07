@@ -5,7 +5,7 @@
 # her 30 saniyede bir backend'e POST eder.
 #
 # Kullanım:
-#   export ASSET_TOKEN="<jwt-veya-api-key>"
+#   export AGENT_SECRET="isoft-agent-secret-2024-xK9mP3qR"
 #   export API_URL="https://example.com/api/v1/monitoring"
 #   export ASSET_ID="42"
 #   bash push_agent.sh
@@ -17,7 +17,7 @@ set -euo pipefail
 INTERVAL=${PUSH_INTERVAL:-30}           # saniye
 API_URL="${API_URL:-http://localhost:5000/api/v1/monitoring}"
 ASSET_ID="${ASSET_ID:?ASSET_ID env variable gerekli}"
-ASSET_TOKEN="${ASSET_TOKEN:?ASSET_TOKEN env variable gerekli}"
+AGENT_SECRET="${AGENT_SECRET:?AGENT_SECRET env variable gerekli}"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
@@ -83,7 +83,7 @@ get_uptime_seconds() {
 
 # ── Ana döngü ──────────────────────────────────────────
 log "Push Agent başlatıldı — AssetID=$ASSET_ID, Interval=${INTERVAL}s"
-log "Endpoint: ${API_URL}/${ASSET_ID}"
+log "Endpoint: ${API_URL}/${ASSET_ID}/push"
 
 while true; do
   CPU=$(get_cpu)
@@ -103,8 +103,8 @@ while true; do
   "ramUsage": ${RAM:-0},
   "diskUsage": ${DISK:-0},
   "temperature": ${TEMP},
-  "memoryUsedGb": ${MEM_USED},
-  "memoryTotalGb": ${MEM_TOTAL},
+  "memoryUsedGB": ${MEM_USED},
+  "memoryTotalGB": ${MEM_TOTAL},
   "uptime": ${UPTIME},
   "isOnline": true
 }
@@ -115,7 +115,7 @@ EOF
   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
     -X POST "${API_URL}/${ASSET_ID}" \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer ${ASSET_TOKEN}" \
+    -H "X-Agent-Key: ${AGENT_SECRET}" \
     -d "${PAYLOAD}" \
     --connect-timeout 10 \
     --max-time 15 \

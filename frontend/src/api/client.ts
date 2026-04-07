@@ -180,6 +180,7 @@ export const userApi = {
   update: (id: number, data: object) => api.put(`/users/${id}`, data),
   delete: (id: number) => api.delete(`/users/${id}`),
   changePassword: (id: number, data: object) => api.put(`/users/${id}/password`, data),
+  resetPassword: (id: number) => api.post(`/users/${id}/reset-password`, {}),
 };
 
 // Licenses
@@ -217,6 +218,13 @@ export const reportApi = {
   create: (data: object) => api.post('/reports', data),
   update: (id: number, data: object) => api.put(`/reports/${id}`, data),
   delete: (id: number) => api.delete(`/reports/${id}`),
+};
+
+// License Requests
+export const licenseRequestApi = {
+  getAll:  (params?: object) => api.get('/license-requests', { params }),
+  create:  (data: object)    => api.post('/license-requests', data),
+  review:  (id: number, data: object) => api.patch(`/license-requests/${id}/review`, data),
 };
 
 // Logs

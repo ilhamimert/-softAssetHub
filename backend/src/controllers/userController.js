@@ -208,4 +208,26 @@ const changePassword = async (req, res, next) => {
   }
 };
 
-module.exports = { getAll, getById, create, update, changePassword, remove, getActivityLog };
+// POST /users/:id/reset-password — Admin: geçici şifre oluştur
+const resetPassword = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(id);
+
+    const existing = await query('SELECT user_id FROM users WHERE user_id = $1', [userId]);
+    if (!existing.recordset[0]) return next(createError('Kullanıcı bulunamadı.', 404, 'NOT_FOUND'));
+
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let tempPassword = '';
+    for (let i = 0; i < 12; i++) tempPassword += chars[Math.floor(Math.random() * chars.length)];
+
+    const hash = await bcrypt.hash(tempPassword, 10);
+    await query('UPDATE users SET password_hash = $1, updated_date = NOW() WHERE user_id = $2', [hash, userId]);
+
+    res.json({ success: true, data: { tempPassword } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getAll, getById, create, update, changePassword, remove, getActivityLog, resetPassword };

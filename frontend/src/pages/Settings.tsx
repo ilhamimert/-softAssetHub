@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi, channelApi } from '@/api/client';
+import { Copy, Check } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import {
   User, Shield, Database, Plus, Edit, Save, Eye, EyeOff,
@@ -305,6 +306,63 @@ function ChangePasswordModal({ userId, onClose }: { userId: number; onClose: () 
   );
 }
 
+// ─── Reset Password Modal ─────────────────────────────────────
+function ResetPasswordModal({ targetUser, onClose }: { targetUser: UserType; onClose: () => void }) {
+  const [tempPw, setTempPw] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const mut = useMutation({
+    mutationFn: () => userApi.resetPassword(targetUser.userId),
+    onSuccess: (res) => setTempPw(res.data.data.tempPassword),
+  });
+
+  const handleCopy = () => {
+    if (!tempPw) return;
+    navigator.clipboard.writeText(tempPw);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <Modal open onClose={onClose} title="Geçici Şifre Oluştur" size="sm">
+      {!tempPw ? (
+        <div className="space-y-4 text-center">
+          <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto">
+            <Key size={20} className="text-amber-400" />
+          </div>
+          <p className="text-sm text-[#e4e7ec]">
+            <span className="font-medium">{targetUser.fullName}</span> için geçici şifre oluşturulacak. Mevcut şifre sıfırlanacak.
+          </p>
+          {mut.isError && <p className="text-xs text-red-400">Hata oluştu, tekrar deneyin.</p>}
+          <div className="flex justify-center gap-2 pt-2">
+            <button onClick={onClose} className="px-4 py-2 rounded border border-[#2e333d] text-xs text-[#8b919e] hover:text-[#e4e7ec] transition-colors">İptal</button>
+            <button
+              onClick={() => mut.mutate()}
+              disabled={mut.isPending}
+              className="px-4 py-2 rounded bg-amber-500/15 border border-amber-500/30 text-xs text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 transition-colors"
+            >
+              {mut.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 p-3 bg-[#111318] border border-[#2e333d] rounded">
+            <code className="flex-1 text-sm font-mono text-amber-400 tracking-wider">{tempPw}</code>
+            <button onClick={handleCopy} className="p-1.5 rounded text-[#555d6e] hover:text-[#5b8fd5] transition-colors">
+              {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+            </button>
+          </div>
+          <p className="text-[10px] text-amber-400/70 font-mono text-center">Bu şifreyi kullanıcıya iletin. Bir daha gösterilmeyecek.</p>
+          <div className="flex justify-center">
+            <button onClick={onClose} className="px-4 py-2 rounded bg-[#22262e] border border-[#2e333d] text-xs text-[#8b919e] hover:text-[#e4e7ec] transition-colors">Kapat</button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 // ─── Settings Page ────────────────────────────────────────────
 export function Settings() {
   const { user } = useAuthStore();
@@ -314,6 +372,7 @@ export function Settings() {
   const [editUser, setEditUser] = useState<UserType | null>(null);
   const [showChangePw, setShowChangePw] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<UserType | null>(null);
+  const [resetPwTarget, setResetPwTarget] = useState<UserType | null>(null);
 
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -451,6 +510,15 @@ export function Settings() {
                         >
                           <Edit size={12} />
                         </button>
+                        {user?.role === 'Admin' && (
+                          <button
+                            onClick={() => setResetPwTarget(u)}
+                            className="p-1.5 rounded text-[#8b919e] hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                            title="Şifre Sıfırla"
+                          >
+                            <Key size={12} />
+                          </button>
+                        )}
                         {u.userId !== user?.userId && (
                           <button
                             onClick={() => setDeleteTarget(u)}
@@ -549,6 +617,13 @@ export function Settings() {
         <ChangePasswordModal
           userId={user.userId}
           onClose={() => setShowChangePw(false)}
+        />
+      )}
+
+      {resetPwTarget && (
+        <ResetPasswordModal
+          targetUser={resetPwTarget}
+          onClose={() => setResetPwTarget(null)}
         />
       )}
 
