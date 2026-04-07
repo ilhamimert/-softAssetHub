@@ -1,9 +1,12 @@
 -- ============================================================
--- BROADCAST ASSET MANAGEMENT SYSTEM - Seed Data
--- Hierarchy: Holding -> Channel -> AssetGroup -> Asset -> Component
+-- [DEPRECATED] MSSQL LEGACY SEED — KULLANILMIYOR
+-- Proje PostgreSQL'e geçti. Aktif seed dosyaları:
+--   migrations/001_pg_schema.sql
+--   migrations/002_pg_seed.sql
+-- Bu dosya referans amaçlı tutulmaktadır, çalıştırmayın.
 -- ============================================================
 
-USE AssetManagementDB;
+-- USE AssetManagementDB;  -- MSSQL syntax, PostgreSQL'de çalışmaz
 GO
 
 -- ============================================================

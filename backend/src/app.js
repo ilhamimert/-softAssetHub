@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 const routes = require('./routes/index');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { activityLogger } = require('./middleware/activityMiddleware');
@@ -21,9 +23,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:'],
+      imgSrc: ["'self'", 'data:', 'https://validator.swagger.io'],
       connectSrc: ["'self'", 'ws://localhost:5000', 'ws://localhost:3000', 'wss://ilhami.yesiloz.net'],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
@@ -77,6 +79,12 @@ if (process.env.NODE_ENV === 'development') {
 } else if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('tiny'));
 }
+
+// ── API Dokümantasyonu — /api/docs ────────────────────────────────
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'İSOFT AssetHub API',
+  swaggerOptions: { persistAuthorization: true },
+}));
 
 // ── Sağlık kontrolü — rate limit öncesi ──────────────────────────
 app.get('/health', (req, res) => {
