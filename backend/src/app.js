@@ -81,7 +81,14 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // ── API Dokümantasyonu — /api/v1/docs ────────────────────────────
-app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+// Helmet CSP'yi docs için gevşet (swagger-ui unsafe-eval kullanır)
+app.use('/api/v1/docs', (req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+  );
+  next();
+}, swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'İSOFT AssetHub API',
   swaggerOptions: { persistAuthorization: true },
 }));
