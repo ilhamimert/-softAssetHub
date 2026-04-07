@@ -3,7 +3,8 @@ import {
   RefreshCw, Search, X, Plus, Link2, Check, Activity, AlertCircle, Boxes,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CHILD_OF, LEVEL_CFG } from './constants';
+import { LEVEL_CFG } from './constants';
+import { CHILD_OF } from './types';
 import { type PhysNode, type PhysLevel, type DragState } from './types';
 import { TreeNode } from './TreeNode';
 

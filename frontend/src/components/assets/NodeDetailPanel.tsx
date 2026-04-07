@@ -1,7 +1,7 @@
 import { Plus, Trash2, Search, Link2, Unlink, Boxes } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CHILD_OF, LEVEL_CFG, PAYLOAD_FIELDS } from './constants';
-import { type PhysNode, type PhysLevel, type SqlAsset } from './types';
+import { LEVEL_CFG, PAYLOAD_FIELDS } from './constants';
+import { CHILD_OF, type PhysNode, type PhysLevel, type SqlAsset } from './types';
 
 interface NodeDetailPanelProps {
   sel: { node: PhysNode; level: PhysLevel } | null;
