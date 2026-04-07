@@ -5,7 +5,7 @@
 # her 30 saniyede bir backend'e POST eder.
 #
 # Kullanım:
-#   export AGENT_SECRET="isoft-agent-secret-2024-xK9mP3qR"
+#   export AGENT_SECRET="your-agent-secret-here"
 #   export API_URL="https://example.com/api/v1/monitoring"
 #   export ASSET_ID="42"
 #   bash push_agent.sh

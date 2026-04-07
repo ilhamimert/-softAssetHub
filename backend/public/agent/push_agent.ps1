@@ -3,7 +3,7 @@
 # CPU/RAM/disk/sıcaklık verisini her 30 saniyede bir POST eder.
 #
 # Kullanım:
-#   $env:AGENT_SECRET = "isoft-agent-secret-2024-xK9mP3qR"
+#   $env:AGENT_SECRET = "your-agent-secret-here"
 #   $env:API_URL      = "https://example.com/api/v1/monitoring"
 #   $env:ASSET_ID     = "42"
 #   .\push_agent.ps1

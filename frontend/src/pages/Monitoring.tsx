@@ -113,13 +113,16 @@ export function Monitoring() {
 
   const assets: HeatmapAsset[] = heatmapRes?.data?.data ?? [];
 
-  // Alert count per asset
-  const alertsByAsset = new Map<number, number>();
-  (alertRes?.data?.data ?? []).forEach((al: Alert) => {
-    if (!al.isResolved && al.assetId != null) {
-      alertsByAsset.set(al.assetId, (alertsByAsset.get(al.assetId) ?? 0) + 1);
-    }
-  });
+  // Alert count per asset — memoized to stabilize useMemo deps below
+  const alertsByAsset = useMemo(() => {
+    const map = new Map<number, number>();
+    (alertRes?.data?.data ?? []).forEach((al: Alert) => {
+      if (!al.isResolved && al.assetId != null) {
+        map.set(al.assetId, (map.get(al.assetId) ?? 0) + 1);
+      }
+    });
+    return map;
+  }, [alertRes]);
 
   const channels = [...new Set(assets.map((a) => a.channelName))].filter(Boolean).sort() as string[];
 
@@ -508,7 +511,7 @@ export function Monitoring() {
         {/* Sort */}
         <select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as any)}
+          onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
           className="px-2 py-1.5 text-xs bg-[#1a1d23] border border-[#2e333d] rounded text-[#e4e7ec] focus:outline-none focus:border-[#5b8fd5]/40"
         >
           <option value="status">{t('monitoring.toolbar.sort_status')}</option>

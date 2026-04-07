@@ -269,7 +269,7 @@ INSERT INTO Alerts (AssetID, AlertType, AlertCategory, AlertMessage, AlertSeveri
 
 -- ============================================================
 -- 9. USERS (Kullanıcılar)
--- NOT: Şifreler bcrypt hash - `node scripts/hashPasswords.js` çalıştırın
+-- Demo kullanıcıları — şifreler bcrypt hash (ilk girişten sonra değiştirin)
 -- ============================================================
 IF NOT EXISTS (SELECT 1 FROM Users WHERE UserID = 1)
 INSERT INTO Users (Username, Email, PasswordHash, FullName, Role, ChannelID, Department) VALUES

@@ -259,7 +259,7 @@ INSERT INTO alerts (asset_id, alert_type, alert_category, alert_message, alert_s
 
 -- ============================================================
 -- 9. USERS
--- Şifreler bcrypt: password / $2a$10$Zp8d5lCRQcm.5IRVoaDJhO1h8UVFjlWSl52YmuM2Ojz1Cz6QZyfJi
+-- Demo kullanıcıları — şifreler bcrypt hash (ilk girişten sonra değiştirin)
 -- ============================================================
 INSERT INTO users (username, email, password_hash, full_name, role, channel_id, department) VALUES
 ('admin',       'admin@assetmgmt.local',   '$2a$10$Zp8d5lCRQcm.5IRVoaDJhO1h8UVFjlWSl52YmuM2Ojz1Cz6QZyfJi', 'Sistem Yöneticisi',  'Admin',      NULL, 'IT'),
